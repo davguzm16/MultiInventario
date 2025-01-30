@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'add_product_page.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -18,6 +19,15 @@ class _InventoryPageState extends State<InventoryPage> {
         child: Column(
           children: [
             Text("Inventory Page"),
+            ElevatedButton(
+              child: Icon(Icons.add),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddproductPage()),
+                );
+              },
+            )
           ],
         ),
       ),

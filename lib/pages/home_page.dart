@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multiinventario/pages/inventory_page.dart';
+import 'package:multiinventario/pages/inventory/inventory_page.dart';
 import 'package:multiinventario/pages/sales_page.dart';
 import 'package:multiinventario/pages/reports_page.dart';
 
