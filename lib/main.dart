@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multiinventario/pages/login_page.dart';
+import 'package:multiinventario/pages/login/login_page.dart';
 
 void main() {
   runApp(const MainApp());
