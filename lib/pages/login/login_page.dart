@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:multiinventario/pages/home_page.dart';
+import 'package:multiinventario/app_routes.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,30 +23,43 @@ class _LoginPageState extends State<LoginPage> {
               // Imagen logo
               Image.asset(
                 "lib/assets/imagenes/logoTienda.png",
-                height: 150, // Tamaño fijo de la imagen
+                height: 150,
                 width: 150,
               ),
-              const SizedBox(height: 50), // Espacio antes del botón
+              const SizedBox(height: 50),
 
-              // Botón de continuar
+              // Botón de confirmar
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.greenAccent, // Fondo del botón
+                  backgroundColor: Color(0xff2bbf55),
                   padding:
                       const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
                   textStyle: const TextStyle(fontSize: 18),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(12), // Bordes redondeados
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const HomePage()),
-                  );
+                  Navigator.pushReplacementNamed(context, AppRoutes.home);
                 },
-                child: const Text("Continuar"),
+                child: const Text("Confirmar"),
+              ),
+
+              // Botón de olvide mi pin
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xffffde59),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                  textStyle: const TextStyle(fontSize: 18),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.pushNamed(context, AppRoutes.loginInputEmail);
+                },
+                child: const Text("Olvidé mi PIN"),
               ),
             ],
           ),

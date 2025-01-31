@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:multiinventario/pages/inventory/inventory_page.dart';
-import 'package:multiinventario/pages/sales_page.dart';
-import 'package:multiinventario/pages/reports_page.dart';
+import 'package:multiinventario/pages/sales/sales_page.dart';
+import 'package:multiinventario/pages/reports/reports_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

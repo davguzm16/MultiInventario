@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class AddproductPage extends StatefulWidget {
-  const AddproductPage({super.key});
+class CreateProductPage extends StatefulWidget {
+  const CreateProductPage({super.key});
 
   @override
-  State<AddproductPage> createState() => _AddproductPageState();
+  State<CreateProductPage> createState() => _CreateProductPageState();
 }
 
-class _AddproductPageState extends State<AddproductPage> {
+class _CreateProductPageState extends State<CreateProductPage> {
   // Controladores para los campos de texto
   final TextEditingController _productNameController = TextEditingController();
   final TextEditingController _productPriceController = TextEditingController();

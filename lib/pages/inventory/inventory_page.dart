@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'add_product_page.dart';
+import 'package:multiinventario/app_routes.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -22,10 +22,7 @@ class _InventoryPageState extends State<InventoryPage> {
             ElevatedButton(
               child: Icon(Icons.add),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AddproductPage()),
-                );
+                Navigator.pushNamed(context, AppRoutes.inventoryCreateProduct);
               },
             )
           ],
