@@ -1,3 +1,4 @@
+import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 
@@ -37,80 +38,32 @@ class _CodeVerificationState extends State<CodeVerification> {
   final String correctCode = "123456"; // Código correcto para la validación
   String enteredCode = ""; // Variable para almacenar el código ingresado
 
-  void showResultDialog(bool isSuccess) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                isSuccess ? Icons.check_circle : Icons.error,
-                color: isSuccess ? Colors.green : Colors.red,
-                size: 60,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                isSuccess ? "¡Excelente!" : "¡Ha ocurrido un error!",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: isSuccess ? Colors.green : Colors.red,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                isSuccess
-                    ? "Se ha confirmado el código de verificación"
-                    : "No se pudo confirmar el código de verificación",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isSuccess ? Colors.green : Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context); // Cierra el diálogo
-                  if (isSuccess) {
-                    navigateToNextScreen(); // Navegación si es correcto
-                  }
-                },
-                child: Text(
-                  isSuccess ? "Continuar" : "Cerrar",
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void validateCode() {
+  Future<void> validateCode() async {
     if (enteredCode == correctCode) {
+      await AwesomeDialog(
+        context: context,
+        dialogType: DialogType.success,
+        animType: AnimType.topSlide,
+        title: "Correcto",
+        desc: "¡El código es correcto!",
+        btnOkOnPress: () {},
+        btnOkIcon: Icons.check_circle,
+        btnOkColor: Colors.green,
+      ).show();
+
       Navigator.pushReplacementNamed(context, "/login/create-pin");
     } else {
-      showResultDialog(false); // Código incorrecto
+      await AwesomeDialog(
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.topSlide,
+        title: "Error",
+        desc: "El código ingresado es incorrecto. Inténtalo nuevamente.",
+        btnOkOnPress: () {},
+        btnOkIcon: Icons.cancel,
+        btnOkColor: Colors.red,
+      ).show();
     }
-  }
-
-  void navigateToNextScreen() {
-    // Aquí defines la navegación a la siguiente ventana
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NextScreen(), // Cambia a tu próxima pantalla
-      ),
-    );
   }
 
   @override
@@ -195,30 +148,6 @@ class _CodeVerificationState extends State<CodeVerification> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class NextScreen extends StatelessWidget {
-  const NextScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Pantalla de Confirmación"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.arrow_forward), // Ícono para navegar
-            onPressed: () {
-              Navigator.pushNamed(context, "/login/create-pin");
-            },
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Text("¡Has llegado a la próxima pantalla!"),
       ),
     );
   }

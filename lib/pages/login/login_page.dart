@@ -147,6 +147,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ),
                   onPressed: () {
+                    Navigator.pushReplacementNamed(context, "/home");
                     focusNode.unfocus();
                     formKey.currentState!.validate();
                   },

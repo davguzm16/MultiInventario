@@ -6,13 +6,10 @@ class InputEmailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: const FractionallySizedBox(
-          widthFactor: 1,
-          child: PinputInfo(),
-        ),
+    return Scaffold(
+      body: const FractionallySizedBox(
+        widthFactor: 1,
+        child: PinputInfo(),
       ),
     );
   }
