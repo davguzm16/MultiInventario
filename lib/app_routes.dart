@@ -8,6 +8,7 @@ class AppRoutes {
   static const String login = '/login';
   static const String loginInputEmail = '/login/input-email';
   static const String loginCodeEmail = '/login/code-email';
+  static const String loginCreatePin = '/login/create-pin';
   static const String home = '/home';
   static const String inventory = '/inventory';
   static const String inventoryProduct = '/inventory/product';
@@ -20,6 +21,7 @@ class AppRoutes {
     login: (context) => LoginPage(),
     loginInputEmail: (context) => InputEmailPage(),
     loginCodeEmail: (context) => CodeEmailPage(),
+    loginCreatePin: (context) => CreatePinPage(),
     home: (context) => HomePage(),
     inventory: (context) => InventoryPage(),
     inventoryProduct: (context) => ProductPage(),
