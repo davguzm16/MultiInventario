@@ -246,7 +246,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Image.asset('lib/assets/iconos/iconoImagen.png', height: 30),
+              Image.asset('lib/assets/iconos/iconoImagen.png', height: 80),
               SizedBox(height: 10),
               Text('Código del producto',
                   style: TextStyle(fontWeight: FontWeight.bold)),
@@ -256,7 +256,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   Text(productCodeController.text,
                       style: TextStyle(fontSize: 24)),
                   SizedBox(width: 10),
-                  Image.asset('lib/assets/iconos/iconoBarras.png', height: 30),
+                  Image.asset('lib/assets/iconos/iconoBarras.png', height: 40),
                 ],
               ),
               SizedBox(height: 10),
@@ -277,14 +277,16 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white),
                     onPressed: () => Navigator.pop(context),
                     child: Text('Cancelar'),
                   ),
                   ElevatedButton(
-                    style:
-                        ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white),
                     onPressed: _showConfirmationDialog,
                     child: Text('Confirmar'),
                   ),
