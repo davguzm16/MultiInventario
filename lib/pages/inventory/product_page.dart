@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ProductPage extends StatefulWidget {
-  const ProductPage({Key? key}) : super(key: key);
+  const ProductPage({super.key});
 
   @override
   State<ProductPage> createState() => _ProductPageState();
@@ -23,7 +23,9 @@ class _ProductPageState extends State<ProductPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Leche Gloria', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text('Leche Gloria',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 Row(
                   children: [
                     IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
@@ -48,7 +50,8 @@ class _ProductPageState extends State<ProductPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: const [
-                    Text('Código del Producto:', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('Código del Producto:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
                     Text('775642343'),
                   ],
                 ),
@@ -81,18 +84,22 @@ class _ProductPageState extends State<ProductPage> {
             const SizedBox(height: 16),
 
             // Categorías del producto
-            const Text('Categorías del producto', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Categorías del producto',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             Wrap(
               spacing: 8.0,
               children: [
-                ElevatedButton(onPressed: () {}, child: const Text('Abarrotes')),
-                ElevatedButton(onPressed: () {}, child: const Text('Enlatados')),
+                ElevatedButton(
+                    onPressed: () {}, child: const Text('Abarrotes')),
+                ElevatedButton(
+                    onPressed: () {}, child: const Text('Enlatados')),
               ],
             ),
             const SizedBox(height: 16),
 
             // Lotes del producto
-            const Text('Lotes del producto', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text('Lotes del producto',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             DataTable(
               columns: const [
                 DataColumn(label: Text('Lote')),

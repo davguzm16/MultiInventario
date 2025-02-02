@@ -1,6 +1,11 @@
+// ignore_for_file: library_private_types_in_public_api, prefer_final_fields
+
 import 'package:flutter/material.dart';
+import 'package:multiinventario/models/producto.dart';
 
 class CreateProductPage extends StatefulWidget {
+  const CreateProductPage({super.key});
+
   @override
   _CreateProductPageState createState() => _CreateProductPageState();
 }
@@ -15,15 +20,24 @@ class _CreateProductPageState extends State<CreateProductPage> {
   final TextEditingController priceController = TextEditingController();
   final TextEditingController categoryController = TextEditingController();
 
-  String selectedUnit = 'kilogramo (kg)';
-  List<String> categories = [
-    'Abarrotes',
-    'Ferretería',
-    'Útiles escolares',
-    'Bebidas',
-    'Enlatados'
-  ];
-  List<String> selectedCategories = [];
+  late Producto producto;
+
+  Map<int, String> unidades = {
+    1: 'kilogramo (kg)',
+    2: 'litro (l)',
+    3: 'unidad (u)'
+  };
+
+  Map<int, String> categorias = {
+    1: 'Abarrotes',
+    2: 'Ferretería',
+    3: 'Útiles escolares',
+    4: 'Bebidas',
+    5: 'Enlatados'
+  };
+
+  int _idUnidadSeleccionada = -1;
+  List<int> _idCategoriasSeleccionadas = [];
 
   @override
   void dispose() {
@@ -39,13 +53,14 @@ class _CreateProductPageState extends State<CreateProductPage> {
 
   void _addCategory() {
     String newCategory = categoryController.text.trim();
-    if (newCategory.isNotEmpty && !categories.contains(newCategory)) {
+    if (newCategory.isNotEmpty && !categorias.containsValue(newCategory)) {
       setState(() {
-        categories.add(newCategory);
+        int newId = categorias.keys.isNotEmpty ? categorias.keys.last + 1 : 1;
+        categorias[newId] = newCategory;
         categoryController.clear();
       });
     }
-    Navigator.of(context).pop();
+    Navigator.pop(context, 'producto_creado');
   }
 
   void _showAddCategoryDialog() {
@@ -82,7 +97,14 @@ class _CreateProductPageState extends State<CreateProductPage> {
           content: Text('El producto ha sido registrado con éxito.'),
           actions: [
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                // Cierra el Dialog
+                Navigator.pop(context);
+
+                // Actualiza la pantalla de inventario
+                Navigator.pop(context,
+                    'producto_creado'); // Esto será recibido en la pantalla de inventario
+              },
               child: Text('Aceptar'),
             ),
           ],
@@ -106,9 +128,14 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 child: Text('Cancelar'),
               ),
               ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _showSuccessDialog();
+                onPressed: () async {
+                  // Insertamos el producto en la BD
+                  if (await Producto.crearProducto(producto)) {
+                    _showSuccessDialog();
+                  } else {
+                    _showErrorDialog(
+                        "Hubo un problema al crear el producto en la base de datos");
+                  }
                 },
                 child: Text('Confirmar'),
               ),
@@ -120,29 +147,30 @@ class _CreateProductPageState extends State<CreateProductPage> {
   }
 
   bool _validateInputs() {
-    if (productNameController.text.isEmpty ||
-        stockController.text.isEmpty ||
-        minStockController.text.isEmpty ||
-        maxStockController.text.isEmpty ||
-        priceController.text.isEmpty) {
-      _showErrorDialog('Todos los campos son obligatorios.');
-      return false;
-    }
+    // Asignamos los valores a la variable global 'producto'
+    producto = Producto(
+      idUnidad: _idUnidadSeleccionada,
+      codigoProducto: productCodeController.text,
+      nombreProducto: productNameController.text,
+      precioProducto: double.tryParse(priceController.text) ?? 0.0,
+      stockActual: double.tryParse(stockController.text) ?? 0.0,
+      stockMinimo: double.tryParse(minStockController.text) ?? 0.0,
+      stockMaximo: double.tryParse(maxStockController.text) ?? 0.0,
+    );
 
-    int? stock = int.tryParse(stockController.text);
-    int? minStock = int.tryParse(minStockController.text);
-    int? maxStock = int.tryParse(maxStockController.text);
-    double? price = double.tryParse(priceController.text);
-
-    if (stock == null ||
-        minStock == null ||
-        maxStock == null ||
-        price == null) {
+    // Verificamos si los valores numéricos son correctos
+    if (producto.stockActual < 0 ||
+        (producto.stockMinimo != null && producto.stockMinimo! < 0) ||
+        (producto.stockMaximo != null && producto.stockMaximo! < 0) ||
+        producto.precioProducto < 0) {
       _showErrorDialog('Ingrese valores numéricos válidos en stock y precio.');
       return false;
     }
 
-    if (minStock > maxStock) {
+    // Verificamos que el stock mínimo no sea mayor que el máximo
+    if (producto.stockMinimo != null &&
+        producto.stockMaximo != null &&
+        producto.stockMinimo! > producto.stockMaximo!) {
       _showErrorDialog('El stock mínimo no puede ser mayor que el máximo.');
       return false;
     }
@@ -175,15 +203,15 @@ class _CreateProductPageState extends State<CreateProductPage> {
         Text('Categoría', style: TextStyle(fontWeight: FontWeight.bold)),
         Wrap(
           spacing: 8.0,
-          children: categories.map((category) {
+          children: categorias.entries.map((entry) {
             return ChoiceChip(
-              label: Text(category),
-              selected: selectedCategories.contains(category),
+              label: Text(entry.value),
+              selected: _idCategoriasSeleccionadas.contains(entry.key),
               onSelected: (selected) {
                 setState(() {
                   selected
-                      ? selectedCategories.add(category)
-                      : selectedCategories.remove(category);
+                      ? _idCategoriasSeleccionadas.add(entry.key)
+                      : _idCategoriasSeleccionadas.remove(entry.key);
                 });
               },
             );
@@ -215,17 +243,17 @@ class _CreateProductPageState extends State<CreateProductPage> {
   Widget _buildDropdown() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: DropdownButtonFormField<String>(
-        value: selectedUnit,
-        items: ['kilogramo (kg)', 'litro (l)', 'unidad (u)']
-            .map((unit) => DropdownMenuItem(
-                  value: unit,
-                  child: Text(unit),
+      child: DropdownButtonFormField<int>(
+        value: _idUnidadSeleccionada != -1 ? _idUnidadSeleccionada : null,
+        items: unidades.entries
+            .map((entry) => DropdownMenuItem<int>(
+                  value: entry.key,
+                  child: Text(entry.value),
                 ))
             .toList(),
         onChanged: (value) {
           setState(() {
-            selectedUnit = value!;
+            _idUnidadSeleccionada = value!;
           });
         },
         decoration: InputDecoration(
