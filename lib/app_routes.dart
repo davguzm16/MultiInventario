@@ -10,7 +10,9 @@ class AppRoutes {
   static const String loginCodeEmail = '/login/code-email';
   static const String home = '/home';
   static const String inventory = '/inventory';
+  static const String inventoryProduct = '/inventory/product';
   static const String inventoryCreateProduct = "/inventory/create-product";
+  static const String inventoryFilterProduct = "/inventory/filter-product";
   static const String sales = '/sales';
   static const String reports = '/reports';
 
@@ -20,7 +22,9 @@ class AppRoutes {
     loginCodeEmail: (context) => CodeEmailPage(),
     home: (context) => HomePage(),
     inventory: (context) => InventoryPage(),
+    inventoryProduct: (context) => ProductPage(),
     inventoryCreateProduct: (context) => CreateProductPage(),
+    inventoryFilterProduct: (context) => FilterProductPage(),
     sales: (context) => SalesPage(),
     //reports: (context) => ReportsPage(),
   };
