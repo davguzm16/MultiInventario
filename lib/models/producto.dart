@@ -1,14 +1,15 @@
-// ignore_for_file: avoid_print
-
+import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/producto_categoria.dart';
 
 class Producto {
-  late int idProducto;
-  late int idUnidad;
+  int? idProducto;
+  int idUnidad;
   String? codigoProducto;
-  late String nombreProducto;
-  late double precioProducto;
-  late double stockActual;
+  String nombreProducto;
+  double precioProducto;
+  double stockActual;
   double? stockMinimo;
   double? stockMaximo;
   bool? estaDisponible;
@@ -18,54 +19,29 @@ class Producto {
 
   // Constructor
   Producto({
+    this.idProducto,
     required this.idUnidad,
-    required this.codigoProducto,
+    this.codigoProducto,
     required this.nombreProducto,
     required this.precioProducto,
     required this.stockActual,
     required this.stockMinimo,
     required this.stockMaximo,
     this.rutaImagen,
+    this.estaDisponible,
   });
 
-  // Getters
-  int get getIdProducto => idProducto;
-  int get getIdUnidad => idUnidad;
-  String? get getCodigoProducto => codigoProducto;
-  String get getNombreProducto => nombreProducto;
-  double get getPrecioProducto => precioProducto;
-  double get getStockActual => stockActual;
-  double? get getStockMinimo => stockMinimo;
-  double? get getStockMaximo => stockMaximo;
-  bool? get getEstaDisponible => estaDisponible;
-  String? get getRutaImagen => rutaImagen;
-  DateTime? get getFechaCreacion => fechaCreacion;
-  DateTime? get getFechaModificacion => fechaModificacion;
-
-  // Setters
-  set setIdProducto(int id) => idProducto = id;
-  set setIdUnidad(int id) => idUnidad = id;
-  set setCodigoProducto(String codigo) => codigoProducto = codigo;
-  set setNombreProducto(String nombre) => nombreProducto = nombre;
-  set setPrecioProducto(double precio) => precioProducto = precio;
-  set setStockActual(double stock) => stockActual = stock;
-  set setStockMinimo(double stock) => stockMinimo = stock;
-  set setStockMaximo(double stock) => stockMaximo = stock;
-  set setEstaDisponible(bool disponible) => estaDisponible = disponible;
-  set setRutaImagen(String ruta) => rutaImagen = ruta;
-  set setFechaCreacion(DateTime fecha) => fechaCreacion = fecha;
-  set setFechaModificacion(DateTime fecha) => fechaModificacion = fecha;
-
   // Metodos CRUD
-  static Future<bool> crearProducto(Producto producto) async {
+  static Future<bool> crearProducto(
+      Producto producto, List<Categoria> categorias) async {
     try {
       final db = await DatabaseController().database;
-      int result = await db.rawInsert('''
-        INSERT INTO Productos (
-          idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual, 
-          stockMinimo, stockMaximo, estaDisponible, rutaImagen, fechaCreacion, fechaModificacion
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ''', [
+      final result = await db.rawInsert('''
+      INSERT INTO Productos (
+        idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual, 
+        stockMinimo, stockMaximo, estaDisponible, rutaImagen, fechaCreacion, fechaModificacion
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', [
         producto.idUnidad,
         producto.codigoProducto,
         producto.nombreProducto,
@@ -73,57 +49,99 @@ class Producto {
         producto.stockActual,
         producto.stockMinimo,
         producto.stockMaximo,
-        producto.estaDisponible ?? true,
-        producto.rutaImagen ??
-            'lib/assets/iconos/iconoImagen.png', // Si rutaImagen es null, usa el valor por defecto
+        producto.estaDisponible,
+        producto.rutaImagen ?? 'lib/assets/iconos/iconoImagen.png',
         producto.fechaCreacion?.toIso8601String(),
         producto.fechaModificacion?.toIso8601String(),
       ]);
 
-      return result > 0; // Retorna true si se insertó correctamente
+      if (result > 0) {
+        int idProductoInsertado =
+            (await db.rawQuery('SELECT last_insert_rowid()')) as int;
+
+        for (var categoria in categorias) {
+          ProductoCategoria.asignarRelacion(idProductoInsertado, categoria.idCategoria!);
+        }
+
+        return true;
+      }
     } catch (e) {
-      print(producto.toString());
-      print(e);
-      return false; // Retorna false en caso de error
+      debugPrint(e.toString());
     }
+
+    return false;
+  }
+
+  static Future<Producto?> obtenerProductoPorID(int idProducto) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery(
+        '''
+        SELECT * FROM Productos WHERE idProducto = ?
+        ''',
+        [idProducto],
+      );
+
+      if (result.isNotEmpty) {
+        return Producto(
+          idProducto: result.first['idProducto']! as int,
+          idUnidad: result.first['idUnidad']! as int,
+          codigoProducto: result.first['codigoProducto'] as String?,
+          nombreProducto: result.first['nombreProducto'] as String,
+          precioProducto: result.first['precioProducto'] as double,
+          stockActual: result.first['stockActual'] as double,
+          stockMinimo: result.first['stockMinimo'] as double?,
+          stockMaximo: result.first['stockMaximo'] as double?,
+          estaDisponible: result.first['estaDisponible']! as bool,
+          rutaImagen: result.first['rutaImagen'] as String?,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");
+    }
+
+    return null;
   }
 
   static Future<List<Producto>> obtenerProductosPorPagina(int pagina) async {
+    List<Producto> productos = [];
+
     try {
       final db = await DatabaseController().database;
-
       int offset = (pagina - 1) * 9;
 
-      final List<Map<String, dynamic>> resultado = await db.rawQuery('''
-      SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual, stockMinimo, stockMaximo, rutaImagen
-      FROM Productos
-      LIMIT 9 OFFSET ?
-    ''', [offset]);
+      final List<Map<String, dynamic>> result = await db.rawQuery(
+        '''
+        SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, 
+               stockActual, stockMinimo, stockMaximo, rutaImagen
+        FROM Productos
+        LIMIT 9 OFFSET ?
+        ''',
+        [offset],
+      );
 
-      if (resultado.isEmpty) {
-        print('No se encontraron productos en la página $pagina');
+      if (result.isNotEmpty) {
+        for (var item in result) {
+          productos.add(Producto(
+            idProducto: item['idProducto']! as int,
+            idUnidad: item['idUnidad']! as int,
+            codigoProducto: item['codigoProducto'] as String?,
+            nombreProducto: item['nombreProducto']! as String,
+            precioProducto: item['precioProducto']! as double,
+            stockActual: item['stockActual']! as double,
+            stockMinimo: item['stockMinimo'] as double?,
+            stockMaximo: item['stockMaximo'] as double?,
+            estaDisponible: item['estaDisponible']! as bool,
+            rutaImagen: item['rutaImagen'] as String?,
+          ));
+        }
+      } else {
+        debugPrint('No se encontraron productos en la página $pagina');
       }
-
-      List<Producto> productos = [];
-      for (var item in resultado) {
-        productos.add(Producto(
-          idUnidad: item['idUnidad'] ?? 0,
-          codigoProducto: item['codigoProducto'] ?? '',
-          nombreProducto: item['nombreProducto'] ?? '',
-          precioProducto: item['precioProducto'] ?? 0.0,
-          stockActual: item['stockActual'] ?? 0.0,
-          stockMinimo: item['stockMinimo'] ?? 0.0,
-          stockMaximo: item['stockMaximo'] ?? 0.0,
-          rutaImagen: item['rutaImagen'],
-        ));
-      }
-
-      print(
-          'Productos obtenidos desde la base de datos: $productos'); // Agregar para depurar
-      return productos;
     } catch (e) {
-      print('Error al obtener productos desde la base de datos: $e');
-      return []; // Retornar una lista vacía en caso de error
+      debugPrint('Error al obtener productos: ${e.toString()}');
     }
+
+    return productos;
   }
 }

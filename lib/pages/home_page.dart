@@ -4,7 +4,7 @@ import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required Widget child});
 
   @override
   State<HomePage> createState() => _HomePageState();

@@ -1,9 +1,13 @@
+import 'package:flutter/foundation.dart';
+import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/unidad.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DatabaseController {
   static final DatabaseController _instance = DatabaseController._internal();
-  static Database? _database;
+  Database? _database;
 
   factory DatabaseController() {
     return _instance;
@@ -18,15 +22,16 @@ class DatabaseController {
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'inventario_ventas.db');
-    return await openDatabase(
+    String path = join(await getDatabasesPath(), 'multiinventario.db');
+    var db = await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE Categorias (
             idCategoria INTEGER PRIMARY KEY,
-            nombreCategoria TEXT UNIQUE
+            nombreCategoria TEXT UNIQUE,
+            rutaImagen TEXT
           )
         ''');
 
@@ -40,7 +45,7 @@ class DatabaseController {
             stockActual REAL NOT NULL,
             stockMinimo REAL,
             stockMaximo REAL,
-            estaDisponible BOOLEAN NOT NULL DEFAULT 1,
+            estaDisponible BOOLEAN DEFAULT 1,
             rutaImagen TEXT,
             fechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
             fechaModificacion DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -117,5 +122,32 @@ class DatabaseController {
         ''');
       },
     );
+    return db;
+  }
+
+  static Future<bool> tableHasData(String tableName) async {
+    try {
+      final db = await DatabaseController().database;
+      // Realizamos una consulta para verificar si la tabla tiene registros
+      final List<Map<String, Object?>> result = await db.rawQuery(
+        "SELECT COUNT(*) FROM $tableName",
+      );
+
+      // Verificamos si el número de registros es mayor que 0
+      int count = Sqflite.firstIntValue(result) ?? 0;
+      debugPrint("Número de registros en la tabla '$tableName': $count");
+
+      return count > 0; // Si hay al menos un registro, retornamos true
+    } catch (e) {
+      debugPrint(
+          "Error al consultar la tabla $tableName en la base de datos: $e");
+      return false; // Retorna false si hay un error
+    }
+  }
+
+  static Future<void> insertDefaultData() async {
+    Credenciales.crearCredencialesPorDefecto();
+    Categoria.crearCategoriasPorDefecto();
+    Unidad.crearUnidadesPorDefecto();
   }
 }

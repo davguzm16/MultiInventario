@@ -1,7 +1,5 @@
-// ignore_for_file: avoid_print, prefer_final_fields
-
 import 'package:flutter/material.dart';
-import 'package:multiinventario/app_routes.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/producto.dart';
 
 class InventoryPage extends StatefulWidget {
@@ -12,24 +10,22 @@ class InventoryPage extends StatefulWidget {
 }
 
 class _InventoryPageState extends State<InventoryPage> {
-  int _paginaActual = 1;
-  late Future<List<Producto>> _productosFuture;
+  final int indexPaginaActual = 1;
+  late Future<List<Producto>> listaProductos;
 
   @override
   void initState() {
     super.initState();
-    _productosFuture = _obtenerProductos();
+    listaProductos = _obtenerProductos();
   }
 
   // Método para obtener los productos con paginación
   Future<List<Producto>> _obtenerProductos() async {
     try {
       List<Producto> productos =
-          await Producto.obtenerProductosPorPagina(_paginaActual);
-      print('Productos obtenidos: $productos');
+          await Producto.obtenerProductosPorPagina(indexPaginaActual);
       return productos;
     } catch (e) {
-      print('Error al obtener productos: $e');
       return [];
     }
   }
@@ -37,7 +33,7 @@ class _InventoryPageState extends State<InventoryPage> {
   // Método para refrescar la lista de productos manualmente
   Future<void> _refrescarProductos() async {
     setState(() {
-      _productosFuture = _obtenerProductos();
+      listaProductos = _obtenerProductos();
     });
   }
 
@@ -49,27 +45,31 @@ class _InventoryPageState extends State<InventoryPage> {
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
-              icon: Icon(Icons.add),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.inventoryCreateProduct);
-                _refrescarProductos();
-              }),
+            icon: Icon(Icons.add),
+            onPressed: () async {
+              // Navegar a la página de creación de producto con GoRouter
+              await context.push('/home/inventory/create-product');
+              _refrescarProductos(); // Refrescar la lista después de regresar
+            },
+          ),
           IconButton(
-              icon: Image.asset(
-                "lib/assets/iconos/iconoFiltro.png",
-                width: 30,
-                height: 30,
-              ),
-              onPressed: () {
-                Navigator.pushNamed(context, AppRoutes.inventoryFilterProduct);
-              }),
+            icon: Image.asset(
+              "lib/assets/iconos/iconoFiltro.png",
+              width: 30,
+              height: 30,
+            ),
+            onPressed: () {
+              context.push('/home/inventory/filter-product');
+            },
+          ),
           IconButton(
-              icon: Image.asset(
-                "lib/assets/iconos/iconoBusqueda.png",
-                width: 23,
-                height: 23,
-              ),
-              onPressed: () {}),
+            icon: Image.asset(
+              "lib/assets/iconos/iconoBusqueda.png",
+              width: 23,
+              height: 23,
+            ),
+            onPressed: () {},
+          ),
         ],
       ),
       body: Padding(
@@ -77,7 +77,7 @@ class _InventoryPageState extends State<InventoryPage> {
         child: RefreshIndicator(
           onRefresh: _refrescarProductos,
           child: FutureBuilder<List<Producto>>(
-            future: _productosFuture,
+            future: listaProductos,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(child: CircularProgressIndicator());
@@ -100,10 +100,12 @@ class _InventoryPageState extends State<InventoryPage> {
                 ),
                 itemCount: productos.length,
                 itemBuilder: (context, index) {
-                  final product = productos[index];
+                  final producto = productos[index];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.pushNamed(context, AppRoutes.inventoryProduct);
+                      // Navegar a la página del producto con su ID en la URL
+                      context.push(
+                          '/home/inventory/product/${producto.idProducto}');
                     },
                     child: Container(
                       decoration: BoxDecoration(
@@ -115,25 +117,25 @@ class _InventoryPageState extends State<InventoryPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Image.asset(
-                            product.rutaImagen ??
+                            producto.rutaImagen ??
                                 'lib/assets/iconos/iconoImagen.png',
                             height: 60,
                             alignment: Alignment.center,
                           ),
                           Text(
-                            product.nombreProducto,
+                            producto.nombreProducto,
                             style: TextStyle(fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
                           Text(
-                            "Precio: S/. ${product.precioProducto.toStringAsFixed(2)}",
+                            "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
                             textAlign: TextAlign.center,
                           ),
                           Text(
-                            "Stock actual: \n ${product.stockActual} ud",
+                            "Stock actual: \n ${producto.stockActual} ud",
                             style: TextStyle(
-                              color: product.stockActual <
-                                      (product.stockMinimo ?? 0)
+                              color: producto.stockActual <
+                                      (producto.stockMinimo ?? 0)
                                   ? Colors.red
                                   : Colors.black,
                             ),
