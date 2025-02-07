@@ -47,9 +47,8 @@ class _InventoryPageState extends State<InventoryPage> {
           IconButton(
             icon: Icon(Icons.add),
             onPressed: () async {
-              // Navegar a la página de creación de producto con GoRouter
-              await context.push('/home/inventory/create-product');
-              _refrescarProductos(); // Refrescar la lista después de regresar
+              await context.push('/inventory/create-product');
+              _refrescarProductos();
             },
           ),
           IconButton(

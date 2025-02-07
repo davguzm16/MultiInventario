@@ -16,8 +16,8 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController pinController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  String? correctPIN;
-  String? userPIN;
+  String correctPIN = "";
+  String userPIN = "";
 
   @override
   void initState() {
@@ -43,8 +43,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _validarPin() async {
     if (userPIN == correctPIN) {
-      context.go(
-          '/home'); // Usamos go() en lugar de Navigator.pushReplacementNamed
+      context.go('/inventory');
     } else {
       await AwesomeDialog(
         context: context,

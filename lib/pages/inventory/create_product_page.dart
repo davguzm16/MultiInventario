@@ -23,7 +23,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
   final TextEditingController maxStockController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
 
-  late Producto producto;
+  Producto? producto;
   late Future<List<Categoria>> categoriasDisponibles;
   late Future<List<Unidad>> unidadesDisponibles;
 
@@ -36,7 +36,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
     categoriasDisponibles = Categoria.obtenerCategorias();
     unidadesDisponibles = Unidad.obtenerUnidades();
 
-    productCodeController.text = producto.codigoProducto ?? "-" * 13;
+    productCodeController.text = producto?.codigoProducto ?? "-" * 13;
   }
 
   @override
@@ -176,9 +176,9 @@ class _CreateProductPageState extends State<CreateProductPage> {
                       // Asegúrate de que el resultado es de tipo String?
                       if (result is String?) {
                         setState(() {
-                          producto.codigoProducto = result;
+                          producto?.codigoProducto = result;
                           productCodeController.text =
-                              producto.codigoProducto ?? "-" * 13;
+                              producto?.codigoProducto ?? "-" * 13;
                         });
                       }
                     },
@@ -315,7 +315,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
 
     // Verificamos si el código de producto es válido
     if (productCodeController.text != "-" * 13) {
-      producto.codigoProducto = productCodeController.text;
+      producto?.codigoProducto = productCodeController.text;
     }
 
     // Verificamos si los valores numéricos son correctos
@@ -354,7 +354,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
         desc: '¿Está seguro de que desea crear el producto?',
         btnOkOnPress: () async {
           bool creado =
-              await Producto.crearProducto(producto, categoriasSeleccionadas);
+              await Producto.crearProducto(producto!, categoriasSeleccionadas);
 
           if (creado) {
             AwesomeDialog(

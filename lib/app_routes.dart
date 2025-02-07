@@ -1,15 +1,21 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multiinventario/pages/inventory/create_product_page.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
-import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
-import 'package:multiinventario/pages/sales/all_sales_pages.dart';
+import 'package:multiinventario/pages/inventory/inventory_page.dart';
+import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/controllers/barcode_scanner.dart';
+
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class AppRoutes {
   static final GoRouter router = GoRouter(
     initialLocation: '/login',
+    debugLogDiagnostics: true,
+    navigatorKey: _rootNavigatorKey,
     routes: <RouteBase>[
-      // Rutas de login
       GoRoute(
         path: '/login',
         builder: (context, state) => LoginPage(),
@@ -20,10 +26,8 @@ class AppRoutes {
           ),
           GoRoute(
             path: 'code-email',
-            builder: (context, state) {
-              final correctCode = state.extra as String;
-              return CodeEmailPage(correctCode: correctCode);
-            },
+            builder: (context, state) =>
+                CodeEmailPage(correctCode: state.extra as String),
           ),
           GoRoute(
             path: 'create-pin',
@@ -31,52 +35,44 @@ class AppRoutes {
           ),
         ],
       ),
-
-      // Contenedor "Home" con ShellRoute
-      ShellRoute(
-        builder: (context, state, child) {
-          return HomePage(child: child);
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return HomePage(navigationShell: navigationShell);
         },
-        routes: [
-          // Ruta principal de Inventario
-          GoRoute(
-            path: '/home/inventory',
-            builder: (context, state) {
-              return const InventoryPage();
-            },
+        branches: [
+          StatefulShellBranch(
             routes: [
-              // Ruta para crear un producto en el inventario
               GoRoute(
-                path: 'create-product',
-                builder: (context, state) => CreateProductPage(),
-              ),
-              // Ruta para ver un producto específico por su ID
-              GoRoute(
-                path: 'product/:idProduct',
-                builder: (context, state) {
-                  final idProducto = state.pathParameters['idProduct']! as int;
-                  return ProductPage(idProducto: idProducto);
-                },
+                path: '/inventory',
+                builder: (context, state) => const InventoryPage(),
+                routes: [
+                  GoRoute(
+                    path: 'create-product',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) => const CreateProductPage(),
+                  ),
+                ],
               ),
             ],
           ),
-          // Ruta para Ventas
-          GoRoute(
-            path: '/home/sales',
-            builder: (context, state) {
-              return const SalesPage(); // Página de ventas
-            },
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/sales',
+                builder: (context, state) => const SalesPage(),
+              ),
+            ],
           ),
-          /*GoRoute(
-            path: '/home/reports',
-            builder: (context, state) {
-              return const ReportsPage(); // Página de reportes
-            },
-          ),*/
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/reports',
+                builder: (context, state) => const ReportsPage(),
+              ),
+            ],
+          ),
         ],
       ),
-
-      // Ruta para el escáner de código de barras
       GoRoute(
         path: '/barcode-scanner',
         builder: (context, state) => BarcodeScanner(),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
+import 'package:sqflite/sqflite.dart';
 
 class Producto {
   int? idProducto;
@@ -39,8 +40,8 @@ class Producto {
       final result = await db.rawInsert('''
       INSERT INTO Productos (
         idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual, 
-        stockMinimo, stockMaximo, estaDisponible, rutaImagen, fechaCreacion, fechaModificacion
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        stockMinimo, stockMaximo, rutaImagen
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', [
         producto.idUnidad,
         producto.codigoProducto,
@@ -49,18 +50,16 @@ class Producto {
         producto.stockActual,
         producto.stockMinimo,
         producto.stockMaximo,
-        producto.estaDisponible,
         producto.rutaImagen ?? 'lib/assets/iconos/iconoImagen.png',
-        producto.fechaCreacion?.toIso8601String(),
-        producto.fechaModificacion?.toIso8601String(),
       ]);
 
       if (result > 0) {
-        int idProductoInsertado =
-            (await db.rawQuery('SELECT last_insert_rowid()')) as int;
+        final resultId = await db.rawQuery('SELECT last_insert_rowid()');
+        int? idProductoInsertado = Sqflite.firstIntValue(resultId);
 
         for (var categoria in categorias) {
-          ProductoCategoria.asignarRelacion(idProductoInsertado, categoria.idCategoria!);
+          ProductoCategoria.asignarRelacion(
+              idProductoInsertado, categoria.idCategoria);
         }
 
         return true;
@@ -112,26 +111,30 @@ class Producto {
 
       final List<Map<String, dynamic>> result = await db.rawQuery(
         '''
-        SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, 
-               stockActual, stockMinimo, stockMaximo, rutaImagen
-        FROM Productos
-        LIMIT 9 OFFSET ?
-        ''',
+      SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, 
+             stockActual, stockMinimo, stockMaximo, estaDisponible, rutaImagen
+      FROM Productos
+      LIMIT 9 OFFSET ?
+      ''',
         [offset],
       );
 
+      debugPrint("Resultados obtenidos: $result");
+
       if (result.isNotEmpty) {
         for (var item in result) {
+          debugPrint("Item obtenido: $item");
+
           productos.add(Producto(
-            idProducto: item['idProducto']! as int,
-            idUnidad: item['idUnidad']! as int,
+            idProducto: item['idProducto'] as int,
+            idUnidad: item['idUnidad'] as int,
             codigoProducto: item['codigoProducto'] as String?,
-            nombreProducto: item['nombreProducto']! as String,
-            precioProducto: item['precioProducto']! as double,
-            stockActual: item['stockActual']! as double,
+            nombreProducto: item['nombreProducto'] as String,
+            precioProducto: item['precioProducto'] as double,
+            stockActual: item['stockActual'] as double,
             stockMinimo: item['stockMinimo'] as double?,
             stockMaximo: item['stockMaximo'] as double?,
-            estaDisponible: item['estaDisponible']! as bool,
+            estaDisponible: (item['estaDisponible'] as int) == 1,
             rutaImagen: item['rutaImagen'] as String?,
           ));
         }

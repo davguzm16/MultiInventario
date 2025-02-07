@@ -1,37 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:multiinventario/pages/inventory/inventory_page.dart';
-import 'package:multiinventario/pages/sales/sales_page.dart';
-import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required Widget child});
+  final StatefulNavigationShell navigationShell;
+
+  const HomePage({super.key, required this.navigationShell});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  var selectIndex = 0;
-
-  final List<Widget> pages = [
-    InventoryPage(),
-    SalesPage(),
-    ReportsPage(),
-  ];
+  void _goBranch(int index) {
+    widget.navigationShell.goBranch(index, initialLocation: true);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: selectIndex,
-        children: pages,
-      ),
+      body: widget.navigationShell,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTap: (index) {
-          setState(() {
-            selectIndex = index;
-          });
+          _goBranch(index);
         },
         items: [
           BottomNavigationBarItem(
