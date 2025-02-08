@@ -65,7 +65,7 @@ class Producto {
         return true;
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint("Error al crear el producto: ${e.toString()}");
     }
 
     return false;
@@ -83,17 +83,16 @@ class Producto {
 
       if (result.isNotEmpty) {
         return Producto(
-          idProducto: result.first['idProducto']! as int,
-          idUnidad: result.first['idUnidad']! as int,
-          codigoProducto: result.first['codigoProducto'] as String?,
-          nombreProducto: result.first['nombreProducto'] as String,
-          precioProducto: result.first['precioProducto'] as double,
-          stockActual: result.first['stockActual'] as double,
-          stockMinimo: result.first['stockMinimo'] as double?,
-          stockMaximo: result.first['stockMaximo'] as double?,
-          estaDisponible: result.first['estaDisponible']! as bool,
-          rutaImagen: result.first['rutaImagen'] as String?,
-        );
+            idProducto: result.first['idProducto']! as int,
+            idUnidad: result.first['idUnidad']! as int,
+            codigoProducto: result.first['codigoProducto'] as String?,
+            nombreProducto: result.first['nombreProducto'] as String,
+            precioProducto: (result.first['precioProducto'] as num).toDouble(),
+            stockActual: (result.first['stockActual'] as num).toDouble(),
+            stockMinimo: (result.first['stockMinimo'] as num?)?.toDouble(),
+            stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
+            estaDisponible: (result.first['estaDisponible'] as int) == 1,
+            rutaImagen: (result.first['rutaImagen']! as String));
       }
     } catch (e) {
       debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");

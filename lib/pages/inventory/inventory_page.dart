@@ -58,7 +58,7 @@ class _InventoryPageState extends State<InventoryPage> {
               height: 30,
             ),
             onPressed: () {
-              context.push('/home/inventory/filter-product');
+              context.push('/inventory/filter-product');
             },
           ),
           IconButton(
@@ -103,44 +103,45 @@ class _InventoryPageState extends State<InventoryPage> {
                   return GestureDetector(
                     onTap: () {
                       // Navegar a la página del producto con su ID en la URL
-                      context.push(
-                          '/home/inventory/product/${producto.idProducto}');
+                      context.push('/inventory/product/${producto.idProducto}');
                     },
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.purple),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            producto.rutaImagen ??
-                                'lib/assets/iconos/iconoImagen.png',
-                            height: 60,
-                            alignment: Alignment.center,
-                          ),
-                          Text(
-                            producto.nombreProducto,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            "Stock actual: \n ${producto.stockActual} ud",
-                            style: TextStyle(
-                              color: producto.stockActual <
-                                      (producto.stockMinimo ?? 0)
-                                  ? Colors.red
-                                  : Colors.black,
+                      child: SingleChildScrollView(
+                        // 👈 Agregado para permitir desplazamiento
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              producto.rutaImagen ??
+                                  'lib/assets/iconos/iconoImagen.png',
+                              height: 60,
+                              alignment: Alignment.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                            Text(
+                              producto.nombreProducto,
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(
+                              "Stock actual: \n ${producto.stockActual} ud",
+                              style: TextStyle(
+                                color: producto.stockActual <
+                                        (producto.stockMinimo ?? 0)
+                                    ? Colors.red
+                                    : Colors.black,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multiinventario/pages/inventory/create_product_page.dart';
+import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
-import 'package:multiinventario/pages/inventory/inventory_page.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
 import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/controllers/barcode_scanner.dart';
@@ -50,6 +49,14 @@ class AppRoutes {
                     path: 'create-product',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const CreateProductPage(),
+                  ),
+                  GoRoute(
+                    path: 'product/:idProducto',
+                    builder: (context, state) {
+                      final idProducto =
+                          int.parse(state.pathParameters['idProducto']!);
+                      return ProductPage(idProducto: idProducto);
+                    },
                   ),
                 ],
               ),

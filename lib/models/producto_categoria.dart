@@ -52,7 +52,7 @@ class ProductoCategoria {
       final db = await DatabaseController().database;
 
       final List<Map<String, dynamic>> result = await db.rawQuery('''
-        SELECT c.idCategoria, c.nombre 
+        SELECT c.idCategoria, c.nombreCategoria 
         FROM Categorias c
         INNER JOIN ProductosCategorias pc ON c.idCategoria = pc.idCategoria
         WHERE pc.idProducto = ?
@@ -62,7 +62,7 @@ class ProductoCategoria {
         for (var item in result) {
           categorias.add(Categoria(
             idCategoria: item['idCategoria']! as int,
-            nombreCategoria: item['nombre']! as String,
+            nombreCategoria: item['nombreCategoria']! as String,
           ));
         }
       } else {

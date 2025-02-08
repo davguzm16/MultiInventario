@@ -103,12 +103,13 @@ class DatabaseController {
 
         await db.execute('''
           CREATE TABLE Lotes (
-            idLote INTEGER PRIMARY KEY,
+            idLote INTEGER,
             idProducto INTEGER,
             cantidadAsignada INTEGER NOT NULL,
             cantidadPerdida INTEGER,
             precioCompra REAL NOT NULL,
-            fechaCaducidad DATETIME,
+            fechaCaducidad DATE,
+            PRIMARY KEY (idLote, idProducto),
             FOREIGN KEY (idProducto) REFERENCES Productos(idProducto)
           )
         ''');
