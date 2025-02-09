@@ -1,34 +1,20 @@
 class Venta {
-  late int idVenta;
-  late int idCliente;
-  late String codigoVenta;
-  late double montoTotal;
-  late DateTime fechaVenta;
-  late bool estaCancelado;
+  int? idVenta;
+  int idCliente;
+  String codigoVenta;
+  DateTime? fechaVenta;
+  double montoTotal;
+  double? montoCancelado;
+  bool? esAlContado;
 
   // Constructor
   Venta({
-    required this.idVenta,
+    this.idVenta,
     required this.idCliente,
     required this.codigoVenta,
+    this.fechaVenta,
     required this.montoTotal,
-    required this.fechaVenta,
-    required this.estaCancelado,
+    this.montoCancelado,
+    this.esAlContado,
   });
-
-  // Getters
-  int get getIdVenta => idVenta;
-  int get getIdCliente => idCliente;
-  String get getCodigoVenta => codigoVenta;
-  double get getMontoTotal => montoTotal;
-  DateTime get getFechaVenta => fechaVenta;
-  bool get getEstaCancelado => estaCancelado;
-
-  // Setters
-  set setIdVenta(int id) => idVenta = id;
-  set setIdCliente(int id) => idCliente = id;
-  set setCodigoVenta(String codigo) => codigoVenta = codigo;
-  set setMontoTotal(double monto) => montoTotal = monto;
-  set setFechaVenta(DateTime fecha) => fechaVenta = fecha;
-  set setEstaCancelado(bool cancelado) => estaCancelado = cancelado;
 }

@@ -4,13 +4,11 @@ import 'package:multiinventario/controllers/db_controller.dart';
 class Categoria {
   int? idCategoria;
   String nombreCategoria;
-  String? rutaImagen;
 
   // Constructor
   Categoria({
     this.idCategoria,
     required this.nombreCategoria,
-    this.rutaImagen,
   });
 
   static Future<bool> crearCategoria(Categoria categoria) async {
@@ -19,8 +17,8 @@ class Categoria {
     try {
       final db = await DatabaseController().database;
       result = await db.rawInsert(
-        'INSERT INTO Categorias (nombreCategoria, rutaImagen) VALUES (?, ?)',
-        [categoria.nombreCategoria, categoria.rutaImagen],
+        'INSERT INTO Categorias (nombreCategoria) VALUES (?)',
+        [categoria.nombreCategoria],
       );
     } catch (e) {
       debugPrint(e.toString());
@@ -41,12 +39,8 @@ class Categoria {
     ];
 
     try {
-      final db = await DatabaseController().database;
       for (Categoria categoria in categorias) {
-        await db.rawInsert(
-          'INSERT INTO Categorias (nombreCategoria, rutaImagen) VALUES (?, ?)',
-          [categoria.nombreCategoria, categoria.rutaImagen],
-        );
+        crearCategoria(categoria);
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -58,14 +52,13 @@ class Categoria {
 
     try {
       final db = await DatabaseController().database;
-      final List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT idCategoria, nombreCategoria, rutaImagen FROM Categorias');
+      final List<Map<String, dynamic>> result = await db
+          .rawQuery('SELECT idCategoria, nombreCategoria FROM Categorias');
 
       for (var map in result) {
         categorias.add(Categoria(
           idCategoria: map['idCategoria'],
           nombreCategoria: map['nombreCategoria'],
-          rutaImagen: map['rutaImagen'],
         ));
       }
     } catch (e) {
