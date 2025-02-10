@@ -28,6 +28,41 @@ class Categoria {
 
     return result > 0;
   }
+static Future<bool> editarCategoria(int idCategoria, String nuevoNombre) async {
+  late int result;
+
+  try {
+    final db = await DatabaseController().database;
+    result = await db.rawUpdate(
+      'UPDATE Categorias SET nombreCategoria = ? WHERE idCategoria = ?',
+      [nuevoNombre, idCategoria],
+    );
+  } catch (e) {
+    debugPrint(e.toString());
+    return false;
+  }
+
+  return result > 0;
+}
+static Future<bool> eliminarCategoria(int idCategoria) async {
+  late int result;
+
+  try {
+    final db = await DatabaseController().database;
+    result = await db.rawDelete(
+      'DELETE FROM Categorias WHERE idCategoria = ?',
+      [idCategoria],
+    );
+  } catch (e) {
+    debugPrint(e.toString());
+    return false;
+  }
+
+  return result > 0;
+}
+
+
+
 
   static Future<void> crearCategoriasPorDefecto() async {
     if (await DatabaseController.tableHasData("Categorias")) return;

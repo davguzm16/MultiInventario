@@ -51,62 +51,89 @@ class _CreateProductPageState extends State<CreateProductPage> {
     super.dispose();
   }
 
-  Widget _buildCategorySelection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Categoría', style: TextStyle(fontWeight: FontWeight.bold)),
-        FutureBuilder<List<Categoria>>(
-          future: categoriasDisponibles,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Text('No hay categorías disponibles.');
-            }
+Widget _buildCategorySelection() {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text('Categorías', style: TextStyle(fontWeight: FontWeight.bold)),
+      FutureBuilder<List<Categoria>>(
+        future: categoriasDisponibles,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          } else if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Text('No hay categorías disponibles.');
+          }
 
-            List<Categoria> categorias = snapshot.data!;
-            debugPrint("Categorías recibidas: ${categorias.length}");
+          List<Categoria> categorias = snapshot.data!;
+          debugPrint("Categorías recibidas: ${categorias.length}");
 
-            // Convertir la lista de categorías en un Map<int, String>
-            Map<int, String> categoriasMap = {
-              for (var categoria in categorias)
-                categoria.idCategoria!: categoria.nombreCategoria
-            };
+          // Convertir la lista de categorías en un Map<int, String>
+          Map<int, String> categoriasMap = {
+            for (var categoria in categorias)
+              categoria.idCategoria!: categoria.nombreCategoria
+          };
 
-            return Wrap(
-              spacing: 8.0,
-              children: categoriasMap.entries.map((entry) {
-                return ChoiceChip(
-                  label: Text(entry.value),
-                  selected: categoriasSeleccionadas
-                      .any((c) => c.idCategoria == entry.key),
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        categoriasSeleccionadas.add(Categoria(
-                            idCategoria: entry.key,
-                            nombreCategoria: entry.value));
-                      } else {
-                        categoriasSeleccionadas
-                            .removeWhere((c) => c.idCategoria == entry.key);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            );
-          },
-        ),
-        TextButton(
-          onPressed: _showAddCategoryDialog,
-          child: Text('Agregar nueva categoría'),
-        ),
-      ],
-    );
-  }
+          return Wrap(
+            spacing: 8.0,
+            children: categoriasMap.entries.map((entry) {
+              return ChoiceChip(
+                label: Text(entry.value),
+                selected: categoriasSeleccionadas
+                    .any((c) => c.idCategoria == entry.key),
+                onSelected: (selected) {
+                  setState(() {
+                    if (selected) {
+                      categoriasSeleccionadas.add(Categoria(
+                          idCategoria: entry.key,
+                          nombreCategoria: entry.value));
+                    } else {
+                      categoriasSeleccionadas
+                          .removeWhere((c) => c.idCategoria == entry.key);
+                    }
+                  });
+                },
+              );
+            }).toList(),
+          );
+        },
+      ),
+      const SizedBox(height: 10),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Botón para agregar categoría
+          TextButton(
+            onPressed: _showAddCategoryDialog,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.purple,
+            ),
+            child: const Text('Agregar categoría'),
+          ),
+          // Botón para editar categoría
+          TextButton(
+            onPressed: _showEditCategoryDialog,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.purple,
+            ),
+            child: const Text('Editar categoría'),
+          ),
+          // Botón para eliminar categoría (en rojo)
+          TextButton(
+            onPressed: _showRemoveCategoryDialog,
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.red,
+            ),
+            child: const Text('Eliminar categoría'),
+          ),
+        ],
+      ),
+    ],
+  );
+}
+
 
   Widget _buildComboBox() {
     return FutureBuilder<List<Unidad>>(
@@ -285,6 +312,161 @@ class _CreateProductPageState extends State<CreateProductPage> {
       },
     );
   }
+void _showEditCategoryDialog() {
+  TextEditingController editCategoriaController = TextEditingController();
+  Categoria? categoriaSeleccionada;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Editar categoría"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FutureBuilder<List<Categoria>>(
+              future: categoriasDisponibles,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text("No hay categorías disponibles.");
+                }
+
+                return DropdownButtonFormField<Categoria>(
+                  value: categoriaSeleccionada,
+                  onChanged: (newValue) {
+                    setState(() {
+                      categoriaSeleccionada = newValue;
+                      editCategoriaController.text = newValue?.nombreCategoria ?? "";
+                    });
+                  },
+                  items: snapshot.data!.map((categoria) {
+                    return DropdownMenuItem(
+                      value: categoria,
+                      child: Text(categoria.nombreCategoria),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: "Selecciona una categoría",
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: editCategoriaController,
+              decoration: const InputDecoration(
+                labelText: "Nuevo nombre",
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (categoriaSeleccionada != null) {
+                String nuevoNombre = editCategoriaController.text.trim();
+                if (nuevoNombre.isNotEmpty) {
+                  bool editada = await Categoria.editarCategoria(
+                    categoriaSeleccionada!.idCategoria!,
+                    nuevoNombre,
+                  );
+
+                  if (editada) {
+                    setState(() {
+                      categoriasDisponibles = Categoria.obtenerCategorias();
+                    });
+                  }
+                }
+              }
+              Navigator.pop(context);
+            },
+            child: const Text("Guardar"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showRemoveCategoryDialog() {
+  Categoria? categoriaSeleccionada;
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text("Eliminar categoría"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            FutureBuilder<List<Categoria>>(
+              future: categoriasDisponibles,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Text("No hay categorías disponibles.");
+                }
+
+                return DropdownButtonFormField<Categoria>(
+                  value: categoriaSeleccionada,
+                  onChanged: (newValue) {
+                    setState(() {
+                      categoriaSeleccionada = newValue;
+                    });
+                  },
+                  items: snapshot.data!.map((categoria) {
+                    return DropdownMenuItem(
+                      value: categoria,
+                      child: Text(categoria.nombreCategoria),
+                    );
+                  }).toList(),
+                  decoration: const InputDecoration(
+                    labelText: "Selecciona una categoría",
+                    border: OutlineInputBorder(),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancelar"),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (categoriaSeleccionada != null) {
+                bool eliminada = await Categoria.eliminarCategoria(
+                  categoriaSeleccionada!.idCategoria!,
+                );
+
+                if (eliminada) {
+                  setState(() {
+                    categoriasDisponibles = Categoria.obtenerCategorias();
+                  });
+                }
+              }
+              Navigator.pop(context);
+            },
+            child: const Text("Eliminar", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+
 
   bool _validateInputs() {
     // Verificamos que los campos no estén vacíos
