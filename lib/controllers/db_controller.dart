@@ -30,8 +30,7 @@ class DatabaseController {
         await db.execute('''
           CREATE TABLE Categorias (
             idCategoria INTEGER PRIMARY KEY,
-            nombreCategoria TEXT UNIQUE,
-            rutaImagen TEXT
+            nombreCategoria TEXT UNIQUE
           )
         ''');
 
@@ -73,7 +72,8 @@ class DatabaseController {
           CREATE TABLE Clientes (
             idCliente INTEGER PRIMARY KEY,
             nombreCliente TEXT NOT NULL,
-            dniCliente TEXT UNIQUE
+            dniCliente TEXT UNIQUE,
+            correoCliente TEXT
           )
         ''');
 
@@ -82,9 +82,10 @@ class DatabaseController {
             idVenta INTEGER PRIMARY KEY,
             idCliente INTEGER,
             codigoVenta TEXT NOT NULL UNIQUE,
-            totalVenta REAL NOT NULL,
             fechaVenta DATETIME DEFAULT CURRENT_TIMESTAMP,
-            estaCancelado BOOLEAN NOT NULL DEFAULT 1,
+            montoTotal REAL NOT NULL,
+            montoCancelado REAL,
+            esAlContado BOOLEAN DEFAULT 1,
             FOREIGN KEY (idCliente) REFERENCES Clientes(idCliente)
           )
         ''');
@@ -103,12 +104,14 @@ class DatabaseController {
 
         await db.execute('''
           CREATE TABLE Lotes (
-            idLote INTEGER PRIMARY KEY,
+            idLote INTEGER,
             idProducto INTEGER,
-            cantidadAsignada INTEGER NOT NULL,
+            cantidadActual INTEGER NOT NULL,
+            cantidadComprada INTEGER NOT NULL,
             cantidadPerdida INTEGER,
             precioCompra REAL NOT NULL,
-            fechaCaducidad DATETIME,
+            fechaCaducidad DATE,
+            PRIMARY KEY (idLote, idProducto),
             FOREIGN KEY (idProducto) REFERENCES Productos(idProducto)
           )
         ''');
@@ -128,20 +131,18 @@ class DatabaseController {
   static Future<bool> tableHasData(String tableName) async {
     try {
       final db = await DatabaseController().database;
-      // Realizamos una consulta para verificar si la tabla tiene registros
       final List<Map<String, Object?>> result = await db.rawQuery(
         "SELECT COUNT(*) FROM $tableName",
       );
 
-      // Verificamos si el número de registros es mayor que 0
       int count = Sqflite.firstIntValue(result) ?? 0;
       debugPrint("Número de registros en la tabla '$tableName': $count");
 
-      return count > 0; // Si hay al menos un registro, retornamos true
+      return count > 0;
     } catch (e) {
       debugPrint(
           "Error al consultar la tabla $tableName en la base de datos: $e");
-      return false; // Retorna false si hay un error
+      return false;
     }
   }
 

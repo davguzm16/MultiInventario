@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
 
+import 'dart:io';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +24,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
   final TextEditingController minStockController = TextEditingController();
   final TextEditingController maxStockController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
+  String? rutaImagen;
 
   Producto? producto;
   late Future<List<Categoria>> categoriasDisponibles;
@@ -183,9 +186,22 @@ Widget _buildCategorySelection() {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: () {},
-                icon: Image.asset('lib/assets/iconos/iconoImagen.png',
-                    height: 80),
+                onPressed: () async {
+                  rutaImagen = await context.push("/image-picker") as String?;
+                  setState(() {});
+                },
+                icon: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: rutaImagen == null
+                        ? Image.asset(
+                            'lib/assets/iconos/iconoImagen.png',
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(rutaImagen!),
+                            fit: BoxFit.cover,
+                          )),
               ),
               const SizedBox(height: 10),
               const Text('Código del producto',
@@ -493,6 +509,7 @@ void _showRemoveCategoryDialog() {
       stockActual: stockActual,
       stockMinimo: stockMinimo,
       stockMaximo: stockMaximo,
+      rutaImagen: rutaImagen,
     );
 
     // Verificamos si el código de producto es válido

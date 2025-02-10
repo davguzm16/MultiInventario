@@ -5,64 +5,63 @@ class Categoria {
   int? idCategoria;
   String nombreCategoria;
   String? rutaImagen;
-  //10/02/2025
+
   // Constructor
   Categoria({
     this.idCategoria,
     required this.nombreCategoria,
-    this.rutaImagen,
   });
 
   static Future<bool> crearCategoria(Categoria categoria) async {
-    late int result;
-
     try {
       final db = await DatabaseController().database;
-      result = await db.rawInsert(
-        'INSERT INTO Categorias (nombreCategoria, rutaImagen) VALUES (?, ?)',
-        [categoria.nombreCategoria, categoria.rutaImagen],
+      final result = await db.rawInsert(
+        'INSERT INTO Categorias (nombreCategoria) VALUES (?)',
+        [categoria.nombreCategoria],
       );
+
+      return result > 0;
     } catch (e) {
       debugPrint(e.toString());
     }
 
+    return false;
+  }
+
+  static Future<bool> editarCategoria(
+      int idCategoria, String nuevoNombre) async {
+    late int result;
+
+    try {
+      final db = await DatabaseController().database;
+      result = await db.rawUpdate(
+        'UPDATE Categorias SET nombreCategoria = ? WHERE idCategoria = ?',
+        [nuevoNombre, idCategoria],
+      );
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+
     return result > 0;
   }
-static Future<bool> editarCategoria(int idCategoria, String nuevoNombre) async {
-  late int result;
 
-  try {
-    final db = await DatabaseController().database;
-    result = await db.rawUpdate(
-      'UPDATE Categorias SET nombreCategoria = ? WHERE idCategoria = ?',
-      [nuevoNombre, idCategoria],
-    );
-  } catch (e) {
-    debugPrint(e.toString());
-    return false;
+  static Future<bool> eliminarCategoria(int idCategoria) async {
+    late int result;
+
+    try {
+      final db = await DatabaseController().database;
+      result = await db.rawDelete(
+        'DELETE FROM Categorias WHERE idCategoria = ?',
+        [idCategoria],
+      );
+    } catch (e) {
+      debugPrint(e.toString());
+      return false;
+    }
+
+    return result > 0;
   }
-
-  return result > 0;
-}
-static Future<bool> eliminarCategoria(int idCategoria) async {
-  late int result;
-
-  try {
-    final db = await DatabaseController().database;
-    result = await db.rawDelete(
-      'DELETE FROM Categorias WHERE idCategoria = ?',
-      [idCategoria],
-    );
-  } catch (e) {
-    debugPrint(e.toString());
-    return false;
-  }
-
-  return result > 0;
-}
-
-
-
 
   static Future<void> crearCategoriasPorDefecto() async {
     if (await DatabaseController.tableHasData("Categorias")) return;
@@ -76,12 +75,8 @@ static Future<bool> eliminarCategoria(int idCategoria) async {
     ];
 
     try {
-      final db = await DatabaseController().database;
       for (Categoria categoria in categorias) {
-        await db.rawInsert(
-          'INSERT INTO Categorias (nombreCategoria, rutaImagen) VALUES (?, ?)',
-          [categoria.nombreCategoria, categoria.rutaImagen],
-        );
+        crearCategoria(categoria);
       }
     } catch (e) {
       debugPrint(e.toString());
@@ -93,14 +88,13 @@ static Future<bool> eliminarCategoria(int idCategoria) async {
 
     try {
       final db = await DatabaseController().database;
-      final List<Map<String, dynamic>> result = await db.rawQuery(
-          'SELECT idCategoria, nombreCategoria, rutaImagen FROM Categorias');
+      final List<Map<String, dynamic>> result = await db
+          .rawQuery('SELECT idCategoria, nombreCategoria FROM Categorias');
 
       for (var map in result) {
         categorias.add(Categoria(
           idCategoria: map['idCategoria'],
           nombreCategoria: map['nombreCategoria'],
-          rutaImagen: map['rutaImagen'],
         ));
       }
     } catch (e) {

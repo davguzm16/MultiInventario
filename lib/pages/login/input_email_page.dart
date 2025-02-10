@@ -90,7 +90,10 @@ class _PinputInfoState extends State<PinputInfo> {
               "El código se ha enviado a su correo ${emailController.text} correctamente!",
           btnOkOnPress: () {
             FocusScope.of(context).requestFocus(FocusNode());
-            context.go('/login/code-email', extra: codigo);
+            context.go(
+              '/login/code-email',
+              extra: {'codigo': codigo, 'email': emailController.text},
+            );
           },
           btnOkIcon: Icons.check_circle,
           btnOkColor: Colors.green,

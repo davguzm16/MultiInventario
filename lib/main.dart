@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:multiinventario/app_routes.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:flutter/foundation.dart'; // Necesario para kIsWeb
+import 'package:flutter/foundation.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

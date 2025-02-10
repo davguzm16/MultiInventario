@@ -4,6 +4,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/lote.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
 import 'package:multiinventario/models/unidad.dart';
@@ -19,31 +20,9 @@ class ProductPage extends StatefulWidget {
 
 class _ProductPageState extends State<ProductPage> {
   Producto? producto;
-  final List<Map<String, String>> lotes = [
-    {
-      "lote": "L001",
-      "cantidad": "8",
-      "perdidas": "2",
-      "caducidad": "23/02/25",
-      "compra": ""
-    },
-    {
-      "lote": "L002",
-      "cantidad": "30",
-      "perdidas": "",
-      "caducidad": "",
-      "compra": ""
-    },
-    {
-      "lote": "L003",
-      "cantidad": "20",
-      "perdidas": "",
-      "caducidad": "",
-      "compra": ""
-    },
-  ];
+  List<Lote> lotesProducto = [];
   Unidad? unidadProducto;
-  late List<Categoria> categoriasProducto;
+  List<Categoria> categoriasProducto = [];
   int? selectedRowIndex;
 
   @override
@@ -54,58 +33,65 @@ class _ProductPageState extends State<ProductPage> {
 
   Future<void> obtenerProducto() async {
     producto = await Producto.obtenerProductoPorID(widget.idProducto);
+    debugPrint("Resultado de la consulta: ${producto.toString()}");
 
-    if(producto == null){
+    if (producto == null) {
+      debugPrint("Producto ${widget.idProducto} no encontrado.");
       await AwesomeDialog(
-       context: context,
-       dialogType: DialogType.error,
-       animType: AnimType.topSlide,
-       title: "Error",
-        desc: "El producto con id ${widget.idProducto} no fue encontrado :c",
-        btnOkOnPress: () {
-          context.pop()
-        ;},
+        context: context,
+        dialogType: DialogType.error,
+        animType: AnimType.topSlide,
+        title: "Error",
+        desc: "El producto con id ${widget.idProducto} no fue encontrado.",
+        btnOkOnPress: () => context.pop(),
         btnOkIcon: Icons.cancel,
         btnOkColor: Colors.red,
       ).show();
+      return;
     }
 
-    categoriasProducto = await ProductoCategoria.obtenerCategoriasDeProducto(producto!.idProducto as int);
+    categoriasProducto = await ProductoCategoria.obtenerCategoriasDeProducto(
+        producto!.idProducto!);
     unidadProducto = await Unidad.obtenerUnidadPorId(producto!.idUnidad);
+    lotesProducto = await Lote.obtenerLotesDeProducto(producto!.idProducto!);
     setState(() {});
-
-    if(categoriasProducto == []){
-      debugPrint("No se encontraron categorias en el producto ${producto!.idProducto}");
-      return;
-    }
-
-    if(unidadProducto == null){
-      debugPrint("Unidad del producto ${producto!.idProducto} no encontrada");
-      return;
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
+    // Si el producto o la unidad aún no se han cargado, muestra un indicador de carga.
+    if (producto == null || unidadProducto == null) {
+      debugPrint("Producto: $producto, unidadProducto: $unidadProducto");
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text("Cargando..."),
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           producto!.nombreProducto,
-          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style:
+              const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
           IconButton(
-              icon: const Icon(Icons.add, color: Colors.black),
-              onPressed: () => _showAddLoteDialog()),
-          IconButton(
-              icon: const Icon(Icons.edit, color: Colors.black),
-              onPressed: () {}),
+            icon: const Icon(Icons.add, color: Colors.black),
+            onPressed: () => _showAddLoteDialog(),
+          ),
         ],
       ),
       body: Padding(
@@ -114,14 +100,11 @@ class _ProductPageState extends State<ProductPage> {
           children: [
             Row(
               children: [
-                Container(
+                SizedBox(
                   height: screenWidth * 0.2,
                   width: screenWidth * 0.2,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black26),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Image.asset(producto!.rutaImagen as String,
+                  child: Image.asset(
+                    producto!.rutaImagen as String,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return const Icon(Icons.image_not_supported, size: 50);
@@ -140,7 +123,7 @@ class _ProductPageState extends State<ProductPage> {
                           color: Colors.black54),
                     ),
                     Text(
-                      producto!.codigoProducto as String,
+                      producto?.codigoProducto ?? "-" * 13,
                       style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -160,26 +143,36 @@ class _ProductPageState extends State<ProductPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("Stock actual: ${producto!.stockActual} ${unidadProducto!.tipoUnidad}",
-                        style: TextStyle(
-                            color: Colors.purple,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                    Text("Stock mínimo: ${producto!.stockMinimo} ${unidadProducto!.tipoUnidad}",
-                        style: TextStyle(
-                            color: Colors.purple,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
-                    Text("Stock máximo: ${producto!.stockMaximo} ${unidadProducto!.tipoUnidad}",
-                        style: TextStyle(
-                            color: Colors.purple,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18)),
+                    Text(
+                      "Stock actual: ${producto!.stockActual} ${unidadProducto!.tipoUnidad}",
+                      style: TextStyle(
+                          color: Colors.purple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                    Text(
+                      "Stock mínimo: ${producto!.stockMinimo} ${unidadProducto!.tipoUnidad}",
+                      style: TextStyle(
+                          color: Colors.purple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
+                    Text(
+                      "Stock máximo: ${producto!.stockMaximo ?? "---"} ${unidadProducto!.tipoUnidad}",
+                      style: TextStyle(
+                          color: Colors.purple,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18),
+                    ),
                     Divider(),
-                    Text("Unidad del producto: ${unidadProducto!.tipoUnidad}",
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
-                    Text("Precio por unidad del producto: S/. ${producto!.precioProducto}",
-                        style: TextStyle(color: Colors.black, fontSize: 16)),
+                    Text(
+                      "Unidad del producto: ${unidadProducto!.tipoUnidad}",
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    ),
+                    Text(
+                      "Precio por unidad del producto: S/. ${producto!.precioProducto}",
+                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    ),
                   ],
                 ),
               ),
@@ -213,193 +206,374 @@ class _ProductPageState extends State<ProductPage> {
                   color: Colors.black),
             ),
             const SizedBox(height: 10),
-            Table(
-              border: TableBorder.all(color: Color(0xFF493d9e)),
-              columnWidths: const {
-                0: FractionColumnWidth(0.1),
-                1: FractionColumnWidth(0.1),
-                2: FractionColumnWidth(0.1),
-                3: FractionColumnWidth(0.1),
-                4: FractionColumnWidth(0.1),
-              },
-              children: [
-                TableRow(
-                  decoration: BoxDecoration(color: Colors.purple.shade100),
+
+            // Sección de tabla desplazable
+            if (lotesProducto.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Center(
+                  child: Text(
+                    "Aún no hay lotes creados para este producto.",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey),
+                  ),
+                ),
+              )
+            else
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Column(
                   children: [
-                    for (var title in [
-                      "Lote",
-                      "Cant.",
-                      "Pérd.",
-                      "Caduc.",
-                      "Prec."
-                    ])
-                      TableCell(
-                        verticalAlignment: TableCellVerticalAlignment.middle,
-                        child: Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Center(
-                            child: Text(
-                              title,
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
+                    Table(
+                      border: TableBorder.all(color: const Color(0xFF493d9e)),
+                      columnWidths: const {
+                        0: FixedColumnWidth(100),
+                        1: FixedColumnWidth(100),
+                        2: FixedColumnWidth(100),
+                        3: FixedColumnWidth(150),
+                        4: FixedColumnWidth(100),
+                      },
+                      children: [
+                        TableRow(
+                          decoration:
+                              BoxDecoration(color: Colors.purple.shade100),
+                          children: [
+                            _tableHeader("Lote"),
+                            _tableHeader("Cantidad"),
+                            _tableHeader("Pérdidas"),
+                            _tableHeader("Caducidad"),
+                            _tableHeader("Precio"),
+                          ],
                         ),
-                      ),
+                      ],
+                    ),
+                    Column(
+                      children: List.generate(lotesProducto.length, (index) {
+                        final lote = lotesProducto[index];
+                        final isSelected = selectedRowIndex == index;
+
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              selectedRowIndex = isSelected ? null : index;
+                            });
+                          },
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Table(
+                                  border: TableBorder.all(color: Colors.purple),
+                                  columnWidths: const {
+                                    0: FixedColumnWidth(100),
+                                    1: FixedColumnWidth(100),
+                                    2: FixedColumnWidth(100),
+                                    3: FixedColumnWidth(150),
+                                    4: FixedColumnWidth(100),
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        _tableCell("${lote.idLote}"),
+                                        _tableCell("${lote.cantidadActual}"),
+                                        _tableCell(
+                                            "${lote.cantidadPerdida ?? "---"}"),
+                                        _tableCell(
+                                          lote.fechaCaducidad
+                                                  ?.toIso8601String()
+                                                  .split('T')[0] ??
+                                              "---",
+                                        ),
+                                        _tableCell(
+                                          "S/. ${lote.precioCompra.toStringAsFixed(2)}",
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (isSelected) ...[
+                                IconButton(
+                                  icon: const Icon(Icons.edit,
+                                      color: Colors.blue),
+                                  onPressed: () => _showEditLoteDialog(lote),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
+                                  onPressed: () => _showDeleteDialog(lote),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      }),
+                    ),
                   ],
                 ),
-              ],
-            ),
-            Column(
-              children: List.generate(lotes.length, (index) {
-                final lote = lotes[index];
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      selectedRowIndex =
-                          selectedRowIndex == index ? null : index;
-                    });
-                  },
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Table(
-                          border: TableBorder.all(color: Colors.purple),
-                          children: [
-                            TableRow(
-                              children: [
-                                for (var key in [
-                                  "lote",
-                                  "cantidad",
-                                  "perdidas",
-                                  "caducidad",
-                                  "compra"
-                                ])
-                                  TableCell(
-                                    verticalAlignment:
-                                        TableCellVerticalAlignment.middle,
-                                    child: Padding(
-                                      padding: EdgeInsets.all(8),
-                                      child: Center(
-                                        child: Text(lote[key] ?? ''),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (selectedRowIndex == index)
-                        Row(
-                          children: [
-                            IconButton(
-                                icon: Icon(Icons.edit,
-                                    color: Colors.purple, size: 20),
-                                onPressed: () => _showEditDialog(index)),
-                            IconButton(
-                                icon: Icon(Icons.delete,
-                                    color: Colors.red, size: 20),
-                                onPressed: () => _showDeleteDialog(index)),
-                          ],
-                        ),
-                    ],
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 20),
+              ),
           ],
         ),
       ),
     );
   }
 
+  Widget _tableHeader(String title) {
+    return TableCell(
+      verticalAlignment: TableCellVerticalAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Center(
+          child: Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tableCell(String content) {
+    return TableCell(
+      verticalAlignment: TableCellVerticalAlignment.middle,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Center(child: Text(content)),
+      ),
+    );
+  }
+
   void _showAddLoteDialog() {
-    TextEditingController loteController = TextEditingController();
     TextEditingController cantidadController = TextEditingController();
     TextEditingController perdidasController = TextEditingController();
+    TextEditingController precioController = TextEditingController();
     TextEditingController caducidadController = TextEditingController();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            "Añadir nuevo lote",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF4A148C), // Morado oscuro elegante
-              fontWeight: FontWeight.bold,
+          title: const Text("Añadir nuevo lote", textAlign: TextAlign.center),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _customTextField(cantidadController, "Cantidad Asignada"),
+                const SizedBox(height: 10),
+                _customTextField(perdidasController, "Pérdidas (Opcional)"),
+                const SizedBox(height: 10),
+                _customTextField(precioController, "Precio de Compra"),
+                const SizedBox(height: 10),
+                _customTextField(
+                    caducidadController, "Caducidad [YYYY-MM-DD] (Opcional)"),
+              ],
             ),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            side: const BorderSide(
-              color: Color(0xFF9C27B0), // Borde morado vibrante
-              width: 2.0,
-            ),
-          ),
-          backgroundColor: Color(0xFFF8F3FB), // Fondo lila claro
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _customTextField(loteController, "Lote"),
-              const SizedBox(height: 10),
-              _customTextField(cantidadController, "Cantidad"),
-              const SizedBox(height: 10),
-              _customTextField(perdidasController, "Pérdidas"),
-              const SizedBox(height: 10),
-              _customTextField(caducidadController, "Caducidad"),
-            ],
-          ),
-          actionsAlignment: MainAxisAlignment.center,
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFF7B1FA2), // Morado suave
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  "Cancelar",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              onPressed: () {
+                context.pop();
+              },
+              child: const Text("Cancelar"),
             ),
             TextButton(
-              onPressed: () {
-                setState(() {
-                  lotes.add({
-                    'lote': loteController.text.trim(),
-                    'cantidad': cantidadController.text.trim(),
-                    'perdidas': perdidasController.text.trim(),
-                    'caducidad': caducidadController.text.trim(),
-                    'compra': '',
-                  });
-                });
-                Navigator.pop(context);
+              onPressed: () async {
+                String cantidadText = cantidadController.text.trim();
+                String precioText = precioController.text.trim();
+
+                if (cantidadText.isEmpty || precioText.isEmpty) {
+                  await AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.warning,
+                    animType: AnimType.topSlide,
+                    title: "Campos vacíos",
+                    desc: "Debes llenar todos los campos obligatorios.",
+                    btnOkOnPress: () {},
+                    btnOkIcon: Icons.warning,
+                    btnOkColor: Colors.orange,
+                  ).show();
+                  return;
+                }
+
+                int? cantidadAsignada = int.tryParse(cantidadText);
+                double? precioCompra = double.tryParse(precioText);
+
+                if (cantidadAsignada == null || precioCompra == null) {
+                  await AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.warning,
+                    animType: AnimType.topSlide,
+                    title: "Entrada inválida",
+                    desc: "Verifica que los valores ingresados sean correctos.",
+                    btnOkOnPress: () {},
+                    btnOkIcon: Icons.warning,
+                    btnOkColor: Colors.orange,
+                  ).show();
+                  return;
+                }
+
+                Lote nuevoLote = Lote(
+                  idProducto: widget.idProducto,
+                  cantidadActual: cantidadAsignada,
+                  cantidadComprada: 10,
+                  cantidadPerdida:
+                      int.tryParse(perdidasController.text.trim()) ?? 0,
+                  precioCompra: precioCompra,
+                  fechaCaducidad: caducidadController.text.isNotEmpty
+                      ? DateTime.tryParse(caducidadController.text.trim())
+                      : null,
+                );
+
+                bool creado = await Lote.crearLote(nuevoLote);
+                if (creado) {
+                  lotesProducto =
+                      await Lote.obtenerLotesDeProducto(widget.idProducto);
+                  setState(() {});
+                }
+
+                context.pop();
               },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFF388E3C), // Verde oscuro elegante
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  "Guardar",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditLoteDialog(Lote lote) {
+    TextEditingController cantidadController =
+        TextEditingController(text: lote.cantidadActual.toString());
+    TextEditingController perdidasController =
+        TextEditingController(text: (lote.cantidadPerdida ?? 0).toString());
+    TextEditingController precioController =
+        TextEditingController(text: lote.precioCompra.toString());
+    TextEditingController caducidadController = TextEditingController(
+        text: lote.fechaCaducidad != null
+            ? lote.fechaCaducidad!.toIso8601String().split('T')[0]
+            : '');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Editar lote", textAlign: TextAlign.center),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _customTextField(cantidadController, "Cantidad Asignada"),
+                const SizedBox(height: 10),
+                _customTextField(perdidasController, "Pérdidas (Opcional)"),
+                const SizedBox(height: 10),
+                _customTextField(precioController, "Precio de Compra"),
+                const SizedBox(height: 10),
+                _customTextField(
+                    caducidadController, "Caducidad [YYYY-MM-DD] (Opcional)"),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.pop();
+              },
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                String cantidadText = cantidadController.text.trim();
+                String precioText = precioController.text.trim();
+
+                if (cantidadText.isEmpty || precioText.isEmpty) {
+                  await AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.warning,
+                    animType: AnimType.topSlide,
+                    title: "Campos vacíos",
+                    desc: "Debes llenar todos los campos obligatorios.",
+                    btnOkOnPress: () {},
+                    btnOkIcon: Icons.warning,
+                    btnOkColor: Colors.orange,
+                  ).show();
+                  return;
+                }
+
+                int? cantidadAsignada = int.tryParse(cantidadText);
+                double? precioCompra = double.tryParse(precioText);
+
+                if (cantidadAsignada == null || precioCompra == null) {
+                  await AwesomeDialog(
+                    context: context,
+                    dialogType: DialogType.warning,
+                    animType: AnimType.topSlide,
+                    title: "Entrada inválida",
+                    desc: "Verifica que los valores ingresados sean correctos.",
+                    btnOkOnPress: () {},
+                    btnOkIcon: Icons.warning,
+                    btnOkColor: Colors.orange,
+                  ).show();
+                  return;
+                }
+
+                Lote loteEditado = Lote(
+                  idLote: lote.idLote,
+                  idProducto: lote.idProducto,
+                  cantidadActual: cantidadAsignada,
+                  cantidadComprada: 10,
+                  cantidadPerdida:
+                      int.tryParse(perdidasController.text.trim()) ?? 0,
+                  precioCompra: precioCompra,
+                  fechaCaducidad: caducidadController.text.isNotEmpty
+                      ? DateTime.tryParse(caducidadController.text.trim())
+                      : null,
+                );
+
+                bool actualizado = await Lote.actualizarLote(loteEditado);
+                if (actualizado) {
+                  lotesProducto =
+                      await Lote.obtenerLotesDeProducto(widget.idProducto);
+                  setState(() {});
+                }
+
+                context.pop();
+              },
+              child: const Text("Guardar cambios"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeleteDialog(Lote lote) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Eliminar Lote", textAlign: TextAlign.center),
+          content:
+              const Text("¿Estás seguro de que deseas eliminar este lote?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                context.pop();
+              },
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                bool eliminado = await Lote.eliminarLote(lote.idLote!);
+                if (eliminado) {
+                  lotesProducto =
+                      await Lote.obtenerLotesDeProducto(widget.idProducto);
+                  setState(() {});
+                }
+                context.pop();
+              },
+              child:
+                  const Text("Eliminar", style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -410,223 +584,7 @@ class _ProductPageState extends State<ProductPage> {
   Widget _customTextField(TextEditingController controller, String label) {
     return TextField(
       controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF4A148C)), // Morado oscuro
-        enabledBorder: OutlineInputBorder(
-          borderSide:
-              BorderSide(color: Color(0xFF9C27B0)), // Borde morado vibrante
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(
-              color: Color(0xFF7B1FA2),
-              width: 2.0), // Borde más oscuro al enfocar
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-      ),
-      style: const TextStyle(color: Color(0xFF4A148C)), // Texto morado oscuro
-      cursorColor: Color(0xFF7B1FA2), // Cursor morado vibrante
-    );
-  }
-
-  void _showEditDialog(int index) {
-    TextEditingController cantidadController =
-        TextEditingController(text: lotes[index]['cantidad']);
-    TextEditingController perdidasController =
-        TextEditingController(text: lotes[index]['perdidas']);
-    TextEditingController caducidadController =
-        TextEditingController(text: lotes[index]['caducidad']);
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Editar lote",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF4A148C), // Morado oscuro elegante
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            side: const BorderSide(
-              color: Color(0xFF9C27B0), // Borde morado
-              width: 2.0,
-            ),
-          ),
-          backgroundColor: Color(0xFFF8F3FB), // Fondo lila claro
-          content: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildStyledTextField(cantidadController, "Cantidad"),
-                const SizedBox(height: 16),
-                _buildStyledTextField(perdidasController, "Pérdidas"),
-                const SizedBox(height: 16),
-                _buildStyledTextField(caducidadController, "Caducidad"),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancelar",
-                style: TextStyle(
-                  color: Color(0xFF7B1FA2), // Morado suave
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  lotes[index]['cantidad'] = cantidadController.text.trim();
-                  lotes[index]['perdidas'] = perdidasController.text.trim();
-                  lotes[index]['caducidad'] = caducidadController.text.trim();
-                });
-                Navigator.pop(context);
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 20.0, vertical: 10.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFF7B1FA2), // Morado vibrante para el botón
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  "Guardar",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildStyledTextField(TextEditingController controller, String label) {
-    return TextField(
-      controller: controller,
-      style: const TextStyle(
-        color: Color(0xFF4A148C), // Texto morado oscuro
-      ),
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF7B1FA2)), // Morado medio
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Color(0xFF9C27B0), // Borde morado vibrante
-            width: 2.0,
-          ),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Color(0xFF9C27B0),
-            width: 2.0,
-          ),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10.0),
-          borderSide: const BorderSide(
-            color: Color(0xFF4A148C),
-            width: 2.5,
-          ),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-      ),
-    );
-  }
-
-  void _showDeleteDialog(int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text(
-            "Eliminar Lote",
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF4A148C),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-            side: const BorderSide(
-              color: Color(0xFF9C27B0),
-              width: 2.0,
-            ),
-          ),
-          backgroundColor: Color(0xFFF8F3FB),
-          content: const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              "¿Estás seguro de que quieres eliminar este lote?",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Color(0xFF4A148C),
-                fontSize: 16.0,
-              ),
-            ),
-          ),
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFF7B1FA2),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  "Cancelar",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  lotes.removeAt(index);
-                });
-                Navigator.pop(context);
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                decoration: BoxDecoration(
-                  color: Color(0xFFD32F2F),
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: const Text(
-                  "Eliminar",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
+      decoration: InputDecoration(labelText: label),
     );
   }
 }

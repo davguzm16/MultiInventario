@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/producto.dart';
@@ -19,7 +20,6 @@ class _InventoryPageState extends State<InventoryPage> {
     listaProductos = _obtenerProductos();
   }
 
-  // Método para obtener los productos con paginación
   Future<List<Producto>> _obtenerProductos() async {
     try {
       List<Producto> productos =
@@ -30,7 +30,6 @@ class _InventoryPageState extends State<InventoryPage> {
     }
   }
 
-  // Método para refrescar la lista de productos manualmente
   Future<void> _refrescarProductos() async {
     setState(() {
       listaProductos = _obtenerProductos();
@@ -58,7 +57,7 @@ class _InventoryPageState extends State<InventoryPage> {
               height: 30,
             ),
             onPressed: () {
-              context.push('/home/inventory/filter-product');
+              context.push('/inventory/filter-product');
             },
           ),
           IconButton(
@@ -92,51 +91,70 @@ class _InventoryPageState extends State<InventoryPage> {
 
               return GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 0.7,
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  childAspectRatio: 1.0,
                 ),
                 itemCount: productos.length,
                 itemBuilder: (context, index) {
                   final producto = productos[index];
                   return GestureDetector(
                     onTap: () {
-                      // Navegar a la página del producto con su ID en la URL
-                      context.push(
-                          '/home/inventory/product/${producto.idProducto}');
+                      context.push('/inventory/product/${producto.idProducto}');
                     },
                     child: Container(
+                      width: 150,
+                      height: 150,
+                      padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         border: Border.all(color: Colors.purple),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          Image.asset(
-                            producto.rutaImagen ??
-                                'lib/assets/iconos/iconoImagen.png',
-                            height: 60,
-                            alignment: Alignment.center,
+                          SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(10),
+                              child: producto.rutaImagen == null
+                                  ? Image.asset(
+                                      'lib/assets/iconos/iconoImagen.png',
+                                      fit: BoxFit.cover,
+                                    )
+                                  : Image.file(
+                                      File(producto.rutaImagen!),
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
                           ),
-                          Text(
-                            producto.nombreProducto,
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 5),
+                          Flexible(
+                            child: Text(
+                              producto.nombreProducto,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 14),
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
                           Text(
                             "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
                             textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 12),
                           ),
                           Text(
-                            "Stock actual: \n ${producto.stockActual} ud",
+                            "Stock: ${producto.stockActual} ud",
                             style: TextStyle(
                               color: producto.stockActual <
                                       (producto.stockMinimo ?? 0)
                                   ? Colors.red
                                   : Colors.black,
+                              fontSize: 12,
                             ),
                             textAlign: TextAlign.center,
                           ),
