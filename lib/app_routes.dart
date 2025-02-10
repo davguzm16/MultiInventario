@@ -56,14 +56,14 @@ class AppRoutes {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const CreateProductPage(),
                   ),
-                  /*GoRoute(
+                  GoRoute(
                     path: 'product/:idProducto',
                     builder: (context, state) {
                       final idProducto =
                           int.parse(state.pathParameters['idProducto']!);
                       return ProductPage(idProducto: idProducto);
                     },
-                  ),*/
+                  ),
                 ],
               ),
             ],

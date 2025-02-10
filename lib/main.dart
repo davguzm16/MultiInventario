@@ -15,6 +15,7 @@ Future<void> main() async {
     databaseFactory = databaseFactoryFfi;
   }
 
+  await DatabaseController().database;
   await DatabaseController.insertDefaultData();
   runApp(const MyApp());
 }

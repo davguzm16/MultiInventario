@@ -92,7 +92,7 @@ class Producto {
             stockMinimo: (result.first['stockMinimo'] as num?)?.toDouble(),
             stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
             estaDisponible: (result.first['estaDisponible'] as int) == 1,
-            rutaImagen: (result.first['rutaImagen']! as String));
+            rutaImagen: (result.first['rutaImagen'] as String?));
       }
     } catch (e) {
       debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");
@@ -117,8 +117,6 @@ class Producto {
       ''',
         [offset],
       );
-
-      debugPrint("Resultados obtenidos: $result");
 
       if (result.isNotEmpty) {
         for (var item in result) {
@@ -145,5 +143,13 @@ class Producto {
     }
 
     return productos;
+  }
+
+  @override
+  String toString() {
+    return '{idProducto: $idProducto, idUnidad: $idUnidad, codigoProducto: $codigoProducto, '
+        'nombreProducto: $nombreProducto, precioProducto: $precioProducto, '
+        'stockActual: $stockActual, stockMinimo: $stockMinimo, stockMaximo: $stockMaximo, '
+        'estaDisponible: ${estaDisponible == true ? 1 : 0}, rutaImagen: $rutaImagen}';
   }
 }

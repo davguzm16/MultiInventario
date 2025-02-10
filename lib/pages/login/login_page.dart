@@ -1,5 +1,3 @@
-// ignore_for_file: unrelated_type_equality_checks, use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/credenciales.dart';
 import 'package:pinput/pinput.dart';
@@ -22,6 +20,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    obtenerCorrectPIN();
   }
 
   Future<void> obtenerCorrectPIN() async {
@@ -43,6 +42,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _validarPin() async {
+    if (correctPIN.isEmpty) return;
+
     if (userPIN == correctPIN) {
       context.go('/inventory');
     } else {
@@ -101,13 +102,18 @@ class _LoginPageState extends State<LoginPage> {
                   defaultPinTheme: defaultPinTheme,
                   separatorBuilder: (index) => const SizedBox(width: 13),
                   validator: (value) {
-                    obtenerCorrectPIN();
                     return value == correctPIN
                         ? null
                         : 'El pin es incorrecto :c';
                   },
                   onCompleted: (value) {
+                    obtenerCorrectPIN();
                     userPIN = value;
+                  },
+                  onChanged: (value) {
+                    setState(() {
+                      userPIN = value;
+                    });
                   },
                   cursor: Column(
                     mainAxisAlignment: MainAxisAlignment.end,
