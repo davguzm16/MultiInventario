@@ -28,7 +28,7 @@ class _CreatePinPageState extends State<CreatePinPage> {
         title: "Correcto",
         desc: "Su PIN de 6 dígitos fue registrado exitosamente!",
         btnOkOnPress: () {
-          GoRouter.of(context).go('/login');
+          context.go('/login');
         },
         btnOkIcon: Icons.check_circle,
         btnOkColor: Colors.green,

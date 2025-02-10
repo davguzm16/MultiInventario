@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multiinventario/controllers/image_picker.dart';
 import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
@@ -25,8 +26,13 @@ class AppRoutes {
           ),
           GoRoute(
             path: 'code-email',
-            builder: (context, state) =>
-                CodeEmailPage(correctCode: state.extra as String),
+            builder: (context, state) {
+              final extra = state.extra as Map<String, dynamic>? ?? {};
+              return CodeEmailPage(
+                correctCode: extra['codigo'] as String,
+                emailUser: extra['email'] as String,
+              );
+            },
           ),
           GoRoute(
             path: 'create-pin',
@@ -50,14 +56,14 @@ class AppRoutes {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const CreateProductPage(),
                   ),
-                  GoRoute(
+                  /*GoRoute(
                     path: 'product/:idProducto',
                     builder: (context, state) {
                       final idProducto =
                           int.parse(state.pathParameters['idProducto']!);
                       return ProductPage(idProducto: idProducto);
                     },
-                  ),
+                  ),*/
                 ],
               ),
             ],
@@ -83,6 +89,10 @@ class AppRoutes {
       GoRoute(
         path: '/barcode-scanner',
         builder: (context, state) => BarcodeScanner(),
+      ),
+      GoRoute(
+        path: '/image-picker',
+        builder: (context, state) => ImagePickerHelper(),
       ),
     ],
   );

@@ -50,7 +50,7 @@ class Producto {
         producto.stockActual,
         producto.stockMinimo,
         producto.stockMaximo,
-        producto.rutaImagen ?? 'lib/assets/iconos/iconoImagen.png',
+        producto.rutaImagen,
       ]);
 
       if (result > 0) {

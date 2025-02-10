@@ -30,7 +30,7 @@ class DatabaseController {
         await db.execute('''
           CREATE TABLE Categorias (
             idCategoria INTEGER PRIMARY KEY,
-            nombreCategoria TEXT UNIQUE,
+            nombreCategoria TEXT UNIQUE
           )
         ''');
 

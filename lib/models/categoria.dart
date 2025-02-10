@@ -12,19 +12,19 @@ class Categoria {
   });
 
   static Future<bool> crearCategoria(Categoria categoria) async {
-    late int result;
-
     try {
       final db = await DatabaseController().database;
-      result = await db.rawInsert(
+      final result = await db.rawInsert(
         'INSERT INTO Categorias (nombreCategoria) VALUES (?)',
         [categoria.nombreCategoria],
       );
+
+      return result > 0;
     } catch (e) {
       debugPrint(e.toString());
     }
 
-    return result > 0;
+    return false;
   }
 
   static Future<void> crearCategoriasPorDefecto() async {

@@ -33,10 +33,10 @@ class _ProductPageState extends State<ProductPage> {
 
   Future<void> obtenerProducto() async {
     producto = await Producto.obtenerProductoPorID(widget.idProducto);
-    debugPrint("🛢️ Resultado de la consulta: ${producto.toString()}");
+    debugPrint("Resultado de la consulta: ${producto.toString()}");
 
     if (producto == null) {
-      debugPrint("Error: Producto ${widget.idProducto} no encontrado.");
+      debugPrint("Producto ${widget.idProducto} no encontrado.");
       await AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
@@ -276,7 +276,7 @@ class _ProductPageState extends State<ProductPage> {
                                     TableRow(
                                       children: [
                                         _tableCell("${lote.idLote}"),
-                                        _tableCell("${lote.cantidadAsignada}"),
+                                        _tableCell("${lote.cantidadActual}"),
                                         _tableCell(
                                             "${lote.cantidadPerdida ?? "---"}"),
                                         _tableCell(
@@ -415,7 +415,8 @@ class _ProductPageState extends State<ProductPage> {
 
                 Lote nuevoLote = Lote(
                   idProducto: widget.idProducto,
-                  cantidadAsignada: cantidadAsignada,
+                  cantidadActual: cantidadAsignada,
+                  cantidadComprada: 10,
                   cantidadPerdida:
                       int.tryParse(perdidasController.text.trim()) ?? 0,
                   precioCompra: precioCompra,
@@ -443,7 +444,7 @@ class _ProductPageState extends State<ProductPage> {
 
   void _showEditLoteDialog(Lote lote) {
     TextEditingController cantidadController =
-        TextEditingController(text: lote.cantidadAsignada.toString());
+        TextEditingController(text: lote.cantidadActual.toString());
     TextEditingController perdidasController =
         TextEditingController(text: (lote.cantidadPerdida ?? 0).toString());
     TextEditingController precioController =
@@ -519,7 +520,8 @@ class _ProductPageState extends State<ProductPage> {
                 Lote loteEditado = Lote(
                   idLote: lote.idLote,
                   idProducto: lote.idProducto,
-                  cantidadAsignada: cantidadAsignada,
+                  cantidadActual: cantidadAsignada,
+                  cantidadComprada: 10,
                   cantidadPerdida:
                       int.tryParse(perdidasController.text.trim()) ?? 0,
                   precioCompra: precioCompra,
@@ -562,7 +564,7 @@ class _ProductPageState extends State<ProductPage> {
             ),
             TextButton(
               onPressed: () async {
-                bool eliminado = await Lote.eliminarLote(lote);
+                bool eliminado = await Lote.eliminarLote(lote.idLote!);
                 if (eliminado) {
                   lotesProducto =
                       await Lote.obtenerLotesDeProducto(widget.idProducto);

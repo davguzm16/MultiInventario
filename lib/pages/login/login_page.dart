@@ -1,4 +1,4 @@
-// ignore_for_file: unrelated_type_equality_checks
+// ignore_for_file: unrelated_type_equality_checks, use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/credenciales.dart';
@@ -22,13 +22,14 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () => obtenerCorrectPIN());
   }
 
   Future<void> obtenerCorrectPIN() async {
     try {
-      correctPIN = await Credenciales.obtenerCredencial("USER_PIN");
-      setState(() {});
+      final pin = await Credenciales.obtenerCredencial("USER_PIN");
+      setState(() {
+        correctPIN = pin;
+      });
       debugPrint("Correct pin: $correctPIN");
     } catch (e) {
       debugPrint("Error al obtener el USER_PIN: $e");
@@ -100,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                   defaultPinTheme: defaultPinTheme,
                   separatorBuilder: (index) => const SizedBox(width: 13),
                   validator: (value) {
+                    obtenerCorrectPIN();
                     return value == correctPIN
                         ? null
                         : 'El pin es incorrecto :c';
