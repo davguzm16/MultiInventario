@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
-
+//10/02/2025
 class CreateProductPage extends StatefulWidget {
   const CreateProductPage({super.key});
 

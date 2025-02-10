@@ -5,7 +5,7 @@ class Categoria {
   int? idCategoria;
   String nombreCategoria;
   String? rutaImagen;
-
+  //10/02/2025
   // Constructor
   Categoria({
     this.idCategoria,
