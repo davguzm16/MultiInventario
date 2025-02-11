@@ -25,7 +25,7 @@ class _CodeEmailPageState extends State<CodeEmailPage> {
   Future<void> validateCode() async {
     if (inputCode == widget.correctCode &&
         await Credenciales.crearCredencial("USER_EMAIL", widget.emailUser)) {
-      await AwesomeDialog(
+      AwesomeDialog(
         context: context,
         dialogType: DialogType.success,
         animType: AnimType.topSlide,
@@ -38,7 +38,7 @@ class _CodeEmailPageState extends State<CodeEmailPage> {
         btnOkColor: Colors.green,
       ).show();
     } else {
-      await AwesomeDialog(
+      AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
         animType: AnimType.topSlide,

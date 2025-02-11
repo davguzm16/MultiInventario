@@ -72,6 +72,36 @@ class Producto {
     return false;
   }
 
+  static Future<List<Producto>> obtenerProductosPorNombre(String nombre) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery(
+        '''
+      SELECT * FROM Productos WHERE nombreProducto LIKE ?
+      ''',
+        ['%$nombre%'],
+      );
+
+      return result.map((map) {
+        return Producto(
+          idProducto: map['idProducto'] as int,
+          idUnidad: map['idUnidad'] as int?,
+          codigoProducto: map['codigoProducto'] as String?,
+          nombreProducto: map['nombreProducto'] as String,
+          precioProducto: (map['precioProducto'] as num).toDouble(),
+          stockActual: (map['stockActual'] as num).toDouble(),
+          stockMinimo: (map['stockMinimo'] as num).toDouble(),
+          stockMaximo: (map['stockMaximo'] as num?)?.toDouble(),
+          estaDisponible: (map['estaDisponible'] as int) == 1,
+          rutaImagen: map['rutaImagen'] as String?,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint("Error al buscar productos: ${e.toString()}");
+      return [];
+    }
+  }
+
   static Future<Producto?> obtenerProductoPorID(int idProducto) async {
     try {
       final db = await DatabaseController().database;

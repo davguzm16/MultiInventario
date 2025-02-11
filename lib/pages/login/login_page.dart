@@ -198,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _showErrorDialog(String errorMessage) async {
-    await AwesomeDialog(
+    AwesomeDialog(
       context: context,
       dialogType: DialogType.error,
       animType: AnimType.topSlide,
