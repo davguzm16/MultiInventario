@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/credenciales.dart';
 import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -150,5 +151,6 @@ class DatabaseController {
     Credenciales.crearCredencialesPorDefecto();
     Categoria.crearCategoriasPorDefecto();
     Unidad.crearUnidadesPorDefecto();
+    Producto.insertarProductosPorDefecto();
   }
 }

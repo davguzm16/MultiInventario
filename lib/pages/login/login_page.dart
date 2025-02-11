@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/credenciales.dart';
 import 'package:pinput/pinput.dart';
@@ -16,23 +18,29 @@ class _LoginPageState extends State<LoginPage> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String correctPIN = "";
   String userPIN = "";
+  String userEmail = "";
 
   @override
   void initState() {
     super.initState();
     obtenerCorrectPIN();
+    obtenerUserEmail();
   }
 
   Future<void> obtenerCorrectPIN() async {
-    try {
-      final pin = await Credenciales.obtenerCredencial("USER_PIN");
-      setState(() {
-        correctPIN = pin;
-      });
-      debugPrint("Correct pin: $correctPIN");
-    } catch (e) {
-      debugPrint("Error al obtener el USER_PIN: $e");
-    }
+    final pin = await Credenciales.obtenerCredencial("USER_PIN");
+    setState(() {
+      correctPIN = pin;
+    });
+    debugPrint("Correct pin: $correctPIN");
+  }
+
+  Future<void> obtenerUserEmail() async {
+    final email = await Credenciales.obtenerCredencial("USER_EMAIL");
+    setState(() {
+      userEmail = email;
+    });
+    debugPrint("User email: $userEmail");
   }
 
   @override
@@ -47,16 +55,8 @@ class _LoginPageState extends State<LoginPage> {
     if (userPIN == correctPIN) {
       context.go('/inventory');
     } else {
-      await AwesomeDialog(
-        context: context,
-        dialogType: DialogType.error,
-        animType: AnimType.topSlide,
-        title: "Error",
-        desc: "El código ingresado es incorrecto. Inténtalo nuevamente.",
-        btnOkOnPress: () {},
-        btnOkIcon: Icons.cancel,
-        btnOkColor: Colors.red,
-      ).show();
+      _showErrorDialog(
+          "El código ingresado es incorrecto. Inténtalo nuevamente.");
     }
   }
 
@@ -107,7 +107,6 @@ class _LoginPageState extends State<LoginPage> {
                         : 'El pin es incorrecto :c';
                   },
                   onCompleted: (value) {
-                    obtenerCorrectPIN();
                     userPIN = value;
                   },
                   onChanged: (value) {
@@ -168,14 +167,26 @@ class _LoginPageState extends State<LoginPage> {
                     padding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 25),
                   ),
-                  onPressed: () =>
-                      context.go('/login/code-email'), // Actualizado
+                  onPressed: () {
+                    if (userEmail.isNotEmpty) {
+                      context.go('/login/recover-pin');
+                    } else {
+                      _showErrorDialog(
+                          "Usted no cuenta con un correo electrónico registrado");
+                    }
+                  },
                   child: const Text('Olvide mi Pin'),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
-                  onPressed: () =>
-                      context.go('/login/input-email'), // Actualizado
+                  onPressed: () {
+                    if (userEmail.isEmpty) {
+                      context.go('/login/input-email');
+                    } else {
+                      _showErrorDialog(
+                          "Usted ya cuenta con un correo electrónico registrado: $userEmail");
+                    }
+                  },
                   child: const Text('¿Eres nuevo? ¡Regístrate aquí!'),
                 ),
               ],
@@ -184,5 +195,18 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _showErrorDialog(String errorMessage) async {
+    await AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.topSlide,
+      title: "Error",
+      desc: errorMessage,
+      btnOkOnPress: () {},
+      btnOkIcon: Icons.cancel,
+      btnOkColor: Colors.red,
+    ).show();
   }
 }

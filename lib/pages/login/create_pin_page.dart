@@ -7,7 +7,9 @@ import 'package:pinput/pinput.dart';
 import 'package:go_router/go_router.dart';
 
 class CreatePinPage extends StatefulWidget {
-  const CreatePinPage({super.key});
+  final bool isRecovery;
+
+  const CreatePinPage({super.key, required this.isRecovery});
 
   @override
   _CreatePinPageState createState() => _CreatePinPageState();
@@ -19,7 +21,11 @@ class _CreatePinPageState extends State<CreatePinPage> {
 
   Future<void> validatePin() async {
     if (pin == confirmPin && pin.length == 6) {
-      if (!await Credenciales.crearCredencial("USER_PIN", pin)) return;
+      if (widget.isRecovery) {
+        if (!await Credenciales.actualizarCredencial("USER_PIN", pin)) return;
+      } else {
+        if (!await Credenciales.crearCredencial("USER_PIN", pin)) return;
+      }
 
       AwesomeDialog(
         context: context,
@@ -28,7 +34,7 @@ class _CreatePinPageState extends State<CreatePinPage> {
         title: "Correcto",
         desc: "Su PIN de 6 dígitos fue registrado exitosamente!",
         btnOkOnPress: () {
-          context.go('/login');
+          context.pushReplacement("/login");
         },
         btnOkIcon: Icons.check_circle,
         btnOkColor: Colors.green,

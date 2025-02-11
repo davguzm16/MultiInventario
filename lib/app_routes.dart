@@ -36,8 +36,14 @@ class AppRoutes {
           ),
           GoRoute(
             path: 'create-pin',
-            builder: (context, state) => CreatePinPage(),
+            builder: (context, state) {
+              final extra = state.extra as bool;
+              return CreatePinPage(isRecovery: extra);
+            },
           ),
+          GoRoute(
+              path: 'recover-pin',
+              builder: (context, state) => RecoverPinPage())
         ],
       ),
       StatefulShellRoute.indexedStack(

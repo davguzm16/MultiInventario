@@ -30,11 +30,11 @@ class Credenciales {
       if (result.isNotEmpty) {
         return decryptPassword(result.first['valorCredencial']);
       } else {
-        return ''; // Retorna una cadena vacía si no hay resultados
+        return '';
       }
     } catch (e) {
       debugPrint("Error al obtener la credencial: $e");
-      return ''; // Retorna una cadena vacía si ocurre un error
+      return '';
     }
   }
 
@@ -52,6 +52,22 @@ class Credenciales {
       debugPrint(e.toString());
     }
 
+    return false;
+  }
+
+  static Future<bool> actualizarCredencial(
+      String tipoCredencial, String nuevoValor) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawUpdate(
+        'UPDATE Credenciales SET valorCredencial = ? WHERE tipoCredencial = ?',
+        [encryptPassword(nuevoValor), tipoCredencial],
+      );
+
+      return result > 0;
+    } catch (e) {
+      debugPrint("Error al actualizar la credencial: $e");
+    }
     return false;
   }
 

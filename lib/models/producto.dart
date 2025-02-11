@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
@@ -101,48 +102,106 @@ class Producto {
     return null;
   }
 
-  static Future<List<Producto>> obtenerProductosPorPagina(int pagina) async {
+  static Future<List<Producto>> obtenerProductosPorCarga(
+      int numeroCarga) async {
     List<Producto> productos = [];
 
     try {
       final db = await DatabaseController().database;
-      int offset = (pagina - 1) * 9;
+      int offset = numeroCarga * 8;
 
       final List<Map<String, dynamic>> result = await db.rawQuery(
         '''
       SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, 
              stockActual, stockMinimo, stockMaximo, estaDisponible, rutaImagen
       FROM Productos
-      LIMIT 9 OFFSET ?
+      LIMIT ? OFFSET ?
       ''',
-        [offset],
+        [8, offset],
       );
 
-      if (result.isNotEmpty) {
-        for (var item in result) {
-          debugPrint("Item obtenido: $item");
-
-          productos.add(Producto(
-            idProducto: item['idProducto'] as int,
-            idUnidad: item['idUnidad'] as int,
-            codigoProducto: item['codigoProducto'] as String?,
-            nombreProducto: item['nombreProducto'] as String,
-            precioProducto: item['precioProducto'] as double,
-            stockActual: item['stockActual'] as double,
-            stockMinimo: item['stockMinimo'] as double?,
-            stockMaximo: item['stockMaximo'] as double?,
-            estaDisponible: (item['estaDisponible'] as int) == 1,
-            rutaImagen: item['rutaImagen'] as String?,
-          ));
-        }
-      } else {
-        debugPrint('No se encontraron productos en la página $pagina');
+      for (var item in result) {
+        productos.add(Producto(
+          idProducto: item['idProducto'] as int,
+          idUnidad: item['idUnidad'] as int,
+          codigoProducto: item['codigoProducto'] as String?,
+          nombreProducto: item['nombreProducto'] as String,
+          precioProducto: item['precioProducto'] as double,
+          stockActual: item['stockActual'] as double,
+          stockMinimo: item['stockMinimo'] as double?,
+          stockMaximo: item['stockMaximo'] as double?,
+          estaDisponible: (item['estaDisponible'] as int) == 1,
+          rutaImagen: item['rutaImagen'] as String?,
+        ));
       }
     } catch (e) {
       debugPrint('Error al obtener productos: ${e.toString()}');
     }
 
     return productos;
+  }
+
+  static Future<int?> contarProductos() async {
+    try {
+      final db = await DatabaseController().database;
+      final result =
+          await db.rawQuery('SELECT COUNT(*) as total FROM Productos');
+
+      if (result.isNotEmpty) {
+        return result.first['total'] as int;
+      }
+    } catch (e) {
+      debugPrint('Error al contar los productos: ${e.toString()}');
+    }
+
+    return null;
+  }
+
+  static Future<void> insertarProductosPorDefecto() async {
+    if (await DatabaseController.tableHasData("Productos")) return;
+
+    try {
+      List<Categoria> categorias = await Categoria.obtenerCategorias();
+      Random random = Random();
+
+      List<Producto> productos = List.generate(100, (index) {
+        int idUnidad = random.nextInt(3) + 1; // Valores entre 1 y 3
+        double precio =
+            (random.nextDouble() * 90) + 10; // Precio entre 10 y 100
+        int stockActual = random.nextInt(200) + 1; // Stock entre 1 y 200
+        int stockMinimo = random.nextInt(20) + 5; // Mínimo entre 5 y 25
+        int stockMaximo = stockActual +
+            random.nextInt(100) +
+            50; // Máximo entre stockActual+50 y stockActual+150
+
+        return Producto(
+          idUnidad: idUnidad,
+          codigoProducto: "7501000000${(index + 1).toString().padLeft(4, '0')}",
+          nombreProducto: "Producto ${index + 1}",
+          precioProducto:
+              double.parse(precio.toStringAsFixed(2)), // Redondeo a 2 decimales
+          stockActual: double.parse(stockActual.toStringAsFixed(2)),
+          stockMinimo: double.parse(stockMinimo.toStringAsFixed(2)),
+          stockMaximo: double.parse(stockMaximo.toStringAsFixed(2)),
+          rutaImagen: null,
+        );
+      });
+
+      // Asignar categorías aleatorias a cada producto
+      for (var producto in productos) {
+        int cantidadCategorias = random.nextInt(3) + 1; // De 1 a 3 categorías
+        List<Categoria> categoriasAsignadas = List.generate(
+          cantidadCategorias,
+          (_) => categorias[random.nextInt(categorias.length)],
+        );
+
+        await crearProducto(producto, categoriasAsignadas);
+      }
+
+      debugPrint("Se insertaron correctamente ${productos.length} productos.");
+    } catch (e) {
+      debugPrint("Error al insertar productos: $e");
+    }
   }
 
   @override
