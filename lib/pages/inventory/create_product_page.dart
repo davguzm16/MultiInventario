@@ -9,6 +9,7 @@ import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
 
+//10/02/2025
 class CreateProductPage extends StatefulWidget {
   const CreateProductPage({super.key});
 
@@ -58,16 +59,16 @@ class _CreateProductPageState extends State<CreateProductPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Categoría', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Categorías', style: TextStyle(fontWeight: FontWeight.bold)),
         FutureBuilder<List<Categoria>>(
           future: categoriasDisponibles,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return const CircularProgressIndicator();
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Text('No hay categorías disponibles.');
+              return const Text('No hay categorías disponibles.');
             }
 
             List<Categoria> categorias = snapshot.data!;
@@ -103,9 +104,35 @@ class _CreateProductPageState extends State<CreateProductPage> {
             );
           },
         ),
-        TextButton(
-          onPressed: _showAddCategoryDialog,
-          child: Text('Agregar nueva categoría'),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            // Botón para agregar categoría
+            TextButton(
+              onPressed: _showAddCategoryDialog,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.purple,
+              ),
+              child: const Text('Agregar categoría'),
+            ),
+            // Botón para editar categoría
+            TextButton(
+              onPressed: _showEditCategoryDialog,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.purple,
+              ),
+              child: const Text('Editar categoría'),
+            ),
+            // Botón para eliminar categoría (en rojo)
+            TextButton(
+              onPressed: _showRemoveCategoryDialog,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Eliminar categoría'),
+            ),
+          ],
         ),
       ],
     );
@@ -206,16 +233,18 @@ class _CreateProductPageState extends State<CreateProductPage> {
               const SizedBox(height: 10),
               _buildCategorySelection(),
               _buildTextField('Nombre del producto', productNameController,
-                  TextInputType.text),
+                  TextInputType.text,
+                  showUnit: false),
               _buildComboBox(),
-              _buildTextField(
+              _buildTextFieldWithUnit(
                   'Stock actual', stockController, TextInputType.number),
-              _buildTextField(
+              _buildTextFieldWithUnit(
                   'Stock mínimo', minStockController, TextInputType.number),
-              _buildTextField(
+              _buildTextFieldWithUnit(
                   'Stock máximo', maxStockController, TextInputType.number),
-              _buildTextField('Precio por medida', priceController,
-                  const TextInputType.numberWithOptions(decimal: true)),
+              _buildTextFieldWithUnit('Precio por medida', priceController,
+                  const TextInputType.numberWithOptions(decimal: true),
+                  isPrice: true),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -244,7 +273,8 @@ class _CreateProductPageState extends State<CreateProductPage> {
   }
 
   Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType keyboardType) {
+      TextInputType keyboardType,
+      {bool showUnit = true}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
@@ -252,6 +282,28 @@ class _CreateProductPageState extends State<CreateProductPage> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
+          suffixText: unidadSeleccionada?.tipoUnidad ?? '',
+          suffixStyle: TextStyle(color: Colors.grey.shade600),
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextFieldWithUnit(String label, TextEditingController controller,
+      TextInputType keyboardType,
+      {bool isPrice = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: isPrice ? '0.00' : '',
+          prefixText: isPrice ? '\$ ' : '',
+          suffixText: isPrice ? '' : unidadSeleccionada?.tipoUnidad ?? '',
+          suffixStyle: TextStyle(color: Colors.grey.shade600),
           border: const OutlineInputBorder(),
         ),
       ),
@@ -295,6 +347,166 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 context.pop();
               },
               child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditCategoryDialog() {
+    TextEditingController editCategoriaController = TextEditingController();
+    Categoria? categoriaSeleccionada;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Editar categoría"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<Categoria>>(
+                future: categoriasDisponibles,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return const Text("No hay categorías disponibles.");
+                  }
+
+                  return DropdownButtonFormField<Categoria>(
+                    value: categoriaSeleccionada,
+                    onChanged: (newValue) {
+                      setState(() {
+                        categoriaSeleccionada = newValue;
+                        editCategoriaController.text =
+                            newValue?.nombreCategoria ?? "";
+                      });
+                    },
+                    items: snapshot.data!.map((categoria) {
+                      return DropdownMenuItem(
+                        value: categoria,
+                        child: Text(categoria.nombreCategoria),
+                      );
+                    }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: "Selecciona una categoría",
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: editCategoriaController,
+                decoration: const InputDecoration(
+                  labelText: "Nuevo nombre",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (categoriaSeleccionada != null) {
+                  String nuevoNombre = editCategoriaController.text.trim();
+                  if (nuevoNombre.isNotEmpty) {
+                    bool editada = await Categoria.editarCategoria(
+                      categoriaSeleccionada!.idCategoria!,
+                      nuevoNombre,
+                    );
+
+                    if (editada) {
+                      setState(() {
+                        categoriasDisponibles = Categoria.obtenerCategorias();
+                      });
+                    }
+                  }
+                }
+                Navigator.pop(context);
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRemoveCategoryDialog() {
+    Categoria? categoriaSeleccionada;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Eliminar categoría"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<Categoria>>(
+                future: categoriasDisponibles,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return const Text("No hay categorías disponibles.");
+                  }
+
+                  return DropdownButtonFormField<Categoria>(
+                    value: categoriaSeleccionada,
+                    onChanged: (newValue) {
+                      setState(() {
+                        categoriaSeleccionada = newValue;
+                      });
+                    },
+                    items: snapshot.data!.map((categoria) {
+                      return DropdownMenuItem(
+                        value: categoria,
+                        child: Text(categoria.nombreCategoria),
+                      );
+                    }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: "Selecciona una categoría",
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (categoriaSeleccionada != null) {
+                  bool eliminada = await Categoria.eliminarCategoria(
+                    categoriaSeleccionada!.idCategoria!,
+                  );
+
+                  if (eliminada) {
+                    setState(() {
+                      categoriasDisponibles = Categoria.obtenerCategorias();
+                    });
+                  }
+                }
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Eliminar", style: TextStyle(color: Colors.red)),
             ),
           ],
         );

@@ -1,13 +1,15 @@
 class Cliente {
-  late int idCliente;
-  late String nombreCliente;
-  late String dniCliente;
+  int idCliente;
+  String nombreCliente;
+  String dniCliente;
+  String? correoCliente;
 
   // Constructor
   Cliente({
     required this.idCliente,
     required this.nombreCliente,
     required this.dniCliente,
+    required this.correoCliente,
   });
 
   // Getters
