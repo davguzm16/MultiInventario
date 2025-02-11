@@ -7,12 +7,12 @@ import 'package:sqflite/sqflite.dart';
 
 class Producto {
   int? idProducto;
-  int idUnidad;
+  int? idUnidad;
   String? codigoProducto;
   String nombreProducto;
   double precioProducto;
   double stockActual;
-  double? stockMinimo;
+  double stockMinimo;
   double? stockMaximo;
   bool? estaDisponible;
   String? rutaImagen;
@@ -22,13 +22,13 @@ class Producto {
   // Constructor
   Producto({
     this.idProducto,
-    required this.idUnidad,
+    this.idUnidad,
     this.codigoProducto,
     required this.nombreProducto,
     required this.precioProducto,
     required this.stockActual,
     required this.stockMinimo,
-    required this.stockMaximo,
+    this.stockMaximo,
     this.rutaImagen,
     this.estaDisponible,
   });
@@ -90,68 +90,13 @@ class Producto {
             nombreProducto: result.first['nombreProducto'] as String,
             precioProducto: (result.first['precioProducto'] as num).toDouble(),
             stockActual: (result.first['stockActual'] as num).toDouble(),
-            stockMinimo: (result.first['stockMinimo'] as num?)?.toDouble(),
+            stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
             stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
             estaDisponible: (result.first['estaDisponible'] as int) == 1,
             rutaImagen: (result.first['rutaImagen'] as String?));
       }
     } catch (e) {
       debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");
-    }
-
-    return null;
-  }
-
-  static Future<List<Producto>> obtenerProductosPorCarga(
-      int numeroCarga) async {
-    List<Producto> productos = [];
-
-    try {
-      final db = await DatabaseController().database;
-      int offset = numeroCarga * 8;
-
-      final List<Map<String, dynamic>> result = await db.rawQuery(
-        '''
-      SELECT idProducto, idUnidad, codigoProducto, nombreProducto, precioProducto, 
-             stockActual, stockMinimo, stockMaximo, estaDisponible, rutaImagen
-      FROM Productos
-      LIMIT ? OFFSET ?
-      ''',
-        [8, offset],
-      );
-
-      for (var item in result) {
-        productos.add(Producto(
-          idProducto: item['idProducto'] as int,
-          idUnidad: item['idUnidad'] as int,
-          codigoProducto: item['codigoProducto'] as String?,
-          nombreProducto: item['nombreProducto'] as String,
-          precioProducto: item['precioProducto'] as double,
-          stockActual: item['stockActual'] as double,
-          stockMinimo: item['stockMinimo'] as double?,
-          stockMaximo: item['stockMaximo'] as double?,
-          estaDisponible: (item['estaDisponible'] as int) == 1,
-          rutaImagen: item['rutaImagen'] as String?,
-        ));
-      }
-    } catch (e) {
-      debugPrint('Error al obtener productos: ${e.toString()}');
-    }
-
-    return productos;
-  }
-
-  static Future<int?> contarProductos() async {
-    try {
-      final db = await DatabaseController().database;
-      final result =
-          await db.rawQuery('SELECT COUNT(*) as total FROM Productos');
-
-      if (result.isNotEmpty) {
-        return result.first['total'] as int;
-      }
-    } catch (e) {
-      debugPrint('Error al contar los productos: ${e.toString()}');
     }
 
     return null;
@@ -206,7 +151,7 @@ class Producto {
 
   @override
   String toString() {
-    return '{idProducto: $idProducto, idUnidad: $idUnidad, codigoProducto: $codigoProducto, '
+    return 'Producto = {idProducto: $idProducto, idUnidad: $idUnidad, codigoProducto: $codigoProducto, '
         'nombreProducto: $nombreProducto, precioProducto: $precioProducto, '
         'stockActual: $stockActual, stockMinimo: $stockMinimo, stockMaximo: $stockMaximo, '
         'estaDisponible: ${estaDisponible == true ? 1 : 0}, rutaImagen: $rutaImagen}';

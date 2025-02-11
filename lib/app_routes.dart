@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/controllers/image_picker.dart';
+import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
@@ -61,6 +62,21 @@ class AppRoutes {
                     path: 'create-product',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const CreateProductPage(),
+                  ),
+                  GoRoute(
+                    path: 'filter-products',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      final categoriasSeleccionadas =
+                          extra['categoriasSeleccionadas'] as List<Categoria>;
+                      final isStockBajo = extra['isStockBajo'] as bool;
+
+                      return FilterProductPage(
+                        categoriasSeleccionadas: categoriasSeleccionadas,
+                        isStockBajo: isStockBajo,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'product/:idProducto',

@@ -54,7 +54,7 @@ class _ProductPageState extends State<ProductPage> {
 
     categoriasProducto = await ProductoCategoria.obtenerCategoriasDeProducto(
         producto!.idProducto!);
-    unidadProducto = await Unidad.obtenerUnidadPorId(producto!.idUnidad);
+    unidadProducto = await Unidad.obtenerUnidadPorId(producto!.idUnidad!);
     lotesProducto = await Lote.obtenerLotesDeProducto(producto!.idProducto!);
     setState(() {});
   }

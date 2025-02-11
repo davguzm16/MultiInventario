@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/producto.dart';
 
 class ProductoCategoria {
   int idProducto;
@@ -74,5 +75,59 @@ class ProductoCategoria {
     }
 
     return categorias;
+  }
+
+  static Future<List<Producto>> obtenerProductosPorCargaFiltrados({
+    required int numeroCarga,
+    required List<Categoria> categorias,
+    bool stockBajo = false,
+  }) async {
+    List<Producto> productos = [];
+    List<int> idsCategorias = categorias.isNotEmpty
+        ? categorias.map((c) => c.idCategoria!).toList()
+        : [];
+
+    try {
+      final db = await DatabaseController().database;
+      int offset = numeroCarga * 8;
+
+      String categoriaQuery = "";
+      String stockBajoQuery = "";
+
+      if (idsCategorias.isNotEmpty) {
+        categoriaQuery =
+            "AND pc.idCategoria IN (${List.filled(idsCategorias.length, '?').join(', ')})";
+      }
+
+      if (stockBajo) {
+        stockBajoQuery = "AND p.stockActual < p.stockMinimo";
+      }
+
+      final List<Map<String, dynamic>> result = await db.rawQuery('''
+      SELECT DISTINCT p.idProducto, p.nombreProducto, p.precioProducto, 
+                      p.stockActual, p.stockMinimo, p.rutaImagen
+      FROM Productos p
+      LEFT JOIN ProductosCategorias pc ON p.idProducto = pc.idProducto
+      WHERE p.estaDisponible = 1 
+      $categoriaQuery
+      $stockBajoQuery
+      LIMIT ? OFFSET ?
+    ''', [...idsCategorias, 8, offset]);
+
+      for (var item in result) {
+        productos.add(Producto(
+          idProducto: item['idProducto'] as int,
+          nombreProducto: item['nombreProducto'] as String,
+          precioProducto: item['precioProducto'] as double,
+          stockActual: item['stockActual'] as double,
+          stockMinimo: item['stockMinimo'] as double,
+          rutaImagen: item['rutaImagen'] as String?,
+        ));
+      }
+    } catch (e) {
+      debugPrint('Error al obtener productos filtrados: ${e.toString()}');
+    }
+
+    return productos;
   }
 }

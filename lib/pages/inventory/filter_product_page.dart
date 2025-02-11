@@ -1,23 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:multiinventario/models/categoria.dart';
 
 class FilterProductPage extends StatefulWidget {
-  const FilterProductPage({super.key});
+  final List<Categoria> categoriasSeleccionadas;
+  final bool isStockBajo;
+
+  const FilterProductPage({
+    super.key,
+    required this.categoriasSeleccionadas,
+    required this.isStockBajo,
+  });
 
   @override
   State<FilterProductPage> createState() => _FilterProductState();
 }
 
 class _FilterProductState extends State<FilterProductPage> {
-  final List<String> categoriasProducto = [
-    "Abarrotes", "Ferretería", "Útiles escolares",
-    "Bebidas", "Enlatados", "Perecibles"
-  ];
+  List<Categoria> categoriasObtenidas = [];
+  List<Categoria> categoriasSeleccionadas = [];
+  bool isStockBajo = false;
 
-  final List<String> otrasCategorias = [
-    "Los más vendidos", "Los menos vendidos", "Stock bajo", "Por caducar"
-  ];
+  @override
+  void initState() {
+    super.initState();
+    categoriasSeleccionadas = List.from(widget.categoriasSeleccionadas);
+    isStockBajo = widget.isStockBajo;
+    obtenerCategorias();
+  }
 
-  List<String> selectedCategory = [];
+  Future<void> obtenerCategorias() async {
+    final categorias = await Categoria.obtenerCategorias();
+
+    setState(() {
+      categoriasObtenidas = categorias;
+    });
+
+    debugPrint("Categorias obtenidas: ");
+    for (var categoria in categoriasObtenidas) {
+      debugPrint(categoria.toString());
+    }
+
+    debugPrint("Categorias seleccionadas: ");
+    for (var categoria in categoriasSeleccionadas) {
+      debugPrint(categoria.toString());
+    }
+
+    debugPrint("isStockBajo: $isStockBajo");
+  }
+
+  void aplicarFiltros() {
+    debugPrint("Categorias seleccionadas nuevas: ");
+    for (var categoria in categoriasSeleccionadas) {
+      debugPrint(categoria.toString());
+    }
+
+    debugPrint("isStockBajo nuevo: $isStockBajo");
+
+    context.pop({
+      'categoriasSeleccionadas': categoriasSeleccionadas,
+      'isStockBajo': isStockBajo,
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +71,12 @@ class _FilterProductState extends State<FilterProductPage> {
           "Filtros",
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: aplicarFiltros,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -35,26 +85,32 @@ class _FilterProductState extends State<FilterProductPage> {
           children: [
             const Text(
               "Categorías del producto",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.purple),
             ),
-            //Categorias principales
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: categoriasProducto.map((categoria) {
+              children: categoriasObtenidas.map((categoria) {
+                final estaSeleccionada = categoriasSeleccionadas
+                    .any((c) => c.idCategoria == categoria.idCategoria);
+
                 return FilterChip(
-                  label: Text(categoria),
-                  selected: selectedCategory.contains(categoria),
+                  label: Text(categoria.nombreCategoria),
+                  selected: estaSeleccionada,
                   selectedColor: Colors.purple,
                   labelStyle: TextStyle(
-                    color: selectedCategory.contains(categoria) ? Colors.white : Colors.purple,
+                    color: estaSeleccionada ? Colors.white : Colors.purple,
                   ),
                   onSelected: (bool selected) {
                     setState(() {
-                      if(selected){
-                        selectedCategory.add(categoria);
-                      }else{
-                        selectedCategory.remove(categoria);
+                      if (selected) {
+                        categoriasSeleccionadas.add(categoria);
+                      } else {
+                        categoriasSeleccionadas.removeWhere(
+                            (c) => c.idCategoria == categoria.idCategoria);
                       }
                     });
                   },
@@ -62,33 +118,14 @@ class _FilterProductState extends State<FilterProductPage> {
               }).toList(),
             ),
             const SizedBox(height: 20),
-            const Text(
-              "Otras categorías",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple),
-            ),
-            //Otras Categorias
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: otrasCategorias.map((categoria) {
-                return FilterChip(
-                  label: Text(categoria),
-                  selected: selectedCategory.contains(categoria),
-                  selectedColor: Colors.purple,
-                  labelStyle: TextStyle(
-                    color: selectedCategory.contains(categoria) ? Colors.white : Colors.purple,
-                  ),
-                  onSelected: (bool selected) {
-                    setState(() {
-                      if(selected){
-                        selectedCategory.add(categoria);
-                      }else{
-                        selectedCategory.remove(categoria);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
+            CheckboxListTile(
+              title: const Text("Stock Bajo"),
+              value: isStockBajo,
+              onChanged: (bool? value) {
+                setState(() {
+                  isStockBajo = value ?? false;
+                });
+              },
             ),
           ],
         ),
