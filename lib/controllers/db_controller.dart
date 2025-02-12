@@ -4,27 +4,45 @@ import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
 import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
 class DatabaseController {
   static final DatabaseController _instance = DatabaseController._internal();
   Database? _database;
 
-  factory DatabaseController() {
-    return _instance;
-  }
+  factory DatabaseController() => _instance;
 
   DatabaseController._internal();
 
   Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
+    _database ??= await _initDatabase();
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
-    String path = join(await getDatabasesPath(), 'multiinventario.db');
-    var db = await openDatabase(
+    String path;
+
+    if (kIsWeb) {
+      // Web
+      databaseFactory = databaseFactoryFfiWeb;
+      path = 'multiinventario_web.db';
+    } else if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      // Windows y Linux
+      sqfliteFfiInit();
+      databaseFactory = databaseFactoryFfi;
+
+      final documentsDirectory = await getApplicationDocumentsDirectory();
+      path = join(documentsDirectory.path, 'multiinventario.db');
+    } else {
+      // iOS, Android, macOS
+      path = join(await getDatabasesPath(), 'multiinventario.db');
+    }
+
+    return await openDatabase(
       path,
       version: 1,
       onCreate: (db, version) async {
@@ -126,7 +144,6 @@ class DatabaseController {
         ''');
       },
     );
-    return db;
   }
 
   static Future<bool> tableHasData(String tableName) async {
@@ -141,8 +158,7 @@ class DatabaseController {
 
       return count > 0;
     } catch (e) {
-      debugPrint(
-          "Error al consultar la tabla $tableName en la base de datos: $e");
+      debugPrint("Error al consultar la tabla $tableName: $e");
       return false;
     }
   }

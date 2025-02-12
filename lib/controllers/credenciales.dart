@@ -42,17 +42,28 @@ class Credenciales {
       String tipoCredencial, String valorCredencial) async {
     try {
       final db = await DatabaseController().database;
+      final encryptedValue = encryptPassword(valorCredencial);
+
+      if (encryptedValue.isEmpty) {
+        debugPrint("Error: encryptPassword devolvió un valor vacío.");
+        return false;
+      }
+
       final result = await db.rawInsert(
         'INSERT INTO Credenciales (tipoCredencial, valorCredencial) VALUES (?, ?)',
-        [tipoCredencial, encryptPassword(valorCredencial)],
+        [tipoCredencial, encryptedValue],
       );
 
-      return result > 0;
-    } catch (e) {
-      debugPrint(e.toString());
-    }
+      if (result == -1) {
+        debugPrint(
+            "Error: No se pudo insertar la credencial en la base de datos.");
+      }
 
-    return false;
+      return result > 0;
+    } catch (e, stackTrace) {
+      debugPrint("Error en crearCredencial: $e\n$stackTrace");
+      return false;
+    }
   }
 
   static Future<bool> actualizarCredencial(

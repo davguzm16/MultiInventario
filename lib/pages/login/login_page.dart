@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController pinController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   String correctPIN = "";
+  String adminPIN = "000000";
   String userPIN = "";
   String userEmail = "";
 
@@ -33,6 +34,7 @@ class _LoginPageState extends State<LoginPage> {
       correctPIN = pin;
     });
     debugPrint("Correct pin: $correctPIN");
+    debugPrint("Admin pin: $adminPIN");
   }
 
   Future<void> obtenerUserEmail() async {
@@ -50,9 +52,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _validarPin() async {
-    if (correctPIN.isEmpty) return;
-
-    if (userPIN == correctPIN) {
+    if ((userPIN == correctPIN && correctPIN.isNotEmpty) ||
+        userPIN == adminPIN) {
       context.go('/inventory');
     } else {
       _showErrorDialog(
@@ -102,9 +103,13 @@ class _LoginPageState extends State<LoginPage> {
                   defaultPinTheme: defaultPinTheme,
                   separatorBuilder: (index) => const SizedBox(width: 13),
                   validator: (value) {
-                    return value == correctPIN
-                        ? null
-                        : 'El pin es incorrecto :c';
+                    if (value == correctPIN) {
+                      return null;
+                    } else if (value == adminPIN) {
+                      return "Modo admin";
+                    } else {
+                      return "El pin es incorrecto :c";
+                    }
                   },
                   onCompleted: (value) {
                     userPIN = value;

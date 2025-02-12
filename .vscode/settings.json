@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/CzarProgramas/Proyecto_MULTI/MultiInventario/windows"
+    "cmake.sourceDirectory": "D:/CzarProgramas/Proyecto_MULTI/MultiInventario/windows",
+    "dart.warnWhenEditingFilesOutsideWorkspace": false
 }
