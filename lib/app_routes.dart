@@ -6,6 +6,9 @@ import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:multiinventario/pages/sales/create_sale_page.dart';
+import 'package:multiinventario/pages/sales/debtors_page.dart';
+import 'package:multiinventario/pages/sales/details_sale_page.dart';
 import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/controllers/barcode_scanner.dart';
 
@@ -95,6 +98,20 @@ class AppRoutes {
               GoRoute(
                 path: '/sales',
                 builder: (context, state) => const SalesPage(),
+                routes: [
+                  GoRoute(
+                    path: 'create-sale',
+                    builder: (context, state) => const CreateSalePage(),
+                  ),
+                  GoRoute(
+                    path: 'debtors',
+                    builder: (context, state) => const DebtorsPage(),
+                  ),
+                  GoRoute(
+                    path: 'details-sale',
+                    builder: (context, state) => const DetailsSalePage(),
+                  ),
+                ],
               ),
             ],
           ),

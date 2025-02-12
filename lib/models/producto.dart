@@ -58,6 +58,12 @@ class Producto {
         final resultId = await db.rawQuery('SELECT last_insert_rowid()');
         int? idProductoInsertado = Sqflite.firstIntValue(resultId);
 
+        if (idProductoInsertado == null) {
+          debugPrint(
+              "El id del producto insertado no se pudo obtener: $idProductoInsertado");
+          return false;
+        }
+
         for (var categoria in categorias) {
           ProductoCategoria.asignarRelacion(
               idProductoInsertado, categoria.idCategoria);

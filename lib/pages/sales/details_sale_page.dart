@@ -1,20 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-
-
-
 class DetailsSalePage extends StatefulWidget {
-  
   const DetailsSalePage({super.key});
   @override
   State<DetailsSalePage> createState() => _DetailsSalePageState();
 }
 
-
 class _DetailsSalePageState extends State<DetailsSalePage> {
   final List<DetallesVentas> item = [
-    DetallesVentas(cantidadProducto: 1, subtotalProducto: 12.40, descuentoProducto: 0.30),
+    DetallesVentas(
+        cantidadProducto: 1, subtotalProducto: 12.40, descuentoProducto: 0.30),
     DetallesVentas(cantidadProducto: 3, subtotalProducto: 4.50),
     DetallesVentas(cantidadProducto: 2, subtotalProducto: 11.50),
   ];
@@ -31,16 +27,17 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
           Padding(
             padding: EdgeInsets.only(right: 20),
             child: IconButton(
-              icon: Icon(Icons.print, size: 35,),
+              icon: Icon(
+                Icons.print,
+                size: 35,
+              ),
               onPressed: () {},
             ),
           ),
         ],
       ),
-
-
       body: Padding(
-        padding: EdgeInsets.only(left:32.0, right: 32.0, top: 16.0),
+        padding: EdgeInsets.only(left: 32.0, right: 32.0, top: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -48,7 +45,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'Código: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E),fontSize: 16),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: '00000023',
@@ -62,7 +62,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'Cliente: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E), fontSize: 16),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: 'Alvaro Cencia Perez',
@@ -76,7 +79,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'DNI: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E), fontSize: 16),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: '71234561',
@@ -90,7 +96,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'Fecha: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E), fontSize: 16),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: '09/01/2025',
@@ -104,7 +113,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'Hora: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E), fontSize: 16),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: '08:05',
@@ -118,7 +130,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
             Text.rich(
               TextSpan(
                 text: 'Estado: ',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF493D9E), fontSize: 16 ),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF493D9E),
+                    fontSize: 16),
                 children: [
                   TextSpan(
                     text: 'Al contado',
@@ -133,99 +148,121 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SizedBox(width: 18),
-                Text('Ud', style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF493D9E))),
+                Text('Ud',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Color(0xFF493D9E))),
                 SizedBox(width: 57),
-                Text('Descripción',style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF493D9E))),
+                Text('Descripción',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Color(0xFF493D9E))),
                 SizedBox(width: 48),
-                Text('Precio',style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF493D9E))),
+                Text('Precio',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Color(0xFF493D9E))),
                 SizedBox(width: 13),
-                Text('Subtotal',style: TextStyle(fontWeight: FontWeight.bold,color: Color(0xFF493D9E))),
-
+                Text('Subtotal',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Color(0xFF493D9E))),
               ],
             ),
 
             SizedBox(height: 5),
-            
 
             //TABLA:
             Expanded(
               //por si la tabla es muy grande
               child: SingleChildScrollView(
                 scrollDirection: Axis.vertical,
-                
-              child: Container(
-              decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10), 
-              border: Border.all(color: Color(0xFF493D9E), width: 1.5), 
-               
-              ),
-              child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Color(0xFF493D9E), width: 1.5),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
 
-              //Empieza la tabla
+                    //Empieza la tabla
 
-              child: Table(
-                border: TableBorder(
-                  verticalInside: BorderSide(width: 1.5, color: Color(0xFF493D9E)),
+                    child: Table(
+                      border: TableBorder(
+                        verticalInside:
+                            BorderSide(width: 1.5, color: Color(0xFF493D9E)),
+                      ),
+                      columnWidths: const <int, TableColumnWidth>{
+                        0: FlexColumnWidth(0.5),
+                        1: FlexColumnWidth(1.5),
+                        2: FlexColumnWidth(0.6),
+                        3: FlexColumnWidth(0.6),
+                      },
+                      children: [
+                        ...item.expand((detalle) => [
+                              TableRow(
+                                children: [
+                                  TableCell(
+                                      child: Center(
+                                          child: Text(
+                                              "${detalle.cantidadProducto} kg"))),
+                                  TableCell(
+                                      child: Center(
+                                          child: Text(
+                                              'Arroz Mass'))), // Falta personalizar
+                                  TableCell(
+                                      child: Center(
+                                          child: Text(detalle.subtotalProducto
+                                              .toStringAsFixed(2)))),
+                                  TableCell(
+                                      child: Center(
+                                          child: Text(detalle.subtotalProducto
+                                              .toStringAsFixed(2)))),
+                                ],
+                              ),
+                              // Si hay un descuento, se agrega una fila adicional
+                              if (detalle.descuentoProducto != null)
+                                TableRow(
+                                  children: [
+                                    TableCell(child: Center(child: Text(''))),
+                                    TableCell(
+                                        child: Center(
+                                            child: Text('Descuento Arroz Mass',
+                                                textAlign: TextAlign
+                                                    .center))), // Falta personalizar
+                                    TableCell(child: Center(child: Text(''))),
+                                    TableCell(
+                                        child: Center(
+                                            child: Text(
+                                                '-${detalle.descuentoProducto!.toStringAsFixed(2)}'))),
+                                  ],
+                                ),
+                            ]),
+                      ],
+                    ),
+                  ),
                 ),
-
-                columnWidths: const <int, TableColumnWidth>{
-                  0: FlexColumnWidth(0.5),
-                  1: FlexColumnWidth(1.5),
-                  2: FlexColumnWidth(0.6),
-                  3: FlexColumnWidth(0.6),
-                  },  
-                children: [
-                      ...item.expand((detalle) => [
-      TableRow(
-        children: [
-          TableCell(child: Center(child: Text("${detalle.cantidadProducto} kg"))),
-          TableCell(child: Center(child: Text('Arroz Mass'))), // Falta personalizar
-          TableCell(child: Center(child: Text('${detalle.subtotalProducto.toStringAsFixed(2)}'))),
-          TableCell(child: Center(child: Text('${detalle.subtotalProducto.toStringAsFixed(2)}'))),
-        ],
-      ),
-      // Si hay un descuento, se agrega una fila adicional
-      if (detalle.descuentoProducto != null)
-        TableRow(
-          children: [
-            TableCell(child: Center(child: Text(''))),
-            TableCell(child: Center(child: Text('Descuento Arroz Mass', textAlign: TextAlign.center))), // Falta personalizar
-            TableCell(child: Center(child: Text(''))),
-            TableCell(child: Center(child: Text('-${detalle.descuentoProducto!.toStringAsFixed(2)}'))),
-          ],
-        ),
-    ]),
-                ],
               ),
-
             ),
-            ),
-              ),
-              ),
 
             SizedBox(height: 12),
 
-
-            
             Align(
               alignment: Alignment.centerRight,
               child: Text(
                 'Total: 23.00',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Color(0xFF493D9E)),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Color(0xFF493D9E)),
               ),
             ),
           ],
         ),
       ),
-
     );
   }
-  
 }
-class DetallesVentas{
+
+class DetallesVentas {
   final int cantidadProducto;
-  final double subtotalProducto; 
+  final double subtotalProducto;
   final double? descuentoProducto;
   DetallesVentas({
     required this.cantidadProducto,
@@ -233,4 +270,3 @@ class DetallesVentas{
     this.descuentoProducto,
   });
 }
-

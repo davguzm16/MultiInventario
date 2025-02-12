@@ -31,7 +31,7 @@ class ProductoCategoria {
 
       if (result > 0) {
         debugPrint(
-            "Categoría $idCategoria relacionada con producto $idProducto");
+            "Categoría $idCategoria relacionada correctamente con productos");
       }
     } catch (e) {
       debugPrint(
@@ -80,8 +80,9 @@ class ProductoCategoria {
   static Future<List<Producto>> obtenerProductosPorCargaFiltrados({
     required int numeroCarga,
     required List<Categoria> categorias,
-    bool stockBajo = false,
+    bool? stockBajo,
   }) async {
+    const int cantidadPorCarga = 8;
     List<Producto> productos = [];
     List<int> idsCategorias = categorias.isNotEmpty
         ? categorias.map((c) => c.idCategoria!).toList()
@@ -89,7 +90,7 @@ class ProductoCategoria {
 
     try {
       final db = await DatabaseController().database;
-      int offset = numeroCarga * 8;
+      int offset = numeroCarga * cantidadPorCarga;
 
       String categoriaQuery = "";
       String stockBajoQuery = "";
@@ -99,8 +100,10 @@ class ProductoCategoria {
             "AND pc.idCategoria IN (${List.filled(idsCategorias.length, '?').join(', ')})";
       }
 
-      if (stockBajo) {
-        stockBajoQuery = "AND p.stockActual < p.stockMinimo";
+      if (stockBajo != null) {
+        if (stockBajo) {
+          stockBajoQuery = "AND p.stockActual < p.stockMinimo";
+        }
       }
 
       final List<Map<String, dynamic>> result = await db.rawQuery('''
@@ -112,7 +115,7 @@ class ProductoCategoria {
       $categoriaQuery
       $stockBajoQuery
       LIMIT ? OFFSET ?
-    ''', [...idsCategorias, 8, offset]);
+    ''', [...idsCategorias, cantidadPorCarga, offset]);
 
       for (var item in result) {
         productos.add(Producto(

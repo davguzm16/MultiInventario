@@ -39,7 +39,7 @@ class _ProductPageState extends State<ProductPage> {
 
     if (producto == null) {
       debugPrint("Producto ${widget.idProducto} no encontrado.");
-      await AwesomeDialog(
+      AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
         animType: AnimType.topSlide,
@@ -99,42 +99,46 @@ class _ProductPageState extends State<ProductPage> {
         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
         child: ListView(
           children: [
-            Row(
-              children: [
-                SizedBox(
-                  height: screenWidth * 0.2,
-                  width: screenWidth * 0.2,
-                  child: producto?.rutaImagen == null
-                      ? Image.asset(
-                          'lib/assets/iconos/iconoImagen.png',
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(
-                          File(producto!.rutaImagen!),
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                const SizedBox(width: 20),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Código del producto",
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black54),
-                    ),
-                    Text(
-                      producto?.codigoProducto ?? "-" * 13,
-                      style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                  ],
-                ),
-              ],
+            SizedBox(
+              width: double.infinity, // Se establece un ancho definido
+              child: Row(
+                mainAxisSize: MainAxisSize.min, // Evita expansión infinita
+                children: [
+                  SizedBox(
+                    height: screenWidth * 0.2,
+                    width: screenWidth * 0.2,
+                    child: producto?.rutaImagen == null
+                        ? Image.asset(
+                            'lib/assets/iconos/iconoImagen.png',
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(producto!.rutaImagen!),
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                  const SizedBox(width: 20),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Código del producto",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black54),
+                      ),
+                      Text(
+                        producto?.codigoProducto ?? "-" * 13,
+                        style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: 15),
             Card(
@@ -148,33 +152,33 @@ class _ProductPageState extends State<ProductPage> {
                   children: [
                     Text(
                       "Stock actual: ${producto!.stockActual} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: Colors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
                     Text(
                       "Stock mínimo: ${producto!.stockMinimo} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: Colors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
                     Text(
                       "Stock máximo: ${producto!.stockMaximo ?? "---"} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
+                      style: const TextStyle(
                           color: Colors.purple,
                           fontWeight: FontWeight.bold,
                           fontSize: 18),
                     ),
-                    Divider(),
+                    const Divider(),
                     Text(
                       "Unidad del producto: ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(color: Colors.black, fontSize: 16),
+                      style: const TextStyle(color: Colors.black, fontSize: 16),
                     ),
                     Text(
                       "Precio por unidad del producto: S/. ${producto!.precioProducto}",
-                      style: TextStyle(color: Colors.black, fontSize: 16),
+                      style: const TextStyle(color: Colors.black, fontSize: 16),
                     ),
                   ],
                 ),
@@ -195,8 +199,8 @@ class _ProductPageState extends State<ProductPage> {
               children: categoriasProducto.map((categoria) {
                 return Chip(
                   label: Text(categoria.nombreCategoria),
-                  labelStyle: TextStyle(color: Colors.white),
-                  backgroundColor: Color(0xFF493d9e),
+                  labelStyle: const TextStyle(color: Colors.white),
+                  backgroundColor: const Color(0xFF493d9e),
                 );
               }).toList(),
             ),
@@ -217,7 +221,7 @@ class _ProductPageState extends State<ProductPage> {
                 child: Center(
                   child: Text(
                     "Aún no hay lotes creados para este producto.",
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey),
@@ -265,7 +269,8 @@ class _ProductPageState extends State<ProductPage> {
                           },
                           child: Row(
                             children: [
-                              Expanded(
+                              Flexible(
+                                // Solución al error de expansión
                                 child: Table(
                                   border: TableBorder.all(color: Colors.purple),
                                   columnWidths: const {

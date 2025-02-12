@@ -25,11 +25,11 @@ class _CreateProductPageState extends State<CreateProductPage> {
   final TextEditingController minStockController = TextEditingController();
   final TextEditingController maxStockController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
-  String? rutaImagen;
 
   Producto? producto;
   late Future<List<Categoria>> categoriasDisponibles;
   late Future<List<Unidad>> unidadesDisponibles;
+  String? rutaImagen;
 
   Unidad? unidadSeleccionada;
   List<Categoria> categoriasSeleccionadas = [];

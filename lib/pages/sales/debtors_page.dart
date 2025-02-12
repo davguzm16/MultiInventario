@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
 class DebtorsPage extends StatefulWidget {
+  const DebtorsPage({super.key});
+
   @override
-  _DebtorsPageState createState() => _DebtorsPageState();
+  DebtorsPageState createState() => DebtorsPageState();
 }
 
-class _DebtorsPageState extends State<DebtorsPage> {
+class DebtorsPageState extends State<DebtorsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Deudores', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+        title: Text('Deudores',
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         elevation: 0,
         actions: [
@@ -53,9 +56,12 @@ class _DebtorsPageState extends State<DebtorsPage> {
         selectedItemColor: Color(0xFF493D9E),
         unselectedItemColor: Colors.grey,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.inventory), label: 'Inventario'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Ventas'),
-          BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Reportes'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.inventory), label: 'Inventario'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_cart), label: 'Ventas'),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart), label: 'Reportes'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Ajustes'),
         ],
       ),
@@ -68,7 +74,10 @@ class DebtorCard extends StatelessWidget {
   final String lastPurchase;
   final String totalAmount;
 
-  DebtorCard({required this.name, required this.lastPurchase, required this.totalAmount});
+  DebtorCard(
+      {required this.name,
+      required this.lastPurchase,
+      required this.totalAmount});
 
   @override
   Widget build(BuildContext context) {
@@ -80,26 +89,32 @@ class DebtorCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Text(name, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(name,
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 4),
-            Text('Última compra: $lastPurchase', style: TextStyle(color: Colors.grey[700])),
+            Text('Última compra: $lastPurchase',
+                style: TextStyle(color: Colors.grey[700])),
             SizedBox(height: 4),
-            Text('Monto total: $totalAmount', style: TextStyle(color: Colors.grey[700])),
+            Text('Monto total: $totalAmount',
+                style: TextStyle(color: Colors.grey[700])),
             SizedBox(height: 8),
             Align(
               alignment: Alignment.centerRight,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Color(0xFF493D9E),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0)),
                 ),
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => DebtorDetailsPage(name: name)),
+                    MaterialPageRoute(
+                        builder: (context) => DebtorDetailsPage(name: name)),
                   );
                 },
-                child: Text('Más detalles', style: TextStyle(color: Colors.white)),
+                child:
+                    Text('Más detalles', style: TextStyle(color: Colors.white)),
               ),
             ),
           ],
@@ -121,7 +136,9 @@ class DebtorDetailsPage extends StatelessWidget {
         title: Text(name, style: TextStyle(color: Colors.black)),
         backgroundColor: Colors.white,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.black), // Asegura que el ícono de la AppBar sea visible
+        iconTheme: IconThemeData(
+            color:
+                Colors.black), // Asegura que el ícono de la AppBar sea visible
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -133,7 +150,9 @@ class DebtorDetailsPage extends StatelessWidget {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 16),
-            Expanded(child: DebtsList()), // Use Expanded to ensure the list takes up available space
+            Expanded(
+                child:
+                    DebtsList()), // Use Expanded to ensure the list takes up available space
             SizedBox(height: 16),
             TotalDebt(),
           ],
@@ -180,7 +199,8 @@ class DebtsList extends StatelessWidget {
         });
 
         return Card(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
           elevation: 4,
           margin: EdgeInsets.symmetric(vertical: 8.0),
           child: Padding(
@@ -220,7 +240,8 @@ class DebtsList extends StatelessWidget {
                     ),
                     Text(
                       'S/${totalDebt.toStringAsFixed(2)}',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.black),
                     ),
                   ],
                 ),
@@ -272,12 +293,11 @@ class TotalDebt extends StatelessWidget {
           ),
           Text(
             'S/${totalDebt.toStringAsFixed(2)}',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
+            style: TextStyle(
+                fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
           ),
         ],
       ),
     );
   }
 }
-
-

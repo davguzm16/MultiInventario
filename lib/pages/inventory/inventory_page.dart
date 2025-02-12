@@ -19,16 +19,22 @@ class _InventoryPageState extends State<InventoryPage>
     with SingleTickerProviderStateMixin {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
+  late AnimationController _animationController;
+  Timer? _searchTimer;
+
+  // Listado de productos
   List<Producto> productos = [];
+
+  // Variables de filtrado
   List<Categoria> categoriasSeleccionadas = [];
   bool isStockBajo = false;
+  String nombreProductoBuscado = "";
+
+  // Manejo de resultados por carga
   int cantidadCargas = 0;
   bool hayMasCargas = true;
-  String searchQuery = "";
   bool isSearching = false;
   bool isLoading = false;
-  Timer? _searchTimer;
-  late AnimationController _animationController;
 
   @override
   void initState() {
@@ -46,7 +52,7 @@ class _InventoryPageState extends State<InventoryPage>
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
         hayMasCargas &&
-        searchQuery.isEmpty) {
+        nombreProductoBuscado.isEmpty) {
       _cargarProductos();
     }
   }
@@ -111,11 +117,9 @@ class _InventoryPageState extends State<InventoryPage>
       List<Producto> productosFiltrados =
           await Producto.obtenerProductosPorNombre(nombre);
 
-      if (mounted) {
-        setState(() {
-          productos = productosFiltrados;
-        });
-      }
+      setState(() {
+        productos = productosFiltrados;
+      });
     });
   }
 
@@ -148,7 +152,7 @@ class _InventoryPageState extends State<InventoryPage>
                         _searchController.clear();
                         setState(() {
                           isSearching = false;
-                          searchQuery = "";
+                          nombreProductoBuscado = "";
                         });
                         _animationController.reverse();
                         _cargarProductos(reiniciarListaProductos: true);
@@ -165,7 +169,7 @@ class _InventoryPageState extends State<InventoryPage>
                   ),
                   onChanged: (value) {
                     setState(() {
-                      searchQuery = value;
+                      nombreProductoBuscado = value;
                     });
                     _buscarProductosPorNombre(value);
                   },
@@ -203,29 +207,28 @@ class _InventoryPageState extends State<InventoryPage>
                     const Duration(milliseconds: 300), _cargarProductos);
               },
             ),
-          if (!isSearching)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: () async {
-                final filtros = await context.push<Map<String, dynamic>>(
-                  '/inventory/filter-products',
-                  extra: {
-                    'categoriasSeleccionadas': categoriasSeleccionadas,
-                    'isStockBajo': isStockBajo,
-                  },
-                );
+          IconButton(
+            icon: const Icon(Icons.filter_list),
+            onPressed: () async {
+              final filtros = await context.push<Map<String, dynamic>>(
+                '/inventory/filter-products',
+                extra: {
+                  'categoriasSeleccionadas': categoriasSeleccionadas,
+                  'isStockBajo': isStockBajo,
+                },
+              );
 
-                if (filtros != null) {
-                  setState(() {
-                    categoriasSeleccionadas =
-                        filtros['categoriasSeleccionadas'] as List<Categoria>;
-                    isStockBajo = filtros['isStockBajo'] as bool;
-                  });
-                }
+              if (filtros != null) {
+                setState(() {
+                  categoriasSeleccionadas =
+                      filtros['categoriasSeleccionadas'] as List<Categoria>;
+                  isStockBajo = filtros['isStockBajo'] as bool;
+                });
+              }
 
-                _cargarProductos(reiniciarListaProductos: true);
-              },
-            ),
+              _cargarProductos(reiniciarListaProductos: true);
+            },
+          ),
         ],
       ),
       body: Stack(
@@ -233,85 +236,94 @@ class _InventoryPageState extends State<InventoryPage>
           Column(
             children: [
               Expanded(
-                child: GridView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.all(10.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    childAspectRatio: 1.0,
-                  ),
-                  itemCount: productos.length,
-                  itemBuilder: (context, index) {
-                    final producto = productos[index];
+                child: productos.isEmpty
+                    ? const Center(
+                        child: Text(
+                          "No se encontraron productos",
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      )
+                    : GridView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.all(10.0),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                          childAspectRatio: 1.0,
+                        ),
+                        itemCount: productos.length,
+                        itemBuilder: (context, index) {
+                          final producto = productos[index];
 
-                    return GestureDetector(
-                      onTap: () {
-                        context
-                            .push('/inventory/product/${producto.idProducto}');
-                      },
-                      child: Container(
-                        width: 150,
-                        height: 150,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.purple),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: ClipRRect(
+                          return GestureDetector(
+                            onTap: () {
+                              context.push(
+                                  '/inventory/product/${producto.idProducto}');
+                            },
+                            child: Container(
+                              width: 150,
+                              height: 150,
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.purple),
                                 borderRadius: BorderRadius.circular(10),
-                                child: producto.rutaImagen == null
-                                    ? Image.asset(
-                                        'lib/assets/iconos/iconoImagen.png',
-                                        fit: BoxFit.cover,
-                                      )
-                                    : Image.file(
-                                        File(producto.rutaImagen!),
-                                        fit: BoxFit.cover,
-                                      ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 80,
+                                    height: 80,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: producto.rutaImagen == null
+                                          ? Image.asset(
+                                              'lib/assets/iconos/iconoImagen.png',
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.file(
+                                              File(producto.rutaImagen!),
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Flexible(
+                                    child: Text(
+                                      producto.nombreProducto,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14),
+                                      textAlign: TextAlign.center,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    ),
+                                  ),
+                                  Text(
+                                    "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  Text(
+                                    "Stock: ${producto.stockActual} ud",
+                                    style: TextStyle(
+                                      color: producto.stockActual <
+                                              producto.stockMinimo
+                                          ? Colors.red
+                                          : Colors.black,
+                                      fontSize: 12,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 5),
-                            Flexible(
-                              child: Text(
-                                producto.nombreProducto,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold, fontSize: 14),
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                              ),
-                            ),
-                            Text(
-                              "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12),
-                            ),
-                            Text(
-                              "Stock: ${producto.stockActual} ud",
-                              style: TextStyle(
-                                color:
-                                    producto.stockActual < producto.stockMinimo
-                                        ? Colors.red
-                                        : Colors.black,
-                                fontSize: 12,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),
