@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
+import 'package:multiinventario/models/lote.dart';
 
 class CreateSalePage extends StatefulWidget {
   const CreateSalePage({super.key});
@@ -68,12 +69,16 @@ class _CreateSalePageState extends State<CreateSalePage> {
   void _showAddProductDialog({bool editarProducto = false, int? index}) {
     int cantidad = editarProducto ? detallesVenta[index!].cantidadProducto : 1;
     double? descuento =
-        editarProducto ? detallesVenta[index!].descuentoProducto : 0.0;
+    editarProducto ? detallesVenta[index!].descuentoProducto : 0.0;
     TextEditingController descuentoController =
-        TextEditingController(text: descuento.toString());
+    TextEditingController(text: descuento.toString());
+
+    Producto? productoSeleccionado;
+    //Lote? loteSeleccionado; // Variable para el lote seleccionado
+    String? loteSeleccionado; // Cambiado a String? si estás trabajando con opciones como "A" y "B"
 
     if (editarProducto) {
-      _searchController.text = productosVenta[index!].nombreProducto;
+      productoSeleccionado = productosVenta[index!];
     }
 
     showDialog(
@@ -81,15 +86,12 @@ class _CreateSalePageState extends State<CreateSalePage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            title:
-                Text(editarProducto ? "Editar producto" : "Agregar producto"),
+            title: Text(editarProducto ? "Editar producto" : "Agregar producto"),
             content: SizedBox(
-              width: double
-                  .maxFinite, // Hace que el dialogo use todo el ancho disponible
+              width: double.maxFinite,
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Se ajusta al contenido
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Buscador animado
                   TextField(
                     controller: _searchController,
                     autofocus: true,
@@ -122,39 +124,107 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     },
                   ),
                   const SizedBox(height: 10),
-
-                  // Lista de productos filtrados
                   if (!editarProducto)
                     SizedBox(
-                      height:
-                          150, // Define una altura fija para evitar conflictos
+                      height: 150,
                       child: productosFiltrados.isEmpty
-                          ? const Center(
-                              child: Text("No hay productos encontrados"))
+                          ? const Center(child: Text("No hay productos encontrados"))
                           : ListView.builder(
-                              itemCount: productosFiltrados.length,
-                              itemBuilder: (context, index) {
-                                final producto = productosFiltrados[index];
-                                return ListTile(
-                                  title: Text(producto.nombreProducto),
-                                  subtitle: Text(
-                                      "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
-                                  onTap: () {
-                                    _searchController.text =
-                                        producto.nombreProducto;
-                                    setDialogState(() {});
-                                  },
-                                );
-                              },
-                            ),
+                        itemCount: productosFiltrados.length,
+                        itemBuilder: (context, index) {
+                          final producto = productosFiltrados[index];
+                          return ListTile(
+                            title: Text(producto.nombreProducto),
+                            subtitle: Text(
+                                "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
+                            onTap: () {
+                              _searchController.text = producto.nombreProducto;
+                              setDialogState(() {});
+                              productoSeleccionado = producto;
+                            },
+                          );
+                        },
+                      ),
                     ),
                   const SizedBox(height: 10),
+                  if (productoSeleccionado != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}"),
+                        const SizedBox(height: 10),
 
-                  // Información del producto seleccionado
-                  Text(
-                      "Precio: S/ ${_obtenerProductoSeleccionado()?.precioProducto.toStringAsFixed(2) ?? '---'}"),
+                        // Mostrar lotes disponibles para el producto
+                        FutureBuilder<List<String>>(
+                          future: Future.delayed(Duration(seconds: 1), () => ["A", "B"]), // Simula la carga de opciones "A" y "B"
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return Text("Error: ${snapshot.error}");
+                            }
 
-                  // Controles de cantidad
+                            final opciones = snapshot.data ?? [];
+                            if (opciones.isEmpty) {
+                              return const Text("No hay opciones disponibles");
+                            }
+
+                            return Column(
+                              children: opciones.map((opcion) {
+                                return RadioListTile<String>(
+                                  title: Text("Opción: $opcion"),
+                                  value: opcion,
+                                  groupValue: loteSeleccionado, // Aquí usamos String? en vez de Lote?
+                                  onChanged: (String? value) {
+                                    setDialogState(() {
+                                      loteSeleccionado = value; // Aquí actualizamos con el valor de String?
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            );
+                          },
+                        )
+
+                        /*FutureBuilder<List<Lote>>(
+                          future: Lote.obtenerLotesDeProducto(productoSeleccionado!.idProducto!),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const CircularProgressIndicator();
+                            }
+                            if (snapshot.hasError) {
+                              return Text("Error: ${snapshot.error}");
+                            }
+
+                            final lotes = snapshot.data ?? [];
+                            if (lotes.isEmpty) {
+                              return const Text("No hay lotes disponibles");
+                            }
+
+                            return Column(
+                              children: lotes.map((lote) {
+                                return RadioListTile<Lote>(
+                                  title: Text("Lote: ${lote.idLote}"),
+                                  subtitle: Text(
+                                    "Cantidad: ${lote.cantidadActual} | Precio: S/ ${lote.precioCompra.toStringAsFixed(2)}",
+                                  ),
+                                  value: lote,
+                                  groupValue: loteSeleccionado,
+                                  onChanged: (Lote? value) {
+                                    setDialogState(() {
+                                      loteSeleccionado = value;
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            );
+                          },
+                        ),*/
+                      ],
+                    ),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -175,11 +245,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
                       ),
                     ],
                   ),
-
-                  // Descuento
                   TextFormField(
-                    decoration:
-                        const InputDecoration(labelText: "Descuento (S/)"),
+                    decoration: const InputDecoration(labelText: "Descuento (S/)"),
                     keyboardType: TextInputType.number,
                     controller: descuentoController,
                     onChanged: (value) {
@@ -189,8 +256,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     },
                   ),
                   const SizedBox(height: 10),
-
-                  // Total
                   Text(
                     "Total: S/ ${_calcularTotal(cantidad, descuento).toStringAsFixed(2)}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
@@ -201,11 +266,9 @@ class _CreateSalePageState extends State<CreateSalePage> {
             actions: [
               ElevatedButton(
                 onPressed: () {
-                  Producto? productoSeleccionado =
-                      _obtenerProductoSeleccionado();
-                  if (productoSeleccionado == null && !editarProducto) {
+                  if (productoSeleccionado == null || loteSeleccionado == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Producto no válido")),
+                      const SnackBar(content: Text("Producto o lote no válidos")),
                     );
                     return;
                   }
@@ -225,10 +288,22 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     );
 
                     setState(() {
-                      productosVenta.add(productoSeleccionado);
+                      if (productoSeleccionado != null) {
+                        productosVenta.add(productoSeleccionado!); // The '!' operator tells Dart that productoSeleccionado is not null here
+                      } else {
+                        // Handle the case when productoSeleccionado is null, e.g., show an error message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text("Producto no seleccionado")),
+                        );
+                      }
                       detallesVenta.add(nuevoDetalle);
                     });
                   }
+
+                  // Aquí es donde puedes almacenar el lote seleccionado en una variable auxiliar
+                  // sin modificar la clase DetalleVenta, por ejemplo:
+                  // loteSeleccionado puede usarse para otro propósito en la lógica del sistema,
+                  // o simplemente ser usado visualmente para mostrarlo.
 
                   context.pop();
                 },
