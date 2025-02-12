@@ -75,7 +75,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
 
     Producto? productoSeleccionado;
     //Lote? loteSeleccionado; // Variable para el lote seleccionado
-    String? loteSeleccionado; // Cambiado a String? si estás trabajando con opciones como "A" y "B"
+    Lote? loteSeleccionado; // Cambiado a String? si estás trabajando con opciones como "A" y "B"
 
     if (editarProducto) {
       productoSeleccionado = productosVenta[index!];
@@ -156,40 +156,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         const SizedBox(height: 10),
 
                         // Mostrar lotes disponibles para el producto
-                        FutureBuilder<List<String>>(
-                          future: Future.delayed(Duration(seconds: 1), () => ["A", "B"]), // Simula la carga de opciones "A" y "B"
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            if (snapshot.hasError) {
-                              return Text("Error: ${snapshot.error}");
-                            }
-
-                            final opciones = snapshot.data ?? [];
-                            if (opciones.isEmpty) {
-                              return const Text("No hay opciones disponibles");
-                            }
-
-                            return Column(
-                              children: opciones.map((opcion) {
-                                return RadioListTile<String>(
-                                  title: Text("Opción: $opcion"),
-                                  value: opcion,
-                                  groupValue: loteSeleccionado, // Aquí usamos String? en vez de Lote?
-                                  onChanged: (String? value) {
-                                    setDialogState(() {
-                                      loteSeleccionado = value; // Aquí actualizamos con el valor de String?
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            );
-                          },
-                        )
-
-                        /*FutureBuilder<List<Lote>>(
-                          future: Lote.obtenerLotesDeProducto(productoSeleccionado!.idProducto!),
+                        FutureBuilder<List<Lote>>(
+                          future: Lote.obtenerLotesDeProducto(productoSeleccionado!.idProducto!), // Llama al método para obtener los lotes
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const CircularProgressIndicator();
@@ -203,25 +171,22 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               return const Text("No hay lotes disponibles");
                             }
 
-                            return Column(
-                              children: lotes.map((lote) {
-                                return RadioListTile<Lote>(
-                                  title: Text("Lote: ${lote.idLote}"),
-                                  subtitle: Text(
-                                    "Cantidad: ${lote.cantidadActual} | Precio: S/ ${lote.precioCompra.toStringAsFixed(2)}",
-                                  ),
+                            return DropdownButton<Lote?>(
+                              value: loteSeleccionado, // Lote seleccionado
+                              onChanged: (Lote? newValue) {
+                                setState(() {
+                                  loteSeleccionado = newValue; // Actualiza con el objeto Lote
+                                });
+                              },
+                              items: lotes.map<DropdownMenuItem<Lote?>>((Lote lote) {
+                                return DropdownMenuItem<Lote?>(
                                   value: lote,
-                                  groupValue: loteSeleccionado,
-                                  onChanged: (Lote? value) {
-                                    setDialogState(() {
-                                      loteSeleccionado = value;
-                                    });
-                                  },
+                                  child: Text("Lote: ${lote.idLote} - ${lote.cantidadActual} ud - S/ ${lote.precioCompra.toStringAsFixed(2)}"),
                                 );
                               }).toList(),
                             );
                           },
-                        ),*/
+                        )
                       ],
                     ),
                   const SizedBox(height: 10),
