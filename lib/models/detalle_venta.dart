@@ -3,16 +3,22 @@ import 'package:multiinventario/controllers/db_controller.dart';
 
 class DetalleVenta {
   int idProducto;
+  int idLote;
   int idVenta;
   int cantidadProducto;
+  double precioUnidadProducto;
   double subtotalProducto;
+  double gananciaProducto;
   double? descuentoProducto;
 
   DetalleVenta({
     required this.idProducto,
+    required this.idLote,
     required this.idVenta,
     required this.cantidadProducto,
+    required this.precioUnidadProducto,
     required this.subtotalProducto,
+    required this.gananciaProducto,
     this.descuentoProducto,
   });
 
@@ -21,13 +27,16 @@ class DetalleVenta {
       final db = await DatabaseController().database;
       await db.rawInsert('''
         INSERT INTO DetallesVentas (
-          idProducto, idVenta, cantidadProducto, subtotalProducto, descuentoProducto
-        ) VALUES (?, ?, ?, ?, ?)
+          idProducto, idLote, idVenta, cantidadProducto, precioUnidadProducto, subtotalProducto, gananciaProducto, descuentoProducto
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       ''', [
         detalle.idProducto,
+        detalle.idLote,
         idVenta,
         detalle.cantidadProducto,
+        detalle.precioUnidadProducto,
         detalle.subtotalProducto,
+        detalle.gananciaProducto,
         detalle.descuentoProducto ?? 0.0,
       ]);
 
@@ -39,7 +48,7 @@ class DetalleVenta {
       return true;
     } catch (e) {
       debugPrint(
-          "Error al asignar la relación de detalle de venta: ${e.toString()}");
+          "Error al asignar la relación de detalle de venta: \${e.toString()}");
     }
     return false;
   }
@@ -67,7 +76,7 @@ class DetalleVenta {
       return true;
     } catch (e) {
       debugPrint(
-          "Error al deshacer la relación de detalle de venta: ${e.toString()}");
+          "Error al deshacer la relación de detalle de venta: \${e.toString()}");
     }
     return false;
   }
@@ -85,16 +94,19 @@ class DetalleVenta {
       List<DetalleVenta> detalles = detallesData.map((detalle) {
         return DetalleVenta(
           idProducto: detalle['idProducto'] as int,
+          idLote: detalle['idLote'] as int,
           idVenta: detalle['idVenta'] as int,
           cantidadProducto: detalle['cantidadProducto'] as int,
+          precioUnidadProducto: (detalle['precioUnidadProducto'] as num).toDouble(),
           subtotalProducto: (detalle['subtotalProducto'] as num).toDouble(),
-          descuentoProducto: detalle['descuentoProducto'] as double,
+          gananciaProducto: (detalle['gananciaProducto'] as num).toDouble(),
+          descuentoProducto: detalle['descuentoProducto'] as double?,
         );
       }).toList();
 
       return detalles;
     } catch (e) {
-      debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
+      debugPrint("Error al obtener los detalles de venta: \${e.toString()}");
       return [];
     }
   }
