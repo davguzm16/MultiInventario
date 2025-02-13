@@ -8,7 +8,9 @@ class Lote {
   int cantidadComprada;
   int? cantidadPerdida;
   double precioCompra;
+  double precioCompraUnidad;
   DateTime? fechaCaducidad;
+  DateTime? fechaCompra;
 
   // Constructor
   Lote({
@@ -18,7 +20,9 @@ class Lote {
     required this.cantidadComprada,
     this.cantidadPerdida,
     required this.precioCompra,
+    required this.precioCompraUnidad,
     this.fechaCaducidad,
+    this.fechaCompra,
   });
 
   static Future<bool> crearLote(Lote lote) async {
@@ -27,16 +31,18 @@ class Lote {
 
       final insertResult = await db.rawInsert(
         '''
-        INSERT INTO Lotes (idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, fechaCaducidad)
-        VALUES (?, ?, ?, ?, ?, ?)
-        ''',
+        INSERT INTO Lotes (idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''' ,
         [
           lote.idProducto,
           lote.cantidadActual,
           lote.cantidadComprada,
           lote.cantidadPerdida ?? 0,
           lote.precioCompra,
+          lote.precioCompraUnidad,
           lote.fechaCaducidad?.toIso8601String(),
+          lote.fechaCompra?.toIso8601String(),
         ],
       );
 
@@ -55,29 +61,33 @@ class Lote {
       final db = await DatabaseController().database;
       final List<Map<String, dynamic>> result = await db.rawQuery(
         '''
-        SELECT idLote, idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, fechaCaducidad 
+        SELECT idLote, idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra 
         FROM Lotes 
         WHERE idProducto = ? 
         ORDER BY idLote ASC
-        ''',
+        ''' ,
         [idProducto],
       );
 
       for (var item in result) {
         lotes.add(Lote(
+          idLote: item['idLote'] as int?,
           idProducto: item['idProducto'] as int,
           cantidadActual: item['cantidadActual'] as int,
           cantidadComprada: item['cantidadComprada'] as int,
           cantidadPerdida: item['cantidadPerdida'] as int? ?? 0,
           precioCompra: (item['precioCompra'] as num).toDouble(),
+          precioCompraUnidad: (item['precioCompraUnidad'] as num).toDouble(),
           fechaCaducidad: item['fechaCaducidad'] != null
               ? DateTime.parse(item['fechaCaducidad'])
+              : null,
+          fechaCompra: item['fechaCompra'] != null
+              ? DateTime.parse(item['fechaCompra'])
               : null,
         ));
       }
     } catch (e) {
-      debugPrint(
-          "Error al obtener los lotes del producto $idProducto: ${e.toString()}");
+      debugPrint("Error al obtener los lotes del producto $idProducto: ${e.toString()}");
     }
     return lotes;
   }
@@ -88,15 +98,17 @@ class Lote {
       int result = await db.rawUpdate(
         '''
         UPDATE Lotes 
-        SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, precioCompra = ?, fechaCaducidad = ? 
+        SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, precioCompra = ?, precioCompraUnidad = ?, fechaCaducidad = ?, fechaCompra = ? 
         WHERE idLote = ?
-        ''',
+        ''' ,
         [
           lote.cantidadActual,
           lote.cantidadComprada,
           lote.cantidadPerdida ?? 0,
           lote.precioCompra,
+          lote.precioCompraUnidad,
           lote.fechaCaducidad?.toIso8601String(),
+          lote.fechaCompra?.toIso8601String(),
           lote.idLote,
         ],
       );

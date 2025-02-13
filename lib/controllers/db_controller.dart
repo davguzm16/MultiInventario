@@ -112,11 +112,15 @@ class DatabaseController {
         await db.execute('''
           CREATE TABLE DetallesVentas (
             idProducto INTEGER,
+            idLote INTEGER,
             idVenta INTEGER,
             cantidadProducto INTEGER NOT NULL,
+            precioUnidadProducto REAL NOT NULL,
             subtotalProducto REAL NOT NULL,
+            gananciaProducto REAL NOT NULL,
             descuentoProducto REAL,
             FOREIGN KEY (idProducto) REFERENCES Productos(idProducto),
+            FOREIGN KEY (idLote) REFERENCES Lotes(idLote)
             FOREIGN KEY (idVenta) REFERENCES Ventas(idVenta)
           )
         ''');
@@ -129,7 +133,9 @@ class DatabaseController {
             cantidadComprada INTEGER NOT NULL,
             cantidadPerdida INTEGER,
             precioCompra REAL NOT NULL,
+            precioCompraUnidad REAL NOT NULL,
             fechaCaducidad DATE,
+            fechaCompra DATE,
             PRIMARY KEY (idLote, idProducto),
             FOREIGN KEY (idProducto) REFERENCES Productos(idProducto)
           )
