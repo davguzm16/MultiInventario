@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/venta.dart';
+import 'package:multiinventario/pages/sales/create_sale_page.dart';
 
 class SalesPage extends StatefulWidget {
   const SalesPage({super.key});

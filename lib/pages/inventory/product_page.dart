@@ -422,6 +422,7 @@ class _ProductPageState extends State<ProductPage> {
                 }
 
                 Lote nuevoLote = Lote(
+                  precioCompraUnidad: 0, // CORREGUIR
                   idProducto: widget.idProducto,
                   cantidadActual: cantidadAsignada,
                   cantidadComprada: 10,
@@ -526,6 +527,7 @@ class _ProductPageState extends State<ProductPage> {
                 }
 
                 Lote loteEditado = Lote(
+                  precioCompraUnidad: 0, // CORREGUIR
                   idLote: lote.idLote,
                   idProducto: lote.idProducto,
                   cantidadActual: cantidadAsignada,
