@@ -151,13 +151,14 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                            "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}"),
+                        Text("Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}"),
                         const SizedBox(height: 10),
 
-                        // Mostrar lotes disponibles para el producto
+// Mostrar lotes disponibles para el producto
                         FutureBuilder<List<Lote>>(
-                          future: Lote.obtenerLotesDeProducto(productoSeleccionado!.idProducto!), // Llama al método para obtener los lotes
+                          future: productoSeleccionado != null
+                              ? Lote.obtenerLotesDeProducto(productoSeleccionado!.idProducto!)
+                              : Future.value([]),
                           builder: (context, snapshot) {
                             if (snapshot.connectionState == ConnectionState.waiting) {
                               return const CircularProgressIndicator();
@@ -171,22 +172,31 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               return const Text("No hay lotes disponibles");
                             }
 
-                            return DropdownButton<Lote?>(
-                              value: loteSeleccionado, // Lote seleccionado
+                            // Asignar lote seleccionado solo si es null y hay lotes disponibles
+                            if (loteSeleccionado == null && lotes.isNotEmpty) {
+                              loteSeleccionado = lotes.first;
+                            }
+
+                            return DropdownButton<Lote>(
+                              value: lotes.contains(loteSeleccionado) ? loteSeleccionado : null,
+                              hint: Text("Seleccione un lote"), // Agregado para mejorar la UX
                               onChanged: (Lote? newValue) {
-                                setState(() {
-                                  loteSeleccionado = newValue; // Actualiza con el objeto Lote
+                                setDialogState(() {
+                                  loteSeleccionado = newValue; // Actualiza el lote seleccionado
                                 });
                               },
-                              items: lotes.map<DropdownMenuItem<Lote?>>((Lote lote) {
-                                return DropdownMenuItem<Lote?>(
+                              items: lotes.map<DropdownMenuItem<Lote>>((Lote lote) {
+                                return DropdownMenuItem<Lote>(
                                   value: lote,
                                   child: Text("Lote: ${lote.idLote} - ${lote.cantidadActual} ud - S/ ${lote.precioCompra.toStringAsFixed(2)}"),
                                 );
                               }).toList(),
                             );
+
                           },
                         )
+
+
                       ],
                     ),
                   const SizedBox(height: 10),
@@ -250,7 +260,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                       cantidadProducto: cantidad,
                       subtotalProducto: _calcularTotal(cantidad, descuento),
                       descuentoProducto: descuento,
-                      idLote: loteSeleccionado!.idLote!,
+                      idLote: loteSeleccionado?.idLote ?? 0,
                       precioUnidadProducto: productoSeleccionado!.precioProducto!,
                       gananciaProducto: 2,
                     );
@@ -340,7 +350,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.purple, width: 2),
+                              border: Border.all(color: Color.fromARGB(255, 124, 33, 243), width: 2),
                             ),
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +420,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.purple, width: 1),
+                    border: Border.all(color: Color.fromARGB(255, 124, 33, 243), width: 1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -438,12 +448,14 @@ class _CreateSalePageState extends State<CreateSalePage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.blue,
+                        color: Color.fromARGB(255, 124, 33, 243),
                       ),
                     ),
                     Container(
+
+
                       decoration: BoxDecoration(
-                        color: Colors.purple.shade800,
+                        color: Color.fromARGB(255, 124, 33, 243),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
