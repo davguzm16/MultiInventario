@@ -250,6 +250,9 @@ class _CreateSalePageState extends State<CreateSalePage> {
                       cantidadProducto: cantidad,
                       subtotalProducto: _calcularTotal(cantidad, descuento),
                       descuentoProducto: descuento,
+                      idLote: loteSeleccionado!.idLote!,
+                      precioUnidadProducto: productoSeleccionado!.precioProducto!,
+                      gananciaProducto: 2,
                     );
 
                     setState(() {
@@ -322,8 +325,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               ),
                               SlidableAction(
                                 onPressed: (context) {
-                                  _showAddProductDialog(
-                                      editarProducto: true, index: index);
+                                  _showAddProductDialog(editarProducto: true, index: index);
                                 },
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
@@ -332,36 +334,69 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               ),
                             ],
                           ),
-                          child: ListTile(
-                            leading: SizedBox(
-                              width:
-                                  50, // Asegura un tamaño fijo para la imagen
-                              height: 50,
-                              child: productosVenta[index].rutaImagen == null
-                                  ? Image.asset(
-                                      'lib/assets/iconos/iconoImagen.png',
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Image.file(
-                                      File(productosVenta[index].rutaImagen!),
-                                      fit: BoxFit.cover,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.purple, width: 2),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Imagen del producto
+                                SizedBox(
+                                  width: 50,
+                                  height: 50,
+                                  child: productosVenta[index].rutaImagen == null
+                                      ? Image.asset(
+                                    'lib/assets/iconos/iconoImagen.png',
+                                    fit: BoxFit.cover,
+                                  )
+                                      : Image.file(
+                                    File(productosVenta[index].rutaImagen!),
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                // Información del producto
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        productosVenta[index].nombreProducto,
+                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text(
+                                        "Precio: S/ ${productosVenta[index].precioProducto}\n"
+                                        "Cantidad: ${detallesVenta[index].cantidadProducto}\n"
+                                        "Lote: ${detallesVenta[index].idLote}\n"
+                                        "Descuento: S/ ${detallesVenta[index].descuentoProducto}",
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                // Subtotal
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    const Text(
+                                      "Subtotal",
+                                      style: TextStyle(fontWeight: FontWeight.bold),
                                     ),
-                            ),
-                            title: Text(
-                              productosVenta[index].nombreProducto,
-                              overflow:
-                                  TextOverflow.ellipsis, // Evita desbordes
-                            ),
-                            subtitle: Text(
-                              "Precio: S/ ${productosVenta[index].precioProducto} \n"
-                              "Cantidad: ${detallesVenta[index].cantidadProducto} \n"
-                              "Descuento: S/ ${detallesVenta[index].descuentoProducto}",
-                            ),
-                            trailing: Text(
-                              "Subtotal: \nS/ ${detallesVenta[index].subtotalProducto.toStringAsFixed(2)}",
+                                    Text(
+                                      "S/ ${detallesVenta[index].subtotalProducto.toStringAsFixed(2)}",
+                                    ),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
                         );
+
                       },
                     ),
             ),
@@ -373,36 +408,67 @@ class _CreateSalePageState extends State<CreateSalePage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  "Total: S/ ${_calcularTotalVenta().toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.purple, width: 1),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  textAlign: TextAlign.center,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _showAddProductDialog, // Funcionalidad de agregar producto
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent, // Botón transparente para el diseño
+                      shadowColor: Colors.transparent,
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      "+",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 18, color: Colors.black),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    const Text(
+                      "Total: ",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.purple.shade800,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: Text(
+                        "${_calcularTotalVenta().toStringAsFixed(2)}", // Calculando el total
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: _showAddProductDialog,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
-                    textStyle: const TextStyle(fontSize: 16),
-                  ),
-                  child: const Text("Agregar Producto"),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {}, // Aquí iría la funcionalidad de confirmar
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                     textStyle: const TextStyle(fontSize: 16),
                   ),
-                  child: const Text("Confirmar",
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text("Confirmar", style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
