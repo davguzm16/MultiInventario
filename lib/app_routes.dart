@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/controllers/image_picker.dart';
+import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:multiinventario/pages/sales/create_sale_page.dart';
+import 'package:multiinventario/pages/sales/debtors_page.dart';
+import 'package:multiinventario/pages/sales/details_sale_page.dart';
 import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/controllers/barcode_scanner.dart';
 
@@ -36,8 +40,14 @@ class AppRoutes {
           ),
           GoRoute(
             path: 'create-pin',
-            builder: (context, state) => CreatePinPage(),
+            builder: (context, state) {
+              final extra = state.extra as bool;
+              return CreatePinPage(isRecovery: extra);
+            },
           ),
+          GoRoute(
+              path: 'recover-pin',
+              builder: (context, state) => RecoverPinPage())
         ],
       ),
       StatefulShellRoute.indexedStack(
@@ -56,14 +66,29 @@ class AppRoutes {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) => const CreateProductPage(),
                   ),
-                  /*GoRoute(
+                  GoRoute(
+                    path: 'filter-products',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>;
+                      final categoriasSeleccionadas =
+                          extra['categoriasSeleccionadas'] as List<Categoria>;
+                      final isStockBajo = extra['isStockBajo'] as bool;
+
+                      return FilterProductPage(
+                        categoriasSeleccionadas: categoriasSeleccionadas,
+                        isStockBajo: isStockBajo,
+                      );
+                    },
+                  ),
+                  GoRoute(
                     path: 'product/:idProducto',
                     builder: (context, state) {
                       final idProducto =
                           int.parse(state.pathParameters['idProducto']!);
                       return ProductPage(idProducto: idProducto);
                     },
-                  ),*/
+                  ),
                 ],
               ),
             ],
@@ -73,6 +98,20 @@ class AppRoutes {
               GoRoute(
                 path: '/sales',
                 builder: (context, state) => const SalesPage(),
+                routes: [
+                  GoRoute(
+                    path: 'create-sale',
+                    builder: (context, state) => const CreateSalePage(),
+                  ),
+                  GoRoute(
+                    path: 'debtors',
+                    builder: (context, state) => const DebtorsPage(),
+                  ),
+                  GoRoute(
+                    path: 'details-sale',
+                    builder: (context, state) => const DetailsSalePage(),
+                  ),
+                ],
               ),
             ],
           ),

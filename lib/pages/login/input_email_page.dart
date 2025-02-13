@@ -33,7 +33,7 @@ class _PinputInfoState extends State<PinputInfo> {
   late final TextEditingController emailController;
   late final GlobalKey<FormState> formKey;
 
-  bool isSendingEmail = false;
+  bool isSendEmail = false;
 
   String generarCodigoVerificacion() {
     Random random = Random();
@@ -42,7 +42,7 @@ class _PinputInfoState extends State<PinputInfo> {
 
   Future<void> enviarCodigoEmail() async {
     setState(() {
-      isSendingEmail = true;
+      isSendEmail = true;
     });
 
     String? addressSendEmail =
@@ -52,7 +52,7 @@ class _PinputInfoState extends State<PinputInfo> {
 
     if (addressSendEmail.isEmpty || passwordSendEmail.isEmpty) {
       setState(() {
-        isSendingEmail = false;
+        isSendEmail = false;
       });
       AwesomeDialog(
         context: context,
@@ -116,7 +116,7 @@ class _PinputInfoState extends State<PinputInfo> {
     } finally {
       if (mounted) {
         setState(() {
-          isSendingEmail = false;
+          isSendEmail = false;
         });
       }
     }
@@ -196,7 +196,7 @@ class _PinputInfoState extends State<PinputInfo> {
             ),
           ),
           const SizedBox(height: 30),
-          isSendingEmail
+          isSendEmail
               ? SizedBox(
                   width: 150,
                   child: LinearProgressIndicator(),

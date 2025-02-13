@@ -103,4 +103,9 @@ class Categoria {
 
     return categorias;
   }
+
+  @override
+  String toString() {
+    return "Categoria = {idCategoria: $idCategoria, nombreCategoria: $nombreCategoria}";
+  }
 }
