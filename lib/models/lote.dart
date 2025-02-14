@@ -33,7 +33,7 @@ class Lote {
         '''
         INSERT INTO Lotes (idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''' ,
+        ''',
         [
           lote.idProducto,
           lote.cantidadActual,
@@ -65,7 +65,7 @@ class Lote {
         FROM Lotes 
         WHERE idProducto = ? 
         ORDER BY idLote ASC
-        ''' ,
+        ''',
         [idProducto],
       );
 
@@ -87,7 +87,8 @@ class Lote {
         ));
       }
     } catch (e) {
-      debugPrint("Error al obtener los lotes del producto $idProducto: ${e.toString()}");
+      debugPrint(
+          "Error al obtener los lotes del producto $idProducto: ${e.toString()}");
     }
     return lotes;
   }
@@ -100,7 +101,7 @@ class Lote {
         UPDATE Lotes 
         SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, precioCompra = ?, precioCompraUnidad = ?, fechaCaducidad = ?, fechaCompra = ? 
         WHERE idLote = ?
-        ''' ,
+        ''',
         [
           lote.cantidadActual,
           lote.cantidadComprada,
