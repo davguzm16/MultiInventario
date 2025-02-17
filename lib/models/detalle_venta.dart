@@ -4,7 +4,7 @@ import 'package:multiinventario/controllers/db_controller.dart';
 class DetalleVenta {
   int idProducto;
   int idLote;
-  int idVenta;
+  int? idVenta;
   int cantidadProducto;
   double precioUnidadProducto;
   double subtotalProducto;
@@ -14,7 +14,7 @@ class DetalleVenta {
   DetalleVenta({
     required this.idProducto,
     required this.idLote,
-    required this.idVenta,
+    this.idVenta,
     required this.cantidadProducto,
     required this.precioUnidadProducto,
     required this.subtotalProducto,
@@ -97,7 +97,8 @@ class DetalleVenta {
           idLote: detalle['idLote'] as int,
           idVenta: detalle['idVenta'] as int,
           cantidadProducto: detalle['cantidadProducto'] as int,
-          precioUnidadProducto: (detalle['precioUnidadProducto'] as num).toDouble(),
+          precioUnidadProducto:
+              (detalle['precioUnidadProducto'] as num).toDouble(),
           subtotalProducto: (detalle['subtotalProducto'] as num).toDouble(),
           gananciaProducto: (detalle['gananciaProducto'] as num).toDouble(),
           descuentoProducto: detalle['descuentoProducto'] as double?,

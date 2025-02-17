@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/controllers/image_picker.dart';
 import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/login/all_login_pages.dart';
 import 'package:multiinventario/pages/home_page.dart';
@@ -9,6 +10,7 @@ import 'package:multiinventario/pages/reports/reports_page.dart';
 import 'package:multiinventario/pages/sales/create_sale_page.dart';
 import 'package:multiinventario/pages/sales/debtors_page.dart';
 import 'package:multiinventario/pages/sales/details_sale_page.dart';
+import 'package:multiinventario/pages/sales/payment_page.dart';
 import 'package:multiinventario/pages/sales/sales_page.dart';
 import 'package:multiinventario/controllers/barcode_scanner.dart';
 
@@ -102,6 +104,16 @@ class AppRoutes {
                   GoRoute(
                     path: 'create-sale',
                     builder: (context, state) => const CreateSalePage(),
+                    routes: [
+                      GoRoute(
+                        path: 'payment-page',
+                        builder: (context, state) {
+                          final detallesVenta =
+                              state.extra as List<DetalleVenta>;
+                          return PaymentPage(detallesVenta: detallesVenta);
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
                     path: 'debtors',

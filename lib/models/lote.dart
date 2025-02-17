@@ -134,4 +134,40 @@ class Lote {
       return false;
     }
   }
+
+  static Future<Lote?> obtenerLotePorId(int idLote) async {
+    try {
+      final db = await DatabaseController().database;
+      final List<Map<String, dynamic>> result = await db.rawQuery(
+        '''
+      SELECT idLote, idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra 
+      FROM Lotes 
+      WHERE idLote = ?
+      ''',
+        [idLote],
+      );
+
+      if (result.isNotEmpty) {
+        var item = result.first;
+        return Lote(
+          idLote: item['idLote'] as int?,
+          idProducto: item['idProducto'] as int,
+          cantidadActual: item['cantidadActual'] as int,
+          cantidadComprada: item['cantidadComprada'] as int,
+          cantidadPerdida: item['cantidadPerdida'] as int? ?? 0,
+          precioCompra: (item['precioCompra'] as num).toDouble(),
+          precioCompraUnidad: (item['precioCompraUnidad'] as num).toDouble(),
+          fechaCaducidad: item['fechaCaducidad'] != null
+              ? DateTime.parse(item['fechaCaducidad'])
+              : null,
+          fechaCompra: item['fechaCompra'] != null
+              ? DateTime.parse(item['fechaCompra'])
+              : null,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al obtener el lote $idLote: ${e.toString()}");
+    }
+    return null;
+  }
 }

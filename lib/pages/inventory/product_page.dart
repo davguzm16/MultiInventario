@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously//
 
+import 'dart:io';
+
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -38,7 +40,7 @@ class _ProductPageState extends State<ProductPage> {
 
     if (producto == null) {
       debugPrint("Producto ${widget.idProducto} no encontrado.");
-      await AwesomeDialog(
+      AwesomeDialog(
         context: context,
         dialogType: DialogType.error,
         animType: AnimType.topSlide,
@@ -106,36 +108,43 @@ class _ProductPageState extends State<ProductPage> {
                 SizedBox(
                   height: screenWidth * 0.2,
                   width: screenWidth * 0.2,
-                  child: producto?.rutaImagen != null
+                  child: producto!.rutaImagen == null
                       ? Image.asset(
-                          producto!.rutaImagen!,
+                          'lib/assets/iconos/iconoImagen.png',
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.image_not_supported,
-                                size: 50);
-                          },
                         )
-                      : const Icon(Icons.image_not_supported, size: 50),
+                      : Image.file(
+                          File(producto!.rutaImagen!),
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 const SizedBox(width: 20),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Código del producto",
-                      style: TextStyle(
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Código del producto",
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Colors.black54),
-                    ),
-                    Text(
-                      producto?.codigoProducto ?? "-" * 13,
-                      style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black),
-                    ),
-                  ],
+                          color: Colors.black54,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          producto?.codigoProducto ?? "-" * 13,
+                          style: const TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -257,7 +266,6 @@ class _ProductPageState extends State<ProductPage> {
                     child: Card(
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.purple,
                           child: Text('${lote.idLote}'),
                         ),
                         title: Text(
@@ -266,19 +274,13 @@ class _ProductPageState extends State<ProductPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text('Precio de compra: S/. ${lote.precioCompra}'),
-                            if (lote.fechaCaducidad != null)
-                              Text(
-                                  'Caducidad: ${lote.fechaCaducidad!.toIso8601String().split('T')[0]}'),
+                            Text(
+                                'Fecha Compra: ${lote.fechaCompra?.toLocal().toString().split(' ')[0] ?? "---"}'),
+                            Text(
+                                'Fecha Caducidad: ${lote.fechaCaducidad?.toLocal().toString().split(' ')[0] ?? "---"}'),
+                            Text('Pérdidas: ${lote.cantidadPerdida ?? 0}'),
                           ],
                         ),
-                        trailing: lote.cantidadPerdida != null &&
-                                lote.cantidadPerdida! > 0
-                            ? Chip(
-                                label:
-                                    Text('Pérdidas: ${lote.cantidadPerdida}'),
-                                backgroundColor: Colors.red[100],
-                              )
-                            : null,
                       ),
                     ),
                   );
@@ -289,8 +291,8 @@ class _ProductPageState extends State<ProductPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddLoteDialog,
-        child: const Icon(Icons.add),
         backgroundColor: Colors.purple,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -354,6 +356,7 @@ class _ProductPageState extends State<ProductPage> {
                 controller: fechaCaducidadController,
                 decoration: const InputDecoration(
                   labelText: 'Fecha de Caducidad',
+                  suffixIcon: Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
                 onTap: () async {

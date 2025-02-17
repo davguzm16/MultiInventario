@@ -1,13 +1,14 @@
-// ignore_for_file: use_build_context_synchronously, library_private_types_in_public_api
+// ignore_for_file: library_private_types_in_public_api, use_build_context_synchronously
 
 import 'dart:io';
-
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
+import 'package:multiinventario/widgets/custom_text_field.dart';
+import 'package:multiinventario/widgets/error_dialog.dart';
 
 //10/02/2025
 class CreateProductPage extends StatefulWidget {
@@ -21,7 +22,6 @@ class _CreateProductPageState extends State<CreateProductPage> {
   // Controladores de texto
   final TextEditingController productCodeController = TextEditingController();
   final TextEditingController productNameController = TextEditingController();
-  final TextEditingController stockController = TextEditingController();
   final TextEditingController minStockController = TextEditingController();
   final TextEditingController maxStockController = TextEditingController();
   final TextEditingController priceController = TextEditingController();
@@ -48,7 +48,6 @@ class _CreateProductPageState extends State<CreateProductPage> {
     // Liberar recursos
     productCodeController.dispose();
     productNameController.dispose();
-    stockController.dispose();
     minStockController.dispose();
     maxStockController.dispose();
     priceController.dispose();
@@ -105,31 +104,24 @@ class _CreateProductPageState extends State<CreateProductPage> {
           },
         ),
         const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 4.0,
+          alignment: WrapAlignment.center,
           children: [
-            // Botón para agregar categoría
             TextButton(
               onPressed: _showAddCategoryDialog,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.purple,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.purple),
               child: const Text('Agregar categoría'),
             ),
-            // Botón para editar categoría
             TextButton(
               onPressed: _showEditCategoryDialog,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.purple,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.purple),
               child: const Text('Editar categoría'),
             ),
-            // Botón para eliminar categoría (en rojo)
             TextButton(
               onPressed: _showRemoveCategoryDialog,
-              style: TextButton.styleFrom(
-                foregroundColor: Colors.red,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Eliminar categoría'),
             ),
           ],
@@ -163,9 +155,24 @@ class _CreateProductPageState extends State<CreateProductPage> {
                     unidades.firstWhere((unidad) => unidad.idUnidad == value);
               });
             },
-            decoration: const InputDecoration(
-              labelText: 'Unidad de medida',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    'Unidad de medida',
+                    style: TextStyle(color: Colors.black87),
+                  ),
+                  Text(
+                    ' *',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              border: const OutlineInputBorder(),
             ),
             isDense: true,
             isExpanded: true,
@@ -214,14 +221,13 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   const SizedBox(width: 10),
                   IconButton(
                     onPressed: () async {
-                      final result = await context.push('/barcode-scanner');
+                      final String? result =
+                          await context.push('/barcode-scanner');
 
-                      // Asegúrate de que el resultado es de tipo String?
-                      if (result is String?) {
+                      debugPrint("Codigo Scaneado: $result");
+                      if (result != null && result.isNotEmpty) {
                         setState(() {
-                          producto?.codigoProducto = result;
-                          productCodeController.text =
-                              producto?.codigoProducto ?? "-" * 13;
+                          productCodeController.text = result;
                         });
                       }
                     },
@@ -232,19 +238,34 @@ class _CreateProductPageState extends State<CreateProductPage> {
               ),
               const SizedBox(height: 10),
               _buildCategorySelection(),
-              _buildTextField('Nombre del producto', productNameController,
-                  TextInputType.text,
-                  showUnit: false),
+              CustomTextField(
+                label: 'Nombre del producto',
+                controller: productNameController,
+                keyboardType: TextInputType.text,
+                isRequired: true,
+              ),
               _buildComboBox(),
-              _buildTextFieldWithUnit(
-                  'Stock actual', stockController, TextInputType.number),
-              _buildTextFieldWithUnit(
-                  'Stock mínimo', minStockController, TextInputType.number),
-              _buildTextFieldWithUnit(
-                  'Stock máximo', maxStockController, TextInputType.number),
-              _buildTextFieldWithUnit('Precio por medida', priceController,
-                  const TextInputType.numberWithOptions(decimal: true),
-                  isPrice: true),
+              CustomTextField(
+                label: 'Stock mínimo',
+                controller: minStockController,
+                keyboardType: TextInputType.number,
+                unidad: unidadSeleccionada,
+              ),
+              CustomTextField(
+                label: 'Stock máximo',
+                controller: maxStockController,
+                keyboardType: TextInputType.number,
+                unidad: unidadSeleccionada,
+              ),
+              CustomTextField(
+                label: 'Precio por medida',
+                controller: priceController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                isPrice: true,
+                isRequired: true,
+                unidad: unidadSeleccionada,
+              ),
               const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -267,44 +288,6 @@ class _CreateProductPageState extends State<CreateProductPage> {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller,
-      TextInputType keyboardType,
-      {bool showUnit = true}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          suffixText: unidadSeleccionada?.tipoUnidad ?? '',
-          suffixStyle: TextStyle(color: Colors.grey.shade600),
-          border: const OutlineInputBorder(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextFieldWithUnit(String label, TextEditingController controller,
-      TextInputType keyboardType,
-      {bool isPrice = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: isPrice ? '0.00' : '',
-          prefixText: isPrice ? '\$ ' : '',
-          suffixText: isPrice ? '' : unidadSeleccionada?.tipoUnidad ?? '',
-          suffixStyle: TextStyle(color: Colors.grey.shade600),
-          border: const OutlineInputBorder(),
         ),
       ),
     );
@@ -515,62 +498,61 @@ class _CreateProductPageState extends State<CreateProductPage> {
   }
 
   bool _validateInputs() {
-    // Verificamos que los campos no estén vacíos
+    // Verificamos que los campos requeridos no estén vacíos
     if (productNameController.text.isEmpty ||
-        stockController.text.isEmpty ||
         minStockController.text.isEmpty ||
-        maxStockController.text.isEmpty ||
         priceController.text.isEmpty ||
         unidadSeleccionada == null) {
-      _showErrorDialog('Por favor, complete todos los campos');
+      ErrorDialog(
+        context: context,
+        errorMessage: 'Por favor, complete todos los campos obligatorios.',
+      );
       return false;
     }
 
-    // Asignamos los valores a la variable 'producto' solo cuando sea necesario
-    double stockActual = double.tryParse(stockController.text) ?? 0.0;
+    // Convertimos los valores de los campos numéricos
     double stockMinimo = double.tryParse(minStockController.text) ?? 0.0;
-    double stockMaximo = double.tryParse(maxStockController.text) ?? 0.0;
+    double? stockMaximo = maxStockController.text.isNotEmpty
+        ? double.tryParse(maxStockController.text)
+        : null;
     double precio = double.tryParse(priceController.text) ?? 0.0;
 
+    // Creamos el objeto producto con valores validados
     producto = Producto(
       idUnidad: unidadSeleccionada!.idUnidad,
       nombreProducto: productNameController.text,
       precioProducto: precio,
-      stockActual: stockActual,
       stockMinimo: stockMinimo,
       stockMaximo: stockMaximo,
       rutaImagen: rutaImagen,
     );
 
-    // Verificamos si el código de producto es válido
+    // Validamos el código del producto
     if (productCodeController.text != "-" * 13) {
       producto?.codigoProducto = productCodeController.text;
     }
 
-    // Verificamos si los valores numéricos son correctos
-    if (stockActual < 0 || stockMinimo < 0 || stockMaximo < 0 || precio < 0) {
-      _showErrorDialog('Ingrese valores numéricos válidos en stock y precio.');
+    // Validamos que los valores numéricos sean correctos
+    if (stockMinimo < 0 ||
+        (stockMaximo != null && stockMaximo < 0) ||
+        precio < 0) {
+      ErrorDialog(
+        context: context,
+        errorMessage: 'Ingrese valores numéricos válidos en stock y precio.',
+      );
       return false;
     }
 
-    // Verificamos que el stock mínimo no sea mayor que el máximo
-    if (stockMinimo > stockMaximo) {
-      _showErrorDialog('El stock mínimo no puede ser mayor que el máximo.');
+    // Verificamos que el stock mínimo no sea mayor que el máximo si stockMaximo no es nulo
+    if (stockMaximo != null && stockMinimo > stockMaximo) {
+      ErrorDialog(
+        context: context,
+        errorMessage: 'El stock mínimo no puede ser mayor que el máximo.',
+      );
       return false;
     }
 
     return true;
-  }
-
-  void _showErrorDialog(String message) {
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.error,
-      animType: AnimType.topSlide,
-      title: 'Error',
-      desc: message,
-      btnOkOnPress: () {},
-    ).show();
   }
 
   void _showConfirmationDialog() {
@@ -595,7 +577,10 @@ class _CreateProductPageState extends State<CreateProductPage> {
               btnOkOnPress: () => context.pop(),
             ).show();
           } else {
-            _showErrorDialog('Hubo un problema al crear el producto.');
+            ErrorDialog(
+              context: context,
+              errorMessage: 'Hubo un problema al crear el producto.',
+            );
           }
         },
         btnCancelOnPress: () {},

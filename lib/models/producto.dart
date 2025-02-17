@@ -26,7 +26,7 @@ class Producto {
     this.codigoProducto,
     required this.nombreProducto,
     required this.precioProducto,
-    required this.stockActual,
+    this.stockActual = 0,
     required this.stockMinimo,
     this.stockMaximo,
     this.rutaImagen,
@@ -40,7 +40,7 @@ class Producto {
       final db = await DatabaseController().database;
       final result = await db.rawInsert('''
       INSERT INTO Productos (
-        idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual, 
+        idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual,
         stockMinimo, stockMaximo, rutaImagen
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', [

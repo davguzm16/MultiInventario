@@ -1,9 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/widgets/error_dialog.dart';
 import 'package:pinput/pinput.dart';
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
@@ -56,8 +54,11 @@ class _LoginPageState extends State<LoginPage> {
         userPIN == adminPIN) {
       context.go('/inventory');
     } else {
-      _showErrorDialog(
-          "El código ingresado es incorrecto. Inténtalo nuevamente.");
+      ErrorDialog(
+        context: context,
+        errorMessage:
+            "El código ingresado es incorrecto. Inténtalo nuevamente.",
+      );
     }
   }
 
@@ -176,8 +177,11 @@ class _LoginPageState extends State<LoginPage> {
                     if (userEmail.isNotEmpty) {
                       context.go('/login/recover-pin');
                     } else {
-                      _showErrorDialog(
-                          "Usted no cuenta con un correo electrónico registrado");
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Usted no cuenta con un correo electrónico registrado",
+                      );
                     }
                   },
                   child: const Text('Olvide mi Pin'),
@@ -188,8 +192,11 @@ class _LoginPageState extends State<LoginPage> {
                     if (userEmail.isEmpty) {
                       context.go('/login/input-email');
                     } else {
-                      _showErrorDialog(
-                          "Usted ya cuenta con un correo electrónico registrado: $userEmail");
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Usted ya cuenta con un correo electrónico registrado: $userEmail",
+                      );
                     }
                   },
                   child: const Text('¿Eres nuevo? ¡Regístrate aquí!'),
@@ -200,18 +207,5 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  Future<void> _showErrorDialog(String errorMessage) async {
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.error,
-      animType: AnimType.topSlide,
-      title: "Error",
-      desc: errorMessage,
-      btnOkOnPress: () {},
-      btnOkIcon: Icons.cancel,
-      btnOkColor: Colors.red,
-    ).show();
   }
 }

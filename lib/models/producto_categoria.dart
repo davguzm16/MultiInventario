@@ -25,14 +25,9 @@ class ProductoCategoria {
     try {
       final db = await DatabaseController().database;
 
-      int result = await db.rawInsert('''
+      await db.rawInsert('''
           INSERT INTO ProductosCategorias (idProducto, idCategoria) VALUES (?,?)
         ''', [idProducto, idCategoria]);
-
-      if (result > 0) {
-        debugPrint(
-            "Categoría $idCategoria relacionada correctamente con productos");
-      }
     } catch (e) {
       debugPrint(
           "Error al relacionar el producto $idProducto con sus categorías: ${e.toString()}");

@@ -53,6 +53,7 @@ class Venta {
           DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
 
+        debugPrint("Venta ${venta.codigoVenta} creada con exito!");
         return true;
       }
     } catch (e) {

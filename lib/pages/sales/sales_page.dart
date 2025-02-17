@@ -199,10 +199,6 @@ class _SalesPageState extends State<SalesPage>
             icon: const Icon(Icons.filter_alt),
             onPressed: () {},
           ),
-          IconButton(
-            icon: const Icon(Icons.search),
-            onPressed: () {},
-          ),
         ],
       ),
       body: Padding(
@@ -213,7 +209,8 @@ class _SalesPageState extends State<SalesPage>
             return Card(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(color: Color.fromARGB(255, 124, 33, 243), width: 2),
+                side: const BorderSide(
+                    color: Color.fromARGB(255, 124, 33, 243), width: 2),
               ),
               margin: const EdgeInsets.only(bottom: 12),
               child: Padding(
@@ -242,7 +239,6 @@ class _SalesPageState extends State<SalesPage>
                         ),
                         onPressed: () {},
                         child: const Text("Detalles"),
-                        
                       ),
                     ),
                   ],
@@ -255,4 +251,3 @@ class _SalesPageState extends State<SalesPage>
     );
   }
 }
-

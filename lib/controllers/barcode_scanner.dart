@@ -1,6 +1,5 @@
-// ignore_for_file: sort_child_properties_last
-
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class BarcodeScanner extends StatefulWidget {
@@ -12,6 +11,12 @@ class BarcodeScanner extends StatefulWidget {
 
 class _BarcodeScannerState extends State<BarcodeScanner> {
   String? _barcode;
+
+  @override
+  void dispose() {
+    MobileScannerController().dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,17 +37,15 @@ class _BarcodeScannerState extends State<BarcodeScanner> {
               });
             },
           ),
-          // Cuadrado grande SOLO si no se ha detectado un código
           if (_barcode == null)
             Container(
-              width: 300, // Ancho del cuadrado grande
-              height: 300, // Alto del cuadrado grande
+              width: 300,
+              height: 300,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white, width: 3),
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
-          // Mensaje centrado después de escanear
           if (_barcode != null)
             Center(
               child: Container(
@@ -64,30 +67,32 @@ class _BarcodeScannerState extends State<BarcodeScanner> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: Visibility(
-        visible: _barcode != null, // Solo muestra los botones si hay código
+        visible: _barcode != null,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FloatingActionButton(
+              heroTag: 'btnAceptar',
               onPressed: () {
-                if (_barcode != null && _barcode!.length == 13) {
-                  Navigator.pop(context, _barcode);
+                if (_barcode != null) {
+                  context.pop(_barcode);
                 }
               },
-              child: const Icon(Icons.check),
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
+              child: const Icon(Icons.check),
             ),
             const SizedBox(width: 16),
             FloatingActionButton(
+              heroTag: 'btnCancelar',
               onPressed: () {
                 setState(() {
-                  _barcode = null; // Reinicia el código escaneado
+                  _barcode = null;
                 });
               },
-              child: const Icon(Icons.close),
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
+              child: const Icon(Icons.close),
             ),
           ],
         ),
