@@ -9,6 +9,7 @@ import 'package:multiinventario/pages/home_page.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
 import 'package:multiinventario/pages/sales/create_sale_page.dart';
 import 'package:multiinventario/pages/sales/debtors_page.dart';
+import 'package:multiinventario/pages/sales/details_debtor_page.dart';
 import 'package:multiinventario/pages/sales/details_sale_page.dart';
 import 'package:multiinventario/pages/sales/payment_page.dart';
 import 'package:multiinventario/pages/sales/sales_page.dart';
@@ -118,10 +119,24 @@ class AppRoutes {
                   GoRoute(
                     path: 'debtors',
                     builder: (context, state) => const DebtorsPage(),
+                    routes: [
+                      GoRoute(
+                        path: ':idDeudor',
+                        builder: (context, state) {
+                          final idDeudor =
+                              int.parse(state.pathParameters['idDeudor']!);
+                          return DetailsDebtorPage(idDeudor: idDeudor);
+                        },
+                      ),
+                    ],
                   ),
                   GoRoute(
-                    path: 'details-sale',
-                    builder: (context, state) => const DetailsSalePage(),
+                    path: 'details-sale/:idVenta',
+                    builder: (context, state) {
+                      final idVenta =
+                          int.parse(state.pathParameters['idVenta']!);
+                      return DetailsSalePage(idVenta: idVenta);
+                    },
                   ),
                 ],
               ),

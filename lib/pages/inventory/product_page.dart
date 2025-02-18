@@ -66,26 +66,11 @@ class _ProductPageState extends State<ProductPage> {
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
 
-    // Si el producto o la unidad aún no se han cargado, muestra un indicador de carga.
-    if (producto == null || unidadProducto == null) {
-      debugPrint("Producto: $producto, unidadProducto: $unidadProducto");
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text("Cargando..."),
-          backgroundColor: Colors.white,
-          elevation: 0,
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
-          producto!.nombreProducto,
+          producto?.nombreProducto ?? "Cargando...",
           style:
               const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
@@ -101,198 +86,209 @@ class _ProductPageState extends State<ProductPage> {
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-        child: ListView(
-          children: [
-            Row(
+        child: FutureBuilder<Producto?>(
+          future: Producto.obtenerProductoPorID(widget.idProducto),
+          builder: (BuildContext context, AsyncSnapshot<Producto?> snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data == null) {
+              return const Center(child: Text('Producto no encontrado.'));
+            }
+
+            Producto productoData = snapshot.data!;
+
+            return ListView(
               children: [
-                SizedBox(
-                  height: screenWidth * 0.2,
-                  width: screenWidth * 0.2,
-                  child: producto!.rutaImagen == null
-                      ? Image.asset(
-                          'lib/assets/iconos/iconoImagen.png',
-                          fit: BoxFit.cover,
-                        )
-                      : Image.file(
-                          File(producto!.rutaImagen!),
-                          fit: BoxFit.cover,
-                        ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        "Código del producto",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black54,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          producto?.codigoProducto ?? "-" * 13,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Row(
                   children: [
-                    Text(
-                      "Stock actual: ${producto!.stockActual} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
+                    SizedBox(
+                      height: screenWidth * 0.2,
+                      width: screenWidth * 0.2,
+                      child: productoData.rutaImagen == null
+                          ? Image.asset(
+                              'lib/assets/iconos/iconoImagen.png',
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(productoData.rutaImagen!),
+                              fit: BoxFit.cover,
+                            ),
                     ),
-                    Text(
-                      "Stock mínimo: ${producto!.stockMinimo} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
-                    ),
-                    Text(
-                      "Stock máximo: ${producto!.stockMaximo ?? "---"} ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(
-                          color: Colors.purple,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18),
-                    ),
-                    Divider(),
-                    Text(
-                      "Unidad del producto: ${unidadProducto!.tipoUnidad}",
-                      style: TextStyle(color: Colors.black, fontSize: 16),
-                    ),
-                    Text(
-                      "Precio por unidad del producto: S/. ${producto!.precioProducto}",
-                      style: TextStyle(color: Colors.black, fontSize: 16),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Código del producto",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              productoData.codigoProducto ?? "-" * 13,
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Categorías del producto",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.black),
-            ),
-            const SizedBox(height: 15),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: categoriasProducto.map((categoria) {
-                return Chip(
-                  label: Text(categoria.nombreCategoria),
-                  labelStyle: TextStyle(color: Colors.white),
-                  backgroundColor: Color(0xFF493d9e),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 15),
-            const Text(
-              "Lotes del producto",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: Colors.black),
-            ),
-            const SizedBox(height: 10),
-
-            // Sección de tabla desplazable
-            if (lotesProducto.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Center(
-                  child: Text(
-                    "Aún no hay lotes creados para este producto.",
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey),
-                  ),
-                ),
-              )
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: lotesProducto.length,
-                itemBuilder: (context, index) {
-                  final lote = lotesProducto[index];
-                  return Slidable(
-                    endActionPane: ActionPane(
-                      motion: const ScrollMotion(),
+                const SizedBox(height: 15),
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SlidableAction(
-                          onPressed: (context) => _showEditLoteDialog(lote),
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          icon: Icons.edit,
-                          label: 'Editar',
+                        Text(
+                          "Stock actual: ${productoData.stockActual} ${unidadProducto?.tipoUnidad ?? ''}",
+                          style: TextStyle(
+                              color: Colors.purple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
                         ),
-                        SlidableAction(
-                          onPressed: (context) => _showDeleteDialog(lote),
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          icon: Icons.delete,
-                          label: 'Eliminar',
+                        Text(
+                          "Stock mínimo: ${productoData.stockMinimo} ${unidadProducto?.tipoUnidad ?? ''}",
+                          style: TextStyle(
+                              color: Colors.purple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        ),
+                        Text(
+                          "Stock máximo: ${productoData.stockMaximo ?? "---"} ${unidadProducto?.tipoUnidad ?? ''}",
+                          style: TextStyle(
+                              color: Colors.purple,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18),
+                        ),
+                        Divider(),
+                        Text(
+                          "Unidad del producto: ${unidadProducto?.tipoUnidad ?? 'No definida'}",
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                        ),
+                        Text(
+                          "Precio por unidad del producto: S/. ${productoData.precioProducto}",
+                          style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                       ],
                     ),
-                    child: Card(
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text('${lote.idLote}'),
-                        ),
-                        title: Text(
-                            'Cantidad: ${lote.cantidadActual} ${unidadProducto!.tipoUnidad}'),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Precio de compra: S/. ${lote.precioCompra}'),
-                            Text(
-                                'Fecha Compra: ${lote.fechaCompra?.toLocal().toString().split(' ')[0] ?? "---"}'),
-                            Text(
-                                'Fecha Caducidad: ${lote.fechaCaducidad?.toLocal().toString().split(' ')[0] ?? "---"}'),
-                            Text('Pérdidas: ${lote.cantidadPerdida ?? 0}'),
-                          ],
-                        ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Categorías del producto",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.black),
+                ),
+                const SizedBox(height: 15),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: categoriasProducto.map((categoria) {
+                    return Chip(
+                      label: Text(categoria.nombreCategoria),
+                      labelStyle: TextStyle(color: Colors.white),
+                      backgroundColor: Color(0xFF493d9e),
+                    );
+                  }).toList(),
+                ),
+                const SizedBox(height: 15),
+                const Text(
+                  "Lotes del producto",
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                      color: Colors.black),
+                ),
+                const SizedBox(height: 10),
+
+                // Sección de tabla desplazable
+                if (lotesProducto.isEmpty)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: Center(
+                      child: Text(
+                        "Aún no hay lotes creados para este producto.",
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey),
                       ),
                     ),
-                  );
-                },
-              ),
-          ],
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    itemCount: lotesProducto.length,
+                    itemBuilder: (context, index) {
+                      final lote = lotesProducto[index];
+                      return Slidable(
+                        endActionPane: ActionPane(
+                          motion: const ScrollMotion(),
+                          children: [
+                            SlidableAction(
+                              onPressed: (context) => _showEditLoteDialog(lote),
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                              icon: Icons.edit,
+                              label: 'Editar',
+                            ),
+                            SlidableAction(
+                              onPressed: (context) => _showDeleteDialog(lote),
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              icon: Icons.delete,
+                              label: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                        child: Card(
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              child: Text('${lote.idLote}'),
+                            ),
+                            title: Text(
+                                'Cantidad: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? ''}'),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                    'Precio de compra: S/. ${lote.precioCompra}'),
+                                Text(
+                                    'Fecha Compra: ${lote.fechaCompra?.toLocal().toString().split(' ')[0] ?? "---"}'),
+                                Text(
+                                    'Fecha Caducidad: ${lote.fechaCaducidad?.toLocal().toString().split(' ')[0] ?? "---"}'),
+                                Text('Pérdidas: ${lote.cantidadPerdida ?? 0}'),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+              ],
+            );
+          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLoteDialog,
-        backgroundColor: Colors.purple,
-        child: const Icon(Icons.add),
       ),
     );
   }

@@ -4,8 +4,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/venta.dart';
-import 'package:multiinventario/pages/sales/create_sale_page.dart';
 
 class SalesPage extends StatefulWidget {
   const SalesPage({super.key});
@@ -25,8 +25,8 @@ class _SalesPageState extends State<SalesPage>
   List<Venta> ventas = [];
 
   // Variables de filtrado
-  String nombreVentaBuscado = "";
-  bool? esAlContado;
+  String codigoVentaBuscado = "";
+  bool esAlContado = true;
 
   // Manejo de carga de datos dinamica
   int cantidadCargas = 0;
@@ -50,7 +50,7 @@ class _SalesPageState extends State<SalesPage>
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
         hayMasCargas &&
-        nombreVentaBuscado.isEmpty) {
+        codigoVentaBuscado.isEmpty) {
       _cargarVentas();
     }
   }
@@ -130,7 +130,7 @@ class _SalesPageState extends State<SalesPage>
                   controller: _searchController,
                   autofocus: true,
                   decoration: InputDecoration(
-                    hintText: "Buscar producto...",
+                    hintText: "Buscar venta...",
                     prefixIcon: const Icon(Icons.search),
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.close),
@@ -138,7 +138,7 @@ class _SalesPageState extends State<SalesPage>
                         _searchController.clear();
                         setState(() {
                           isSearching = false;
-                          nombreVentaBuscado = "";
+                          codigoVentaBuscado = "";
                         });
                         _animationController.reverse();
                         _cargarVentas(reiniciarListaVentas: true);
@@ -155,7 +155,7 @@ class _SalesPageState extends State<SalesPage>
                   ),
                   onChanged: (value) {
                     setState(() {
-                      nombreVentaBuscado = value;
+                      codigoVentaBuscado = value;
                     });
                     _buscarVentasPorCodigo(value);
                   },
@@ -181,72 +181,161 @@ class _SalesPageState extends State<SalesPage>
           ),
           if (!isSearching)
             IconButton(
-              icon: const Icon(Icons.person),
+              icon: const Icon(Icons.add),
               onPressed: () async {
-                await context.push('/sales/debtors');
+                await context.push('/sales/create-sale');
+                setState(() {
+                  ventas.clear();
+                  cantidadCargas = 0;
+                  hayMasCargas = true;
+                });
+                Future.delayed(
+                    const Duration(milliseconds: 300), _cargarVentas);
               },
             ),
           IconButton(
-            icon: Icon(Icons.add), // Pequeña cruz para ir a CreateSalePage
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CreateSalePage()),
+            icon: const Icon(Icons.filter_list),
+            onPressed: () async {
+              final filtros = await context.push<Map<String, dynamic>>(
+                '/sales/filter-sales',
+                extra: {
+                  'esAlContado': esAlContado,
+                },
               );
+
+              if (filtros != null) {
+                setState(() {
+                  esAlContado = (filtros['esAlContado'] as bool?)!;
+                });
+              }
+
+              _cargarVentas(reiniciarListaVentas: true);
             },
           ),
           IconButton(
-            icon: const Icon(Icons.filter_alt),
-            onPressed: () {},
+            icon: Icon(Icons.person),
+            onPressed: () {
+              context.push('/sales/debtors');
+            },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            return Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: const BorderSide(
-                    color: Color.fromARGB(255, 124, 33, 243), width: 2),
-              ),
-              margin: const EdgeInsets.only(bottom: 12),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Luis Alfredo Muñoz",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
+      body: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ventas.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No se encontraron ventas",
+                      style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
-                    const SizedBox(height: 4),
-                    const Text("Fecha: 09/01/2025"),
-                    const Text("Monto: S/ 15.00"),
-                    const Text("Estado: Por cancelar"),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color.fromARGB(255, 124, 33, 243),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () {},
-                        child: const Text("Detalles"),
-                      ),
+                  )
+                : ListView.builder(
+                    itemCount: ventas.length,
+                    itemBuilder: (context, index) {
+                      final venta = ventas[index];
+
+                      return FutureBuilder<Cliente?>(
+                        future: Cliente.obtenerClientePorId(venta.idCliente),
+                        builder: (context, snapshot) {
+                          final Cliente? cliente = snapshot.data;
+
+                          return Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(
+                                  color: Color(0xFF493D9E), width: 2),
+                            ),
+                            margin: const EdgeInsets.only(bottom: 12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Columna de información de la venta
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          venta.codigoVenta,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 20,
+                                            color: Color(0xFF493D9E),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Text(
+                                          "Cliente: ${cliente?.nombreCliente ?? "-----"}",
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                        Text(
+                                          "Fecha: ${venta.fechaVenta!.toIso8601String().split('T')[0]}",
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                        Text(
+                                          "Monto: S/ ${venta.montoTotal.toStringAsFixed(2)}",
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                        Text(
+                                          "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              const Color(0xFF2BBF55),
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        onPressed: () {
+                                          context.push(
+                                              '/sales/details-sale/${venta.idVenta}');
+                                        },
+                                        child: const Text("Detalles"),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+          if (isLoading)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: SizedBox(
+                    width: 50,
+                    height: 50,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 6,
                     ),
-                  ],
+                  ),
                 ),
               ),
-            );
-          },
-        ),
+            ),
+        ],
       ),
     );
   }
