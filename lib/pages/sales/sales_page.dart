@@ -26,7 +26,7 @@ class _SalesPageState extends State<SalesPage>
 
   // Variables de filtrado
   String codigoVentaBuscado = "";
-  bool esAlContado = true;
+  bool? esAlContado;
 
   // Manejo de carga de datos dinamica
   int cantidadCargas = 0;
@@ -44,6 +44,11 @@ class _SalesPageState extends State<SalesPage>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
+
+    
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    GoRouter.of(context).refresh();
+                  });
   }
 
   void _detectarScrollFinal() {
@@ -212,12 +217,6 @@ class _SalesPageState extends State<SalesPage>
               _cargarVentas(reiniciarListaVentas: true);
             },
           ),
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              context.push('/sales/debtors');
-            },
-          ),
         ],
       ),
       body: Stack(
@@ -287,8 +286,11 @@ class _SalesPageState extends State<SalesPage>
                                         ),
                                         Text(
                                           "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
-                                          style: const TextStyle(
-                                              color: Colors.black),
+                                          style: TextStyle(
+                                              color: venta.esAlContado!
+                                                ? Colors.red
+                                                : Colors.black,
+                                          ),
                                         ),
                                       ],
                                     ),

@@ -40,7 +40,8 @@ class _PDFViewerScreenState extends State<_PDFViewerScreen> {
   bool isReady = false;
 
   Future<void> sharePDF() async {
-    await Share.shareFiles([widget.pdfPath], text: "Aquí tienes el reporte en PDF");
+    await Share.shareXFiles([XFile(widget.pdfPath)], text: "Aquí tienes el reporte en PDF");
+
   }
 
   Future<void> downloadPDF() async {

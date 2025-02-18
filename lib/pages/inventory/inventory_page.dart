@@ -27,7 +27,7 @@ class _InventoryPageState extends State<InventoryPage>
 
   // Variables de filtrado
   List<Categoria> categoriasSeleccionadas = [];
-  bool isStockBajo = false;
+  bool? isStockBajo;
   String nombreProductoBuscado = "";
 
   // Manejo de resultados por carga

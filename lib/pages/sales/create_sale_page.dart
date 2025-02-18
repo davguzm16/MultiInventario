@@ -79,13 +79,12 @@ class _CreateSalePageState extends State<CreateSalePage> {
         : TextEditingController();
 
     Producto? productoSeleccionado;
+    List<Lote> lotesProducto = [];
     Unidad? unidadProducto;
     Lote? loteSeleccionado;
 
     if (editarProducto) {
       productoSeleccionado = productosVenta[index!];
-      unidadProducto =
-          await Unidad.obtenerUnidadPorId(productoSeleccionado.idUnidad!);
       loteSeleccionado =
           await Lote.obtenerLotePorId(detallesVenta[index].idLote);
     }
@@ -151,26 +150,30 @@ class _CreateSalePageState extends State<CreateSalePage> {
                                 itemCount: productosFiltrados.length,
                                 itemBuilder: (context, index) {
                                   final producto = productosFiltrados[index];
+
                                   return ListTile(
                                     title: Text(producto.nombreProducto),
                                     subtitle: Text(
                                         "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
                                     onTap: () async {
                                       FocusScope.of(context).unfocus();
+
                                       setDialogState(() {
-                                        _searchController.text =
-                                            producto.nombreProducto;
+                                        _searchController.text = producto.nombreProducto;
                                         productoSeleccionado = producto;
                                       });
 
-                                      final unidad =
-                                          await Unidad.obtenerUnidadPorId(
-                                              productoSeleccionado!
-                                                  .idProducto!);
+                                      Unidad? unidad = await Unidad.obtenerUnidadPorId(producto.idUnidad!);
+                                      List<Lote> lotesDisponibles = await Lote.obtenerLotesDeProducto(producto.idProducto!);
+
                                       setDialogState(() {
                                         unidadProducto = unidad;
+                                        lotesProducto = lotesDisponibles;
+                                        loteSeleccionado = lotesDisponibles.isNotEmpty ? lotesDisponibles.first : null;
                                       });
-                                    },
+
+                                      debugPrint("Tipo de unidad: ${unidad!.tipoUnidad}");
+                                    }
                                   );
                                 },
                               ),
@@ -182,64 +185,41 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         children: [
                           Text(
                             "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 10),
-                          FutureBuilder<List<Lote>>(
-                            future: Lote.obtenerLotesDeProducto(
-                                productoSeleccionado!.idProducto!),
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircularProgressIndicator();
-                              }
-                              if (snapshot.hasError) {
-                                return Text("Error: ${snapshot.error}");
-                              }
-
-                              final lotes = snapshot.data ?? [];
-
-                              return SizedBox(
-                                width: double.infinity,
-                                child: DropdownButtonFormField<Lote>(
-                                  isExpanded: true,
-                                  value: lotes.isNotEmpty &&
-                                          lotes.contains(loteSeleccionado)
-                                      ? loteSeleccionado
-                                      : null,
-                                  hint: Align(
+                          SizedBox(
+                            width: double.infinity,
+                            child: DropdownButtonFormField<Lote>(
+                              isExpanded: true,
+                              value: lotesProducto.isNotEmpty ? loteSeleccionado : null,
+                              hint: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(lotesProducto.isEmpty ? "No hay lotes disponibles" : "Seleccione un lote"),
+                              ),
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
+                              ),
+                              onChanged: lotesProducto.isNotEmpty
+                                  ? (Lote? newValue) {
+                                      setDialogState(() {
+                                        loteSeleccionado = newValue;
+                                      });
+                                    }
+                                  : null,
+                              items: lotesProducto.map((Lote lote) {
+                                return DropdownMenuItem<Lote>(
+                                  value: lote,
+                                  child: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: Text(lotes.isEmpty
-                                        ? "No hay lotes disponibles"
-                                        : "Seleccione un lote"),
+                                    child: Text(
+                                      "Lote ${lote.idLote}: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? '---'}",
+                                      textAlign: TextAlign.left,
+                                    ),
                                   ),
-                                  decoration: InputDecoration(
-                                    border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(5)),
-                                  ),
-                                  onChanged: lotes.isNotEmpty
-                                      ? (Lote? newValue) {
-                                          loteSeleccionado = newValue;
-                                        }
-                                      : null,
-                                  items: lotes.isNotEmpty
-                                      ? lotes.map((Lote lote) {
-                                          return DropdownMenuItem<Lote>(
-                                            value: lote,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                "Lote ${lote.idLote}: ${lote.cantidadActual} ${unidadProducto!.tipoUnidad}",
-                                                textAlign: TextAlign.left,
-                                              ),
-                                            ),
-                                          );
-                                        }).toList()
-                                      : [],
-                                ),
-                              );
-                            },
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ],
                       ),

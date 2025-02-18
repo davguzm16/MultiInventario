@@ -19,7 +19,7 @@ class FilterProductPage extends StatefulWidget {
 class _FilterProductState extends State<FilterProductPage> {
   List<Categoria> categoriasObtenidas = [];
   List<Categoria> categoriasSeleccionadas = [];
-  bool isStockBajo = false;
+  bool? isStockBajo;
 
   @override
   void initState() {

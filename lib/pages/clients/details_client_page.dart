@@ -243,7 +243,11 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                       ),
                                       Text(
                                         "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
-                                        style: TextStyle(color: Colors.black),
+                                        style: TextStyle(
+                                              color: venta.esAlContado!
+                                                ? Colors.red
+                                                : Colors.black,
+                                          ),
                                       ),
                                     ],
                                   ),

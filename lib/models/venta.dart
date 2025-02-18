@@ -133,8 +133,15 @@ class Venta {
       final db = await DatabaseController().database;
       int offset = numeroCarga * cantidadPorCarga;
 
-      String esAlContadoQuery =
-          esAlContado == null ? "WHERE esAlContado = ?" : "";
+      String esAlContadoQuery = "";
+
+      if(esAlContado != null){
+        if(esAlContado){
+          esAlContadoQuery = "WHERE esAlContado = 1";
+        }else{
+          esAlContadoQuery = "WHERE NOT esAlContado = 1";
+        }
+      }
 
       final result = await db.rawQuery('''
       SELECT idVenta, idCliente, codigoVenta, fechaVenta, 
