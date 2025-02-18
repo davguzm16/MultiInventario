@@ -19,37 +19,52 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: widget.navigationShell,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: widget.navigationShell.currentIndex,
-        onTap: (index) {
-          _goBranch(index);
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              "lib/assets/iconos/iconoInventario.png",
-              width: 30,
-              height: 30,
+      bottomNavigationBar: SizedBox(
+        height: 100,
+        child: BottomNavigationBar(
+          showUnselectedLabels: true,
+          selectedLabelStyle: TextStyle(color: Colors.black),
+          unselectedLabelStyle: TextStyle(color: Colors.black),
+          unselectedItemColor: Colors.black,
+          selectedItemColor: Colors.black,
+          currentIndex: widget.navigationShell.currentIndex,
+          onTap: (index) {
+            _goBranch(index);
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                "lib/assets/iconos/iconoInventario.png",
+                width: 30,
+                height: 30,
+              ),
+              label: "Inventario",
             ),
-            label: "Inventario",
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              "lib/assets/iconos/iconoVentas.png",
-              width: 30,
-              height: 30,
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                "lib/assets/iconos/iconoVentas.png",
+                width: 30,
+                height: 30,
+              ),
+              label: "Ventas",
             ),
-            label: "Ventas",
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              "lib/assets/iconos/iconoReportes.png",
-              width: 30,
-              height: 30,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.person_2,
+                size: 30,
+              ),
+              label: "Clientes",
             ),
-            label: "Reportes",
-          ),
-        ],
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                "lib/assets/iconos/iconoReportes.png",
+                width: 30,
+                height: 30,
+              ),
+              label: "Reportes",
+            ),
+          ],
+        ),
       ),
     );
   }

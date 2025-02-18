@@ -161,4 +161,33 @@ class Venta {
 
     return ventas;
   }
+
+  static Future<List<Venta>> obtenerVentasDeCliente(int idCliente) async {
+    List<Venta> ventas = [];
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+        SELECT idVenta, codigoVenta, fechaVenta, 
+             montoTotal, montoCancelado, esAlContado
+        FROM Ventas
+        WHERE idCliente = ?
+      ''', [idCliente]);
+
+      for (var item in result) {
+        ventas.add(Venta(
+          idVenta: item['idVenta'] as int,
+          idCliente: idCliente,
+          codigoVenta: item['codigoVenta'] as String,
+          fechaVenta: DateTime.parse(item['fechaVenta'] as String),
+          montoTotal: (item['montoTotal'] as num).toDouble(),
+          montoCancelado: (item['montoCancelado'] as num).toDouble(),
+          esAlContado: (item['esAlContado'] as int) == 1,
+        ));
+      }
+    } catch (e) {
+      debugPrint("Error al obtener las ventas del cliente: ${e.toString()}");
+    }
+
+    return ventas;
+  }
 }

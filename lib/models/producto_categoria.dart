@@ -98,6 +98,8 @@ class ProductoCategoria {
       if (stockBajo != null) {
         if (stockBajo) {
           stockBajoQuery = "AND p.stockActual < p.stockMinimo";
+        } else {
+          stockBajoQuery = "AND NOT p.stockActual < p.stockMinimo";
         }
       }
 

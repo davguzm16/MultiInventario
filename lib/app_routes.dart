@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:multiinventario/controllers/image_picker.dart';
-import 'package:multiinventario/models/categoria.dart';
+
+// Models
 import 'package:multiinventario/models/detalle_venta.dart';
-import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
+import 'package:multiinventario/models/categoria.dart';
+
+// Vistas del login
 import 'package:multiinventario/pages/login/all_login_pages.dart';
+
+// Vistas del HomePage
 import 'package:multiinventario/pages/home_page.dart';
+import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
+import 'package:multiinventario/pages/sales/all_sales_pages.dart';
+import 'package:multiinventario/pages/clients/all_clients_pages.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
-import 'package:multiinventario/pages/sales/create_sale_page.dart';
-import 'package:multiinventario/pages/sales/debtors_page.dart';
-import 'package:multiinventario/pages/sales/details_debtor_page.dart';
-import 'package:multiinventario/pages/sales/details_sale_page.dart';
-import 'package:multiinventario/pages/sales/payment_page.dart';
-import 'package:multiinventario/pages/sales/sales_page.dart';
+
+// Modulos auxiales
 import 'package:multiinventario/controllers/barcode_scanner.dart';
+import 'package:multiinventario/controllers/image_picker.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -117,25 +121,29 @@ class AppRoutes {
                     ],
                   ),
                   GoRoute(
-                    path: 'debtors',
-                    builder: (context, state) => const DebtorsPage(),
-                    routes: [
-                      GoRoute(
-                        path: ':idDeudor',
-                        builder: (context, state) {
-                          final idDeudor =
-                              int.parse(state.pathParameters['idDeudor']!);
-                          return DetailsDebtorPage(idDeudor: idDeudor);
-                        },
-                      ),
-                    ],
-                  ),
-                  GoRoute(
                     path: 'details-sale/:idVenta',
                     builder: (context, state) {
                       final idVenta =
                           int.parse(state.pathParameters['idVenta']!);
                       return DetailsSalePage(idVenta: idVenta);
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/clients',
+                builder: (context, state) => const ClientsPage(),
+                routes: [
+                  GoRoute(
+                    path: 'details-client/:idCliente',
+                    builder: (context, state) {
+                      final idCliente =
+                          int.parse(state.pathParameters['idCliente']!);
+                      return DetailsClientPage(idCliente: idCliente);
                     },
                   ),
                 ],

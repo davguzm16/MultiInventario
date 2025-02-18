@@ -4,7 +4,7 @@ import 'package:multiinventario/controllers/db_controller.dart';
 class Cliente {
   int? idCliente;
   String nombreCliente;
-  String dniCliente;
+  String? dniCliente;
   String? correoCliente;
 
   // Constructor
@@ -19,7 +19,10 @@ class Cliente {
     try {
       final db = await DatabaseController().database;
       final result = await db.rawInsert(
-        'INSERT INTO Clientes (nombreCliente, dniCliente, correoCliente) VALUES (?, ?, ?)',
+        '''
+        INSERT INTO Clientes (nombreCliente, dniCliente, correoCliente) 
+        VALUES (?, ?, ?)
+        ''',
         [cliente.nombreCliente, cliente.dniCliente, cliente.correoCliente],
       );
 
@@ -34,27 +37,160 @@ class Cliente {
     return null;
   }
 
-  static Future<List<Cliente>> obtenerClientesPorNombre(String nombre) async {
+  static Future<Cliente?> obtenerClientePorId(int id) async {
     try {
       final db = await DatabaseController().database;
       final result = await db.rawQuery(
         '''
-        SELECT * FROM Clientes WHERE nombreCliente LIKE ?
+        SELECT idCliente, nombreCliente, dniCliente, correoCliente 
+        FROM Clientes 
+        WHERE idCliente = ?
         ''',
-        ['%$nombre%'],
+        [id],
       );
 
-      return result.map((map) {
+      if (result.isNotEmpty) {
+        final map = result.first;
         return Cliente(
           idCliente: map['idCliente'] as int?,
           nombreCliente: map['nombreCliente'] as String,
           dniCliente: map['dniCliente'] as String,
           correoCliente: map['correoCliente'] as String?,
         );
-      }).toList();
+      }
+    } catch (e) {
+      debugPrint("Error al obtener cliente por ID: ${e.toString()}");
+    }
+
+    return null;
+  }
+
+  static Future<List<Cliente>> obtenerClientesPorNombre(String nombre) async {
+    List<Cliente> clientes = [];
+
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery(
+        '''
+        SELECT idCliente, nombreCliente, dniCliente, correoCliente 
+        FROM Clientes 
+        WHERE nombreCliente LIKE ?
+        ''',
+        ['%$nombre%'],
+      );
+
+      for (var map in result) {
+        clientes.add(Cliente(
+          idCliente: map['idCliente'] as int?,
+          nombreCliente: map['nombreCliente'] as String,
+          dniCliente: map['dniCliente'] as String,
+          correoCliente: map['correoCliente'] as String?,
+        ));
+      }
     } catch (e) {
       debugPrint("Error al buscar clientes: ${e.toString()}");
-      return [];
+    }
+
+    return clientes;
+  }
+
+  static Future<List<Cliente>> obtenerClientesPorCarga({
+    required int numeroCarga,
+    bool? esDeudor,
+  }) async {
+    const int cantidadPorCarga = 8;
+    List<Cliente> clientes = [];
+
+    String esDeudorQuery = "";
+
+    if (esDeudor != null) {
+      if (esDeudor) {
+        esDeudorQuery =
+            "AND EXISTS (SELECT 1 FROM Ventas WHERE Ventas.idCliente = Clientes.idCliente AND esAlContado = 1)";
+      } else {
+        esDeudorQuery =
+            "AND NOT EXISTS (SELECT 1 FROM Ventas WHERE Ventas.idCliente = Clientes.idCliente AND esAlContado = 1)";
+      }
+    }
+
+    try {
+      final db = await DatabaseController().database;
+      int offset = numeroCarga * cantidadPorCarga;
+
+      final result = await db.rawQuery('''
+        SELECT idCliente, nombreCliente, dniCliente, correoCliente 
+        FROM Clientes
+        $esDeudorQuery
+        LIMIT ? OFFSET ?
+      ''', [cantidadPorCarga, offset]);
+
+      for (var map in result) {
+        clientes.add(Cliente(
+          idCliente: map['idCliente'] as int?,
+          nombreCliente: map['nombreCliente'] as String,
+          dniCliente: map['dniCliente'] as String,
+          correoCliente: map['correoCliente'] as String?,
+        ));
+      }
+    } catch (e) {
+      debugPrint("Error al obtener clientes filtrados: ${e.toString()}");
+    }
+
+    return clientes;
+  }
+
+  Future<bool?> esDeudor() async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+        SELECT COUNT(*) > 0 AS esDeudor
+        FROM Ventas
+        WHERE idCliente = ? AND esAlContado = 0
+      ''', [idCliente]);
+
+      return result.isNotEmpty ? result.first['esDeudor'] == 1 : null;
+    } catch (e) {
+      debugPrint("Error al verificar estado deudor: ${e.toString()}");
+      return null;
+    }
+  }
+
+  Future<double?> obtenerTotalDeVentas() async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+        SELECT SUM(montoTotal) AS totalVentas
+        FROM Ventas
+        WHERE idCliente = ?
+      ''', [idCliente]);
+
+      if (result.isNotEmpty && result.first['totalVentas'] != null) {
+        return result.first['totalVentas'] as double?;
+      }
+      return 0.0;
+    } catch (e) {
+      debugPrint("Error al obtener el total de ventas: ${e.toString()}");
+      return null;
+    }
+  }
+
+  Future<DateTime?> obtenerFechaUltimaVenta() async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+        SELECT MAX(fechaVenta) AS ultimaVenta
+        FROM Ventas
+        WHERE idCliente = ?
+      ''', [idCliente]);
+
+      if (result.isNotEmpty && result.first['ultimaVenta'] != null) {
+        return DateTime.parse(result.first['ultimaVenta'] as String);
+      }
+      return null;
+    } catch (e) {
+      debugPrint(
+          "Error al obtener la fecha de la última venta: ${e.toString()}");
+      return null;
     }
   }
 }
