@@ -194,7 +194,7 @@ class Producto {
         'estaDisponible: ${estaDisponible == true ? 1 : 0}, rutaImagen: $rutaImagen}';
   }
 
-  static Future<List<Producto>> obtenerDetallesPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
+  static Future<List<Producto>> obtenerProductosPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
     List<Producto> productos = [];
     try{
       
