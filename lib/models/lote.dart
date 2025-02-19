@@ -170,4 +170,42 @@ class Lote {
     }
     return null;
   }
+
+
+  static Future<List<Lote>> obtenerLotesporFecha(DateTime fechaInicio, DateTime fechaFinal) async{
+    List<Lote> lote = [];
+  
+  try{
+    final db = await DatabaseController().database;
+    final result = await db.rawQuery('''
+      SELECT idLote, idProducto, cantidadActual, cantidadComprada,
+              cantidadPerdida, precioCompra, precioCompraUnidad,
+              fechaCaducidad, fechaCompra
+      FROM lotes 
+      WHERE fechaCompra BETWEEN ? AND ?
+      ORDER BY fechaCompra ASC
+      ''', [fechaInicio.toIso8601String(),fechaFinal.toIso8601String()]);
+      if(result.isNotEmpty){
+        for (var item in result){
+          lote.add(Lote(
+          idLote: item['idLote'] as int,
+          idProducto: item['idProducto'] as int,
+          cantidadActual: item['cantidadActual'] as int,
+          cantidadComprada: item['cantidadComprada'] as int,
+          cantidadPerdida: item['cantidadPerdida'] as int,
+          precioCompra: item['precioCompra'] as double,
+          precioCompraUnidad: item['preciocompraUnidad'] as double,
+          fechaCaducidad: DateTime.parse(item['fechaCaducidad'] as String),
+          fechaCompra: DateTime.parse(item['fechaCompra'] as String)
+        )
+        );
+      }
+      }
+  }catch(e) {
+    debugPrint("Error al obtener los loten en la fechas: ${e.toString()}");
+  }
+  return lote;
+ }
+
 }
+

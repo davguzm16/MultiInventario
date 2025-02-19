@@ -190,4 +190,37 @@ class Venta {
 
     return ventas;
   }
+
+  static Future<List<Venta>> obtenerVentasporFecha(DateTime fechaInicio, DateTime fechaFinal) async{
+    List<Venta> ventas = [];
+  
+  try{
+    final db = await DatabaseController().database;
+    final result = await db.rawQuery('''
+      SELECT idVenta, idCliente, CodigoVenta, fechaVenta,
+              montoTotal, montoCancelado, esAlcontado
+      FROM Ventas 
+      WHERE fechaVenta BETWEEN ? AND ?
+      ORDER BY fechaVenta ASC
+      ''', [fechaInicio.toIso8601String(),fechaFinal.toIso8601String()]);
+      if(result.isNotEmpty){
+        for (var item in result){
+          ventas.add(Venta(
+          idVenta: item['idVenta'] as int,
+          idCliente: item['idCliente'] as int,
+          codigoVenta: item['CodigoVenta'] as String,
+          fechaVenta: DateTime.parse(item['fechaVenta'] as String),
+          montoTotal: item['montoTotal'] as double,
+          montoCancelado: item['montoCancelado'] as double,
+          esAlContado: (item['esAlcontado'] as int) == 1,
+        )
+        );
+      }
+      }
+
+  }catch(e) {
+    debugPrint("Error al obtener las ventas en la fechas: ${e.toString()}");
+  }
+  return ventas;
+}
 }
