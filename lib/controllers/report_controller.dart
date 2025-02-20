@@ -19,6 +19,50 @@ class ReportController {
     } catch (e) {
       debugPrint('Error al generar PDF: $e');
       throw Exception('Error al generar PDF: $e');
+    final dir = await getTemporaryDirectory();
+    final file = File("${dir.path}/$filename");
+    await file.writeAsBytes(await pdf.save());
+    return file.path;
+  }
+
+  Future<void> mostrarPDF(BuildContext context,String path) async {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => verPDFScreen(path)),
+    );
+  }
+  Widget verPDFScreen(String pdfPath) {
+    return _PDFViewerScreen(pdfPath: pdfPath);
+  }
+
+}
+
+class _PDFViewerScreen extends StatefulWidget {
+  final String pdfPath;
+  const _PDFViewerScreen({Key? key, required this.pdfPath}) : super(key: key);
+
+  @override
+  _PDFViewerScreenState createState() => _PDFViewerScreenState();
+}
+
+class _PDFViewerScreenState extends State<_PDFViewerScreen> {
+  final Completer<PDFViewController> _controller = Completer<PDFViewController>();
+  bool isReady = false;
+
+  Future<void> sharePDF() async {
+    await Share.shareFiles([widget.pdfPath], text: "Aquí tienes el reporte en PDF");
+  }
+
+  Future<void> downloadPDF() async {
+    final directory = await getExternalStorageDirectory();
+    if (directory != null) {
+      final newPath = "${directory.path}/reporte_ventas.pdf";
+      final newFile = File(newPath);
+      await newFile.writeAsBytes(await File(widget.pdfPath).readAsBytes());
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("PDF guardado en: $newPath")),
+      );
     }
   }
 

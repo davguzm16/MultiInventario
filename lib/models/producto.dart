@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
+import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Producto {
@@ -192,4 +193,25 @@ class Producto {
         'stockActual: $stockActual, stockMinimo: $stockMinimo, stockMaximo: $stockMaximo, '
         'estaDisponible: ${estaDisponible == true ? 1 : 0}, rutaImagen: $rutaImagen}';
   }
+
+  static Future<List<Producto>> obtenerProductosPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
+    List<Producto> productos = [];
+    try{
+      
+    List<DetalleVenta> ventas = await DetalleVenta.obtenerDetallesPorFechas(fechaInicio,fechaFinal);
+    List<int> idsProductos = ventas.map((venta) => venta.idProducto).whereType<int>().toList();
+    
+      for(var id in idsProductos){
+        Producto? productoFiltrado = await obtenerProductoPorID(id);
+        if(productoFiltrado != null){
+                  productos.add(productoFiltrado);
+        }
+        
+      }
+    }catch(e){
+      debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
+    }
+    return productos;
+  }
+
 }

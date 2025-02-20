@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/models/venta.dart';
 
 class DetalleVenta {
   int idProducto;
@@ -110,5 +111,21 @@ class DetalleVenta {
       debugPrint("Error al obtener los detalles de venta: \${e.toString()}");
       return [];
     }
+  }
+
+  static Future<List<DetalleVenta>> obtenerDetallesPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
+    List<DetalleVenta> detalles = [];
+    List<Venta> ventas = await Venta.obtenerVentasporFecha(fechaInicio,fechaFinal);
+    List<int> idsVentas = ventas.map((venta) => venta.idVenta).whereType<int>().toList();
+
+    try{
+      for(var id in idsVentas){
+        List<DetalleVenta> detallesVenta = await obtenerDetallesPorVenta(id);
+        detalles.addAll(detallesVenta);
+      }
+    }catch(e){
+      debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
+    }
+    return detalles;
   }
 }
