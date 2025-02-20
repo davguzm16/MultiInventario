@@ -143,7 +143,20 @@ class _ReportsPageState extends State<ReportsPage> {
   }
 
   void _generateSoldProductsReport() async {
-    // Implementa la lógica para el reporte de productos vendidos
+    _showDateRangeDialog(
+      'Reporte de Productos Vendidos',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Aquí implementa la lógica para generar el reporte
+          // usando startDate y endDate
+          debugPrint('Generando reporte desde ${startDate.toString()} '
+              'hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   void _generateInventoryReport() async {
@@ -225,5 +238,93 @@ class _ReportsPageState extends State<ReportsPage> {
     final path = await report.generarPDF(pdf, "ventas_contado.pdf");
     //mostrar pdf
     report.mostrarPDF(context, path);
+  }
+
+  void _showDateRangeDialog(
+      String reportTitle, Function(DateTime, DateTime) onConfirm) {
+    DateTime? startDate;
+    DateTime? endDate;
+    final startDateController = TextEditingController();
+    final endDateController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(reportTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: startDateController,
+              decoration: const InputDecoration(
+                labelText: 'Fecha de inicio',
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              readOnly: true,
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null) {
+                  startDate = picked;
+                  startDateController.text =
+                      "${picked.day}/${picked.month}/${picked.year}";
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: endDateController,
+              decoration: const InputDecoration(
+                labelText: 'Fecha final',
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              readOnly: true,
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null) {
+                  endDate = picked;
+                  endDateController.text =
+                      "${picked.day}/${picked.month}/${picked.year}";
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              if (startDate != null && endDate != null) {
+                Navigator.pop(context);
+                onConfirm(startDate!, endDate!);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Por favor, seleccione ambas fechas'),
+                  ),
+                );
+              }
+            },
+            child: const Text('Confirmar'),
+          ),
+        ],
+      ),
+    );
   }
 }
