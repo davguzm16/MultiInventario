@@ -14,6 +14,7 @@ class ReportsPage extends StatefulWidget {
 class _ReportsPageState extends State<ReportsPage> {
   bool _isLoading = false;
   final ReportController report = ReportController();
+
   void _generateReport() async {
     setState(() {
       _isLoading = true;
@@ -130,16 +131,33 @@ class _ReportsPageState extends State<ReportsPage> {
 
   // Métodos para generar cada tipo de reporte
   void _generateDetailedSalesReport() async {
-    setState(() => _isLoading = true);
-    try {
-      await generarVentasContado(context); // Modifica esto según necesites
-    } finally {
-      setState(() => _isLoading = false);
-    }
+    _showDateRangeDialog(
+      'Reporte Detallado de Ventas',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Implementa la lógica para generar el reporte detallado de ventas
+          debugPrint('Generando reporte detallado de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   void _generateSalesReport() async {
-    // Implementa la lógica para el reporte de ventas
+    _showDateRangeDialog(
+      'Reporte de Ventas',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Implementa la lógica para generar el reporte de ventas
+          debugPrint('Generando reporte de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   void _generateSoldProductsReport() async {
@@ -148,10 +166,8 @@ class _ReportsPageState extends State<ReportsPage> {
       (DateTime startDate, DateTime endDate) async {
         setState(() => _isLoading = true);
         try {
-          // Aquí implementa la lógica para generar el reporte
-          // usando startDate y endDate
-          debugPrint('Generando reporte desde ${startDate.toString()} '
-              'hasta ${endDate.toString()}');
+          // Implementa la lógica para generar el reporte de productos vendidos
+          debugPrint('Generando reporte de productos vendidos desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -160,15 +176,48 @@ class _ReportsPageState extends State<ReportsPage> {
   }
 
   void _generateInventoryReport() async {
-    // Implementa la lógica para el reporte de inventario
+    _showDateRangeDialog(
+      'Reporte de Inventario',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Implementa la lógica para generar el reporte de inventario
+          debugPrint('Generando reporte de inventario desde ${startDate.toString()} hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   void _generateLotsReport() async {
-    // Implementa la lógica para el reporte de lotes
+    _showDateRangeDialog(
+      'Reporte de Lotes',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Implementa la lógica para generar el reporte de lotes
+          debugPrint('Generando reporte de lotes desde ${startDate.toString()} hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   void _generateDebtorsReport() async {
-    // Implementa la lógica para el reporte de deudores
+    _showDateRangeDialog(
+      'Reporte de Deudores',
+      (DateTime startDate, DateTime endDate) async {
+        setState(() => _isLoading = true);
+        try {
+          // Implementa la lógica para generar el reporte de deudores
+          debugPrint('Generando reporte de deudores desde ${startDate.toString()} hasta ${endDate.toString()}');
+        } finally {
+          setState(() => _isLoading = false);
+        }
+      },
+    );
   }
 
   //ejemplo de reporte
