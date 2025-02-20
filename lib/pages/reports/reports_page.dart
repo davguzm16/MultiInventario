@@ -137,7 +137,8 @@ class _ReportsPageState extends State<ReportsPage> {
         setState(() => _isLoading = true);
         try {
           // Implementa la lógica para generar el reporte detallado de ventas
-          debugPrint('Generando reporte detallado de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
+          debugPrint(
+              'Generando reporte detallado de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -152,7 +153,8 @@ class _ReportsPageState extends State<ReportsPage> {
         setState(() => _isLoading = true);
         try {
           // Implementa la lógica para generar el reporte de ventas
-          debugPrint('Generando reporte de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
+          debugPrint(
+              'Generando reporte de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -166,10 +168,6 @@ class _ReportsPageState extends State<ReportsPage> {
       (DateTime startDate, DateTime endDate) async {
         setState(() => _isLoading = true);
         try {
-<<<<<<< HEAD
-          // Implementa la lógica para generar el reporte de productos vendidos
-          debugPrint('Generando reporte de productos vendidos desde ${startDate.toString()} hasta ${endDate.toString()}');
-=======
           // Crear el documento PDF
           final pdf = pw.Document();
 
@@ -248,7 +246,6 @@ class _ReportsPageState extends State<ReportsPage> {
               SnackBar(content: Text('Error al generar el reporte: $e')),
             );
           }
->>>>>>> df8a1a41380f2709f4b60d39d37f324faeb0fe12
         } finally {
           if (mounted) {
             setState(() => _isLoading = false);
@@ -265,7 +262,8 @@ class _ReportsPageState extends State<ReportsPage> {
         setState(() => _isLoading = true);
         try {
           // Implementa la lógica para generar el reporte de inventario
-          debugPrint('Generando reporte de inventario desde ${startDate.toString()} hasta ${endDate.toString()}');
+          debugPrint(
+              'Generando reporte de inventario desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -280,7 +278,8 @@ class _ReportsPageState extends State<ReportsPage> {
         setState(() => _isLoading = true);
         try {
           // Implementa la lógica para generar el reporte de lotes
-          debugPrint('Generando reporte de lotes desde ${startDate.toString()} hasta ${endDate.toString()}');
+          debugPrint(
+              'Generando reporte de lotes desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -295,7 +294,8 @@ class _ReportsPageState extends State<ReportsPage> {
         setState(() => _isLoading = true);
         try {
           // Implementa la lógica para generar el reporte de deudores
-          debugPrint('Generando reporte de deudores desde ${startDate.toString()} hasta ${endDate.toString()}');
+          debugPrint(
+              'Generando reporte de deudores desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
