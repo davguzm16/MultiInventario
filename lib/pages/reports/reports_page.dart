@@ -160,16 +160,99 @@ class _ReportsPageState extends State<ReportsPage> {
     );
   }
 
-  void _generateSoldProductsReport() async {
+  void _generateSoldProductsReport() {
     _showDateRangeDialog(
       'Reporte de Productos Vendidos',
       (DateTime startDate, DateTime endDate) async {
         setState(() => _isLoading = true);
         try {
+<<<<<<< HEAD
           // Implementa la lógica para generar el reporte de productos vendidos
           debugPrint('Generando reporte de productos vendidos desde ${startDate.toString()} hasta ${endDate.toString()}');
+=======
+          // Crear el documento PDF
+          final pdf = pw.Document();
+
+          // Obtener datos de la base de datos y generar el PDF
+          pdf.addPage(
+            pw.MultiPage(
+              pageFormat: PdfPageFormat.a4,
+              margin: const pw.EdgeInsets.all(20),
+              build: (pw.Context context) {
+                return [
+                  pw.Text("Reporte de Productos Vendidos",
+                      style: pw.TextStyle(
+                          fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.SizedBox(height: 10),
+                  pw.Text(
+                      "Período: ${startDate.day}/${startDate.month}/${startDate.year} - ${endDate.day}/${endDate.month}/${endDate.year}"),
+                  pw.SizedBox(height: 20),
+                  pw.Table.fromTextArray(
+                    headers: [
+                      "Ranking",
+                      "Código",
+                      "Producto",
+                      "Cantidad Total",
+                      "Precio Unitario",
+                      "Descuento Total",
+                      "Total Ventas",
+                      "Ganancias"
+                    ],
+                    data: [
+                      [
+                        "1",
+                        "001",
+                        "Producto Ejemplo",
+                        "10",
+                        "S/. 50.00",
+                        "S/. 5.00",
+                        "S/. 495.00",
+                        "S/. 100.00"
+                      ],
+                      // Aquí irán los datos reales de tu base de datos
+                    ],
+                    border: pw.TableBorder.all(),
+                    cellStyle: pw.TextStyle(fontSize: 10),
+                    headerStyle: pw.TextStyle(
+                        fontSize: 12,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColors.white),
+                    headerDecoration: pw.BoxDecoration(
+                        color: PdfColors.black,
+                        borderRadius: pw.BorderRadius.circular(2)),
+                    headerAlignments: {
+                      0: pw.Alignment.center,
+                      1: pw.Alignment.center,
+                      2: pw.Alignment.centerLeft,
+                      3: pw.Alignment.center,
+                      4: pw.Alignment.center,
+                      5: pw.Alignment.center,
+                      6: pw.Alignment.center,
+                      7: pw.Alignment.center,
+                    },
+                  ),
+                ];
+              },
+            ),
+          );
+
+          // Generar y mostrar el PDF
+          final path = await report.generarPDF(pdf, "productos_vendidos.pdf");
+          if (mounted) {
+            await report.mostrarPDF(context, path);
+          }
+        } catch (e) {
+          debugPrint('Error en _generateSoldProductsReport: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Error al generar el reporte: $e')),
+            );
+          }
+>>>>>>> df8a1a41380f2709f4b60d39d37f324faeb0fe12
         } finally {
-          setState(() => _isLoading = false);
+          if (mounted) {
+            setState(() => _isLoading = false);
+          }
         }
       },
     );
