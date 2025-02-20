@@ -9,6 +9,7 @@ class ReportsPage extends StatefulWidget {
   @override
   State<ReportsPage> createState() => _ReportsPageState();
 }
+
 //para agregar una pantalla de carga
 class _ReportsPageState extends State<ReportsPage> {
   bool _isLoading = false;
@@ -25,22 +26,140 @@ class _ReportsPageState extends State<ReportsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Obtener las dimensiones de la pantalla
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
-      appBar: AppBar(title: const Text("Mis Reportes")),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator()
-            //boton de ejemplo
-            : ElevatedButton(
-                onPressed: _generateReport,
-                child: const Text("Ver Reporte Ventas Contado (ejemplo)"),
+      appBar: AppBar(
+        title: const Text("Mis Reportes"),
+        elevation: 0,
+      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: screenWidth * 0.05,
+                vertical: screenHeight * 0.02,
               ),
+              child: GridView.count(
+                crossAxisCount: 3,
+                mainAxisSpacing: screenHeight * 0.02,
+                crossAxisSpacing: screenWidth * 0.02,
+                childAspectRatio: 1.2, // Proporción más cuadrada
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildReportButton(
+                    title: "Reporte Detallado\nde Ventas",
+                    icon: Icons.receipt_long,
+                    onPressed: () => _generateDetailedSalesReport(),
+                  ),
+                  _buildReportButton(
+                    title: "Reporte de\nVentas",
+                    icon: Icons.point_of_sale,
+                    onPressed: () => _generateSalesReport(),
+                  ),
+                  _buildReportButton(
+                    title: "Reporte de\nProductos Vendidos",
+                    icon: Icons.shopping_cart,
+                    onPressed: () => _generateSoldProductsReport(),
+                  ),
+                  _buildReportButton(
+                    title: "Reporte de\nInventario",
+                    icon: Icons.inventory,
+                    onPressed: () => _generateInventoryReport(),
+                  ),
+                  _buildReportButton(
+                    title: "Reporte de\nLotes",
+                    icon: Icons.ballot,
+                    onPressed: () => _generateLotsReport(),
+                  ),
+                  _buildReportButton(
+                    title: "Reporte de\nDeudores",
+                    icon: Icons.account_balance,
+                    onPressed: () => _generateDebtorsReport(),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  Widget _buildReportButton({
+    required String title,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 40, // Icono más grande
+                color: Colors.purple,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
-  //ejemplo de reporte
-    Future<void> generarVentasContado(BuildContext context) async {
 
+  // Métodos para generar cada tipo de reporte
+  void _generateDetailedSalesReport() async {
+    setState(() => _isLoading = true);
+    try {
+      await generarVentasContado(context); // Modifica esto según necesites
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _generateSalesReport() async {
+    // Implementa la lógica para el reporte de ventas
+  }
+
+  void _generateSoldProductsReport() async {
+    // Implementa la lógica para el reporte de productos vendidos
+  }
+
+  void _generateInventoryReport() async {
+    // Implementa la lógica para el reporte de inventario
+  }
+
+  void _generateLotsReport() async {
+    // Implementa la lógica para el reporte de lotes
+  }
+
+  void _generateDebtorsReport() async {
+    // Implementa la lógica para el reporte de deudores
+  }
+
+  //ejemplo de reporte
+  Future<void> generarVentasContado(BuildContext context) async {
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
@@ -49,7 +168,8 @@ class _ReportsPageState extends State<ReportsPage> {
         build: (pw.Context context) {
           return [
             pw.Text("Reporte de ventas al contado",
-                style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                style:
+                    pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text("Fecha: 01/01/2025 - 31/01/2025"),
             pw.Text("Total: S/ 1000.00"),
@@ -57,25 +177,53 @@ class _ReportsPageState extends State<ReportsPage> {
             pw.SizedBox(height: 10),
             pw.Table.fromTextArray(
               headers: [
-                "Fecha y hora", "Código de venta", "Cliente", "Subtotal (S/)", "Descuento (S/)", "Monto total (S/)", "Ganancias (S/)"
+                "Fecha y hora",
+                "Código de venta",
+                "Cliente",
+                "Subtotal (S/)",
+                "Descuento (S/)",
+                "Monto total (S/)",
+                "Ganancias (S/)"
               ],
-              data: List.generate(12, (index) => ["01/01/2023 07:35", "", "~~", "6.00", "0.10", "5.90", "0.50"]),
+              data: List.generate(
+                  12,
+                  (index) => [
+                        "01/01/2023 07:35",
+                        "",
+                        "~~",
+                        "6.00",
+                        "0.10",
+                        "5.90",
+                        "0.50"
+                      ]),
               border: pw.TableBorder.all(),
               cellStyle: pw.TextStyle(fontSize: 10),
-              headerStyle: pw.TextStyle(fontSize: 12, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
-              headerDecoration: pw.BoxDecoration(color: PdfColors.black, borderRadius: pw.BorderRadius.circular(2)),
-              headerAlignments: {0: pw.Alignment.center, 1: pw.Alignment.center, 2: pw.Alignment.centerLeft, 3: pw.Alignment.center, 4: pw.Alignment.center, 5: pw.Alignment.center, 6: pw.Alignment.center},
+              headerStyle: pw.TextStyle(
+                  fontSize: 12,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white),
+              headerDecoration: pw.BoxDecoration(
+                  color: PdfColors.black,
+                  borderRadius: pw.BorderRadius.circular(2)),
+              headerAlignments: {
+                0: pw.Alignment.center,
+                1: pw.Alignment.center,
+                2: pw.Alignment.centerLeft,
+                3: pw.Alignment.center,
+                4: pw.Alignment.center,
+                5: pw.Alignment.center,
+                6: pw.Alignment.center
+              },
             ),
           ];
         },
       ),
     );
     //metodos de report_controller.dart
-    
+
     //generar pdf
     final path = await report.generarPDF(pdf, "ventas_contado.pdf");
     //mostrar pdf
     report.mostrarPDF(context, path);
   }
 }
-
