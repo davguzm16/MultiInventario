@@ -26,7 +26,6 @@ class _ReportsPageState extends State<ReportsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtener las dimensiones de la pantalla
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -39,44 +38,42 @@ class _ReportsPageState extends State<ReportsPage> {
           ? const Center(child: CircularProgressIndicator())
           : Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.05,
+                horizontal: screenWidth * 0.1, // Aumentado para centrar mejor
                 vertical: screenHeight * 0.02,
               ),
               child: GridView.count(
-                crossAxisCount: 3,
-                mainAxisSpacing: screenHeight * 0.02,
-                crossAxisSpacing: screenWidth * 0.02,
-                childAspectRatio: 1.2, // Proporción más cuadrada
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 1, // Cambiado a 1 columna
+                mainAxisSpacing: 10, // Espaciado fijo entre botones
+                childAspectRatio:
+                    4.0, // Ajustado para botones más anchos que altos
                 children: [
                   _buildReportButton(
-                    title: "Reporte Detallado\nde Ventas",
+                    title: "Reporte Detallado de Ventas",
                     icon: Icons.receipt_long,
                     onPressed: () => _generateDetailedSalesReport(),
                   ),
                   _buildReportButton(
-                    title: "Reporte de\nVentas",
+                    title: "Reporte de Ventas",
                     icon: Icons.point_of_sale,
                     onPressed: () => _generateSalesReport(),
                   ),
                   _buildReportButton(
-                    title: "Reporte de\nProductos Vendidos",
+                    title: "Reporte de Productos Vendidos",
                     icon: Icons.shopping_cart,
                     onPressed: () => _generateSoldProductsReport(),
                   ),
                   _buildReportButton(
-                    title: "Reporte de\nInventario",
+                    title: "Reporte de Inventario",
                     icon: Icons.inventory,
                     onPressed: () => _generateInventoryReport(),
                   ),
                   _buildReportButton(
-                    title: "Reporte de\nLotes",
+                    title: "Reporte de Lotes",
                     icon: Icons.ballot,
                     onPressed: () => _generateLotsReport(),
                   ),
                   _buildReportButton(
-                    title: "Reporte de\nDeudores",
+                    title: "Reporte de Deudores",
                     icon: Icons.account_balance,
                     onPressed: () => _generateDebtorsReport(),
                   ),
@@ -100,26 +97,29 @@ class _ReportsPageState extends State<ReportsPage> {
         onTap: onPressed,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            // Cambiado a Row para layout horizontal
             children: [
               Icon(
                 icon,
-                size: 40, // Icono más grande
+                size: 32,
                 color: Colors.purple,
               ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  height: 1.2,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: Colors.grey,
+                size: 16,
               ),
             ],
           ),
