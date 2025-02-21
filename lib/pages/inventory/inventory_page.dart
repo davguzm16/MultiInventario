@@ -208,33 +208,34 @@ class _InventoryPageState extends State<InventoryPage>
                     const Duration(milliseconds: 300), _cargarProductos);
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () async {
-              final filtros = await context.push<Map<String, dynamic>>(
-                '/inventory/filter-products',
-                extra: {
-                  'categoriasSeleccionadas': categoriasSeleccionadas
-                      .map((c) => {
-                            'idCategoria': c.idCategoria,
-                            'nombreCategoria': c.nombreCategoria
-                          })
-                      .toList(),
-                  'isStockBajo': isStockBajo,
-                },
-              );
+          if (!isSearching)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: () async {
+                final filtros = await context.push<Map<String, dynamic>>(
+                  '/inventory/filter-products',
+                  extra: {
+                    'categoriasSeleccionadas': categoriasSeleccionadas
+                        .map((c) => {
+                              'idCategoria': c.idCategoria,
+                              'nombreCategoria': c.nombreCategoria
+                            })
+                        .toList(),
+                    'isStockBajo': isStockBajo,
+                  },
+                );
 
-              if (filtros != null) {
-                setState(() {
-                  categoriasSeleccionadas =
-                      filtros['categoriasSeleccionadas'] as List<Categoria>;
-                  isStockBajo = filtros['isStockBajo'] as bool?;
-                });
-              }
+                if (filtros != null) {
+                  setState(() {
+                    categoriasSeleccionadas =
+                        filtros['categoriasSeleccionadas'] as List<Categoria>;
+                    isStockBajo = (filtros['isStockBajo'] as bool?)!;
+                  });
+                }
 
-              _cargarProductos(reiniciarListaProductos: true);
-            },
-          ),
+                _cargarProductos(reiniciarListaProductos: true);
+              },
+            ),
         ],
       ),
       body: Stack(
@@ -320,7 +321,7 @@ class _InventoryPageState extends State<InventoryPage>
                                       return Text(
                                         "Stock: ${producto.stockActual} ${snapshot.data?.tipoUnidad ?? "---"}",
                                         style: TextStyle(
-                                          color: producto.stockActual <
+                                          color: producto.stockActual! <
                                                   producto.stockMinimo
                                               ? Colors.red
                                               : Colors.black,

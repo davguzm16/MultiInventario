@@ -12,7 +12,7 @@ class Producto {
   String? codigoProducto;
   String nombreProducto;
   double precioProducto;
-  double stockActual;
+  double? stockActual;
   double stockMinimo;
   double? stockMaximo;
   bool? estaDisponible;
@@ -27,7 +27,7 @@ class Producto {
     this.codigoProducto,
     required this.nombreProducto,
     required this.precioProducto,
-    this.stockActual = 0,
+    this.stockActual,
     required this.stockMinimo,
     this.stockMaximo,
     this.rutaImagen,
@@ -42,13 +42,14 @@ class Producto {
       final result = await db.rawInsert('''
       INSERT INTO Productos (
         idUnidad, codigoProducto, nombreProducto, precioProducto,
-        stockMinimo, stockMaximo, rutaImagen
+        stockActual, stockMinimo, stockMaximo, rutaImagen
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', [
         producto.idUnidad,
         producto.codigoProducto,
         producto.nombreProducto,
         producto.precioProducto,
+        producto.stockActual ?? 0,
         producto.stockMinimo,
         producto.stockMaximo,
         producto.rutaImagen,
@@ -194,11 +195,9 @@ class Producto {
         int idUnidad = random.nextInt(3) + 1; // Valores entre 1 y 3
         double precio =
             (random.nextDouble() * 90) + 10; // Precio entre 10 y 100
-        int stockActual = random.nextInt(200) + 1; // Stock entre 1 y 200
         int stockMinimo = random.nextInt(20) + 5; // Mínimo entre 5 y 25
-        int stockMaximo = stockActual +
-            random.nextInt(100) +
-            50; // Máximo entre stockActual+50 y stockActual+150
+        int stockMaximo = (random.nextInt(100) +
+            50); // Máximo entre stockActual+50 y stockActual+150
 
         return Producto(
           idUnidad: idUnidad,
@@ -237,24 +236,24 @@ class Producto {
         'estaDisponible: ${estaDisponible == true ? 1 : 0}, rutaImagen: $rutaImagen}';
   }
 
-  static Future<List<Producto>> obtenerProductosPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
+  static Future<List<Producto>> obtenerProductosPorFechas(
+      DateTime fechaInicio, DateTime fechaFinal) async {
     List<Producto> productos = [];
-    try{
-      
-    List<DetalleVenta> ventas = await DetalleVenta.obtenerDetallesPorFechas(fechaInicio,fechaFinal);
-    List<int> idsProductos = ventas.map((venta) => venta.idProducto).whereType<int>().toList();
-    
-      for(var id in idsProductos){
+    try {
+      List<DetalleVenta> ventas =
+          await DetalleVenta.obtenerDetallesPorFechas(fechaInicio, fechaFinal);
+      List<int> idsProductos =
+          ventas.map((venta) => venta.idProducto).whereType<int>().toList();
+
+      for (var id in idsProductos) {
         Producto? productoFiltrado = await obtenerProductoPorID(id);
-        if(productoFiltrado != null){
-                  productos.add(productoFiltrado);
+        if (productoFiltrado != null) {
+          productos.add(productoFiltrado);
         }
-        
       }
-    }catch(e){
+    } catch (e) {
       debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
     }
     return productos;
   }
-
 }

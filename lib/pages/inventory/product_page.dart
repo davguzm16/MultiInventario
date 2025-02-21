@@ -447,7 +447,7 @@ class _ProductPageState extends State<ProductPage> {
                       int cantidadDisponible =
                           cantidadValue - cantidadPerdidaValue;
                       return Text(
-                        "Cantidad Disponible: ${cantidadDisponible < 0 ? "Cantidad inválida!" : cantidadDisponible}",
+                        "Cantidad Actual: ${cantidadDisponible < 0 ? "Cantidad inválida!" : cantidadDisponible}",
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,

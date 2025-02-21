@@ -193,31 +193,26 @@ class _SalesPageState extends State<SalesPage>
                     const Duration(milliseconds: 300), _cargarVentas);
               },
             ),
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () async {
-              final filtros = await context.push<Map<String, dynamic>>(
-                '/sales/filter-sales',
-                extra: {
-                  'esAlContado': esAlContado,
-                },
-              );
+          if (!isSearching)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: () async {
+                final filtros = await context.push<Map<String, dynamic>>(
+                  '/sales/filter-sales',
+                  extra: {
+                    'esAlContado': esAlContado,
+                  },
+                );
 
-              if (filtros != null) {
-                setState(() {
-                  esAlContado = (filtros['esAlContado'] as bool?)!;
-                });
-              }
+                if (filtros != null) {
+                  setState(() {
+                    esAlContado = (filtros['esAlContado'] as bool?)!;
+                  });
+                }
 
-              _cargarVentas(reiniciarListaVentas: true);
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              context.push('/sales/debtors');
-            },
-          ),
+                _cargarVentas(reiniciarListaVentas: true);
+              },
+            ),
         ],
       ),
       body: Stack(

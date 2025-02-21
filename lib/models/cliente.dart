@@ -26,7 +26,7 @@ class Cliente {
         ''',
         [
           cliente.nombreCliente,
-          cliente.dniCliente,
+          cliente.dniCliente ?? Null,
           cliente.correoCliente,
           cliente.esDeudor ? 1 : 0
         ],

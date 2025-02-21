@@ -12,7 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   void _goBranch(int index) {
-    widget.navigationShell.goBranch(index, initialLocation: true);
+    widget.navigationShell.goBranch(index);
   }
 
   @override
@@ -28,9 +28,7 @@ class _HomePageState extends State<HomePage> {
           unselectedItemColor: Colors.black,
           selectedItemColor: Colors.black,
           currentIndex: widget.navigationShell.currentIndex,
-          onTap: (index) {
-            _goBranch(index);
-          },
+          onTap: _goBranch,
           items: [
             BottomNavigationBarItem(
               icon: Image.asset(
@@ -49,9 +47,10 @@ class _HomePageState extends State<HomePage> {
               label: "Ventas",
             ),
             BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person_2,
-                size: 30,
+              icon: Image.asset(
+                "lib/assets/iconos/iconoClientes.png",
+                width: 30,
+                height: 30,
               ),
               label: "Clientes",
             ),

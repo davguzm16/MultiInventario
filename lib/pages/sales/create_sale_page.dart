@@ -45,7 +45,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
     });
   }
 
-  double _calcularTotal(
+  double _calcularSubtotal(
       Producto? productoSeleccionado, int cantidad, double? descuento) {
     if (productoSeleccionado == null) return 0.0;
 
@@ -70,6 +70,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
         : TextEditingController();
 
     Producto? productoSeleccionado;
+    List<Lote> lotesProducto = [];
     Unidad? unidadProducto;
     Lote? loteSeleccionado;
 
@@ -184,8 +185,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                             "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
@@ -232,7 +231,12 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Cantidad de productos"),
+                        Flexible(
+                          child: Text(
+                            "Cantidad de productos",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ),
                         IconButton(
                           icon: const Icon(Icons.remove),
                           onPressed: () {
@@ -274,14 +278,18 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         return ValueListenableBuilder(
                           valueListenable: descuento,
                           builder: (context, descuentoValue, child) {
-                            double total = _calcularTotal(productoSeleccionado,
-                                cantidadValue, descuentoValue);
+                            double subtotal = _calcularSubtotal(
+                                productoSeleccionado,
+                                cantidadValue,
+                                descuentoValue);
                             return Text(
-                              "Total: S/ ${total.toStringAsFixed(2)}",
-                              style: const TextStyle(
+                              "Subtotal: ${subtotal < 0 ? "\nMonto invalido" : ""} S/ ${subtotal.toStringAsFixed(2)}",
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Color(0xFF493d9e),
+                                color: subtotal < 0
+                                    ? Colors.red
+                                    : Color(0xFF493d9e),
                               ),
                             );
                           },
@@ -305,12 +313,16 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         idLote: loteSeleccionado!.idLote!,
                         cantidadProducto: cantidad.value,
                         descuentoProducto: descuento.value,
-                        subtotalProducto: _calcularTotal(productoSeleccionado,
-                            cantidad.value, descuento.value),
+                        subtotalProducto: _calcularSubtotal(
+                            productoSeleccionado,
+                            cantidad.value,
+                            descuento.value),
                         precioUnidadProducto:
                             productoSeleccionado!.precioProducto,
-                        gananciaProducto: _calcularTotal(productoSeleccionado,
-                                cantidad.value, descuento.value) -
+                        gananciaProducto: _calcularSubtotal(
+                                productoSeleccionado,
+                                cantidad.value,
+                                descuento.value) -
                             (productoSeleccionado!.precioProducto *
                                 cantidad.value),
                       );
@@ -320,6 +332,17 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         errorMessage: productoSeleccionado == null
                             ? "No se ha seleccionado ningun producto para agregar en la venta."
                             : "No se ha seleccionado ningun lote del producto seleccionado.",
+                      );
+                      return;
+                    }
+
+                    if (_calcularSubtotal(productoSeleccionado, cantidad.value,
+                            descuento.value) <
+                        0) {
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Monto del subtotal invalido, considere bajar el descuento.",
                       );
                       return;
                     }
