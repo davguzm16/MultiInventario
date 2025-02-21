@@ -66,9 +66,7 @@ class AppRoutes {
             routes: [
               GoRoute(
                 path: '/inventory',
-                builder: (context, state) {
-                  return const InventoryPage();
-                },
+                builder: (context, state) => const InventoryPage(),
                 routes: [
                   GoRoute(
                     path: 'create-product',
@@ -111,9 +109,7 @@ class AppRoutes {
             routes: [
               GoRoute(
                 path: '/sales',
-                builder: (context, state) {
-                  return const SalesPage();
-                },
+                builder: (context, state) => const SalesPage(),
                 routes: [
                   GoRoute(
                     path: 'create-sale',
@@ -160,9 +156,7 @@ class AppRoutes {
             routes: [
               GoRoute(
                 path: '/clients',
-                builder: (context, state) {
-                  return const ClientsPage();
-                },
+                builder: (context, state) => const ClientsPage(),
                 routes: [
                   GoRoute(
                     path: 'details-client/:idCliente',

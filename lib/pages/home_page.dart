@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(
-                Icons.perm_identity,
+                Icons.person_2,
                 size: 30,
               ),
               label: "Clientes",

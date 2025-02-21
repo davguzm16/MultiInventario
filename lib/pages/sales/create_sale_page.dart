@@ -70,7 +70,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
         : TextEditingController();
 
     Producto? productoSeleccionado;
-    List<Lote> lotesProducto = [];
     Unidad? unidadProducto;
     Lote? loteSeleccionado;
 
@@ -141,7 +140,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                                 itemCount: productosFiltrados.length,
                                 itemBuilder: (context, index) {
                                   final producto = productosFiltrados[index];
-
                                   return ListTile(
                                       title: Text(producto.nombreProducto),
                                       subtitle: Text(
@@ -184,6 +182,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         children: [
                           Text(
                             "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                             style: const TextStyle(
                                 fontSize: 16, fontWeight: FontWeight.bold),
                           ),

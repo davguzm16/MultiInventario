@@ -21,8 +21,7 @@ class _ClientsPageState extends State<ClientsPage>
 
   // Clientes
   List<Cliente> clientes = [];
-  String nombreClienteBuscado = "";
-  bool? esDeudor;
+  String nombreBuscado = "";
 
   // Variables de carga dinámica
   int cantidadCargas = 0;
@@ -50,15 +49,15 @@ class _ClientsPageState extends State<ClientsPage>
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
         hayMasCargas &&
-        nombreClienteBuscado.isEmpty) {
+        nombreBuscado.isEmpty) {
       _cargarClientes();
     }
   }
 
-  Future<void> _cargarClientes({bool reiniciarListaCliente = false}) async {
-    if (!hayMasCargas && !reiniciarListaCliente) return;
+  Future<void> _cargarClientes({bool reiniciarLista = false}) async {
+    if (!hayMasCargas && !reiniciarLista) return;
 
-    if (reiniciarListaCliente) {
+    if (reiniciarLista) {
       setState(() {
         clientes.clear();
         cantidadCargas = 0;
@@ -72,13 +71,12 @@ class _ClientsPageState extends State<ClientsPage>
 
     List<Cliente> nuevosClientes = await Cliente.obtenerClientesPorCarga(
       numeroCarga: cantidadCargas,
-      esDeudor: esDeudor,
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
 
     setState(() {
-      if (reiniciarListaCliente) {
+      if (reiniciarLista) {
         clientes = nuevosClientes;
       } else {
         clientes.addAll(nuevosClientes);
@@ -93,17 +91,17 @@ class _ClientsPageState extends State<ClientsPage>
     });
   }
 
-  void _buscarClientes(String nombreCliente) {
+  void _buscarClientes(String nombre) {
     if (_searchTimer?.isActive ?? false) _searchTimer!.cancel();
 
     _searchTimer = Timer(const Duration(milliseconds: 300), () async {
-      if (nombreCliente.isEmpty) {
-        _cargarClientes(reiniciarListaCliente: true);
+      if (nombre.isEmpty) {
+        _cargarClientes(reiniciarLista: true);
         return;
       }
 
       List<Cliente> clientesFiltrados =
-          await Cliente.obtenerClientesPorNombre(nombreCliente);
+          await Cliente.obtenerClientesPorNombre(nombre);
 
       setState(() {
         clientes = clientesFiltrados;
@@ -131,10 +129,10 @@ class _ClientsPageState extends State<ClientsPage>
                         _searchController.clear();
                         setState(() {
                           isSearching = false;
-                          nombreClienteBuscado = "";
+                          nombreBuscado = "";
                         });
                         _animationController.reverse();
-                        _cargarClientes(reiniciarListaCliente: true);
+                        _cargarClientes(reiniciarLista: true);
                       },
                     ),
                     contentPadding:
@@ -147,7 +145,7 @@ class _ClientsPageState extends State<ClientsPage>
                     fillColor: Colors.white.withOpacity(0.2),
                   ),
                   onChanged: (value) {
-                    setState(() => nombreClienteBuscado = value);
+                    setState(() => nombreBuscado = value);
                     _buscarClientes(value);
                   },
                 )
