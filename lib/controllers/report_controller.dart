@@ -1,30 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:multiinventario/helpers/database_helper.dart';
 
-class ReportController  {
+class ReportController {
   Future<String> generarPDF(pw.Document pdf, String filename) async {
-    final dir = await getTemporaryDirectory();
-    final file = File("${dir.path}/$filename");
-    await file.writeAsBytes(await pdf.save());
-    return file.path;
+    try {
+      final dir = await getTemporaryDirectory();
+      final file = File("${dir.path}/$filename");
+      await file.writeAsBytes(await pdf.save());
+      debugPrint('PDF generado en: ${file.path}');
+      return file.path;
+    } catch (e) {
+      debugPrint('Error al generar PDF: $e');
+      throw Exception('Error al generar PDF: $e');
+    }
   }
 
-  Future<void> mostrarPDF(BuildContext context,String path) async {
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => verPDFScreen(path)),
-    );
+  Future<void> mostrarPDF(BuildContext context, String path) async {
+    try {
+      final file = File(path);
+      if (await file.exists()) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => _PDFViewerScreen(pdfPath: path),
+          ),
+        );
+      } else {
+        throw Exception('El archivo PDF no existe');
+      }
+    } catch (e) {
+      debugPrint('Error al mostrar PDF: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al mostrar el PDF: $e')),
+        );
+      }
+    }
   }
-  Widget verPDFScreen(String pdfPath) {
-    return _PDFViewerScreen(pdfPath: pdfPath);
-  }
-
 }
 
 class _PDFViewerScreen extends StatefulWidget {
@@ -36,57 +56,78 @@ class _PDFViewerScreen extends StatefulWidget {
 }
 
 class _PDFViewerScreenState extends State<_PDFViewerScreen> {
-  final Completer<PDFViewController> _controller = Completer<PDFViewController>();
-  bool isReady = false;
-
-  Future<void> sharePDF() async {
-    await Share.shareFiles([widget.pdfPath], text: "Aquí tienes el reporte en PDF");
-  }
-
-  Future<void> downloadPDF() async {
-    final directory = await getExternalStorageDirectory();
-    if (directory != null) {
-      final newPath = "${directory.path}/reporte_ventas.pdf";
-      final newFile = File(newPath);
-      await newFile.writeAsBytes(await File(widget.pdfPath).readAsBytes());
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("PDF guardado en: $newPath")),
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Reporte"),
+        title: const Text("Visor de PDF"),
         actions: [
-          IconButton(icon: Icon(Icons.download), onPressed: downloadPDF),
-          IconButton(icon: Icon(Icons.share), onPressed: sharePDF),
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: sharePDF,
+          ),
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: downloadPDF,
+          ),
         ],
       ),
-      body: Stack(
-        children: [
-          PDFView(
-            filePath: widget.pdfPath,
-            onViewCreated: (PDFViewController pdfViewController) {
-              _controller.complete(pdfViewController);
-              setState(() {});
-              Future.delayed(Duration(milliseconds: 300), () async {
-                pdfViewController.setPage(0);
-              });
-            },
-            onRender: (_) {
-              setState(() => isReady = true);
-            },
-            onError: (error) {
-              print("Error al cargar PDF: $error");
-              setState(() => isReady = true);
-            },
-          ),
-          if (!isReady) const Center(child: CircularProgressIndicator()),
-        ],
+      body: FutureBuilder<Uint8List>(
+        future: File(widget.pdfPath).readAsBytes(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return PdfPreview(
+              build: (format) => snapshot.data!,
+              allowPrinting: false,
+              allowSharing: false,
+              canChangePageFormat: false,
+              canChangeOrientation: false,
+              maxPageWidth: MediaQuery.of(context).size.width * 0.9,
+            );
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error al cargar el PDF: ${snapshot.error}'),
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
     );
+  }
+
+  Future<void> sharePDF() async {
+    try {
+      await Share.shareFiles([widget.pdfPath],
+          text: "Aquí tienes el reporte en PDF");
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al compartir el PDF: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> downloadPDF() async {
+    try {
+      final directory = await getExternalStorageDirectory();
+      if (directory != null) {
+        final newPath = "${directory.path}/reporte.pdf";
+        final newFile = File(newPath);
+        await newFile.writeAsBytes(await File(widget.pdfPath).readAsBytes());
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("PDF guardado en: $newPath")),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al descargar el PDF: $e')),
+        );
+      }
+    }
   }
 }
