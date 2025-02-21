@@ -175,7 +175,7 @@ class _ClientsPageState extends State<ClientsPage>
             child: clientes.isEmpty
                 ? const Center(
                     child: Text(
-                      "No hay clientes",
+                      "No se encontraron clientes",
                       style: TextStyle(fontSize: 16, color: Colors.black),
                     ),
                   )
@@ -259,7 +259,7 @@ class _ClientsPageState extends State<ClientsPage>
                                       },
                                     ),
                                     Text(
-                                      "Estado: ${cliente.esDeudor}",
+                                      "Estado: ${cliente.esDeudor ? "Deudor" : "Regular"}",
                                       style: TextStyle(
                                         color: cliente.esDeudor
                                             ? Colors.red

@@ -28,7 +28,7 @@ class _InventoryPageState extends State<InventoryPage>
 
   // Variables de filtrado
   List<Categoria> categoriasSeleccionadas = [];
-  bool isStockBajo = false;
+  bool? isStockBajo;
   String nombreProductoBuscado = "";
 
   // Manejo de resultados por carga
@@ -204,8 +204,7 @@ class _InventoryPageState extends State<InventoryPage>
                   cantidadCargas = 0;
                   hayMasCargas = true;
                 });
-                Future.delayed(
-                    const Duration(milliseconds: 300), _cargarProductos);
+                _cargarProductos(reiniciarListaProductos: true);
               },
             ),
           if (!isSearching)
@@ -229,7 +228,7 @@ class _InventoryPageState extends State<InventoryPage>
                   setState(() {
                     categoriasSeleccionadas =
                         filtros['categoriasSeleccionadas'] as List<Categoria>;
-                    isStockBajo = (filtros['isStockBajo'] as bool?)!;
+                    isStockBajo = filtros['isStockBajo'] as bool?;
                   });
                 }
 

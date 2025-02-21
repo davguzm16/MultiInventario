@@ -26,7 +26,7 @@ class _SalesPageState extends State<SalesPage>
 
   // Variables de filtrado
   String codigoVentaBuscado = "";
-  bool esAlContado = true;
+  bool? esAlContado;
 
   // Manejo de carga de datos dinamica
   int cantidadCargas = 0;
