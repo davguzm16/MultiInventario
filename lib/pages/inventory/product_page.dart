@@ -1,8 +1,6 @@
-// ignore_for_file: use_build_context_synchronously//
+// ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
-
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/categoria.dart';
@@ -11,6 +9,7 @@ import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
 import 'package:multiinventario/models/unidad.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:multiinventario/widgets/all_custom_widgets.dart';
 
 class ProductPage extends StatefulWidget {
   final int idProducto;
@@ -31,7 +30,7 @@ class _ProductPageState extends State<ProductPage> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration.zero, () => obtenerProducto());
+    obtenerProducto();
   }
 
   Future<void> obtenerProducto() async {
@@ -40,16 +39,12 @@ class _ProductPageState extends State<ProductPage> {
 
     if (producto == null) {
       debugPrint("Producto ${widget.idProducto} no encontrado.");
-      AwesomeDialog(
+
+      ErrorDialog(
         context: context,
-        dialogType: DialogType.error,
-        animType: AnimType.topSlide,
-        title: "Error",
-        desc: "El producto con id ${widget.idProducto} no fue encontrado.",
-        btnOkOnPress: () => context.pop(),
-        btnOkIcon: Icons.cancel,
-        btnOkColor: Colors.red,
-      ).show();
+        errorMessage:
+            "El producto con id ${widget.idProducto} no fue encontrado.",
+      );
       return;
     }
 
@@ -80,7 +75,7 @@ class _ProductPageState extends State<ProductPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () => _showAddLoteDialog(),
+            onPressed: () => _showLoteDialog(),
           ),
         ],
       ),
@@ -149,6 +144,7 @@ class _ProductPageState extends State<ProductPage> {
                 const SizedBox(height: 15),
                 Card(
                   elevation: 0,
+                  color: Colors.grey[200],
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   child: Padding(
@@ -159,21 +155,21 @@ class _ProductPageState extends State<ProductPage> {
                         Text(
                           "Stock actual: ${productoData.stockActual} ${unidadProducto?.tipoUnidad ?? ''}",
                           style: TextStyle(
-                              color: Colors.purple,
+                              color: Color(0xFF493d9e),
                               fontWeight: FontWeight.bold,
                               fontSize: 18),
                         ),
                         Text(
                           "Stock mínimo: ${productoData.stockMinimo} ${unidadProducto?.tipoUnidad ?? ''}",
                           style: TextStyle(
-                              color: Colors.purple,
+                              color: Color(0xFF493d9e),
                               fontWeight: FontWeight.bold,
                               fontSize: 18),
                         ),
                         Text(
                           "Stock máximo: ${productoData.stockMaximo ?? "---"} ${unidadProducto?.tipoUnidad ?? ''}",
                           style: TextStyle(
-                              color: Colors.purple,
+                              color: Color(0xFF493d9e),
                               fontWeight: FontWeight.bold,
                               fontSize: 18),
                         ),
@@ -183,7 +179,15 @@ class _ProductPageState extends State<ProductPage> {
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
-                          "Precio por unidad del producto: S/. ${productoData.precioProducto}",
+                          "Precio por unidad: S/. ${productoData.precioProducto}",
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                        ),
+                        Text(
+                          "Fecha de creación: S/. ${productoData.fechaCreacion?.toLocal().toString().split(' ')[0] ?? "---"}",
+                          style: TextStyle(color: Colors.black, fontSize: 16),
+                        ),
+                        Text(
+                          "Fecha de modificación: S/. ${productoData.fechaModificacion?.toLocal().toString().split(' ')[0] ?? "---"}",
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                       ],
@@ -246,7 +250,8 @@ class _ProductPageState extends State<ProductPage> {
                           motion: const ScrollMotion(),
                           children: [
                             SlidableAction(
-                              onPressed: (context) => _showEditLoteDialog(lote),
+                              onPressed: (context) =>
+                                  _showLoteDialog(lote: lote, editarLote: true),
                               backgroundColor: Colors.blue,
                               foregroundColor: Colors.white,
                               icon: Icons.edit,
@@ -264,20 +269,24 @@ class _ProductPageState extends State<ProductPage> {
                         child: Card(
                           child: ListTile(
                             leading: CircleAvatar(
+                              backgroundColor: Color(0xFF493d9e),
+                              foregroundColor: Colors.white,
                               child: Text('${lote.idLote}'),
                             ),
                             title: Text(
-                                'Cantidad: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? ''}'),
+                                'Cantidad Actual: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? ''}'),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    'Precio de compra: S/. ${lote.precioCompra}'),
+                                    'Cantidad comprada: ${lote.cantidadComprada}'),
+                                Text('Pérdidas: ${lote.cantidadPerdida}'),
+                                Text(
+                                    'Precio de Compra: S/. ${lote.precioCompra}'),
                                 Text(
                                     'Fecha Compra: ${lote.fechaCompra?.toLocal().toString().split(' ')[0] ?? "---"}'),
                                 Text(
                                     'Fecha Caducidad: ${lote.fechaCaducidad?.toLocal().toString().split(' ')[0] ?? "---"}'),
-                                Text('Pérdidas: ${lote.cantidadPerdida ?? 0}'),
                               ],
                             ),
                           ),
@@ -293,20 +302,42 @@ class _ProductPageState extends State<ProductPage> {
     );
   }
 
-  void _showAddLoteDialog() {
-    final cantidadController = TextEditingController();
-    final precioController = TextEditingController();
-    final fechaCaducidadController = TextEditingController();
-    final fechaCompraController = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+  void _showLoteDialog({
+    Lote? lote,
+    bool editarLote = false,
+  }) {
+    final cantidadCompradaController = TextEditingController(
+      text: editarLote ? lote!.cantidadActual.toString() : '',
     );
-    DateTime selectedFechaCompra = DateTime.now();
-    DateTime? selectedDate;
+    final precioController = TextEditingController(
+      text: editarLote ? lote!.precioCompra.toString() : '',
+    );
+    final fechaCaducidadController = TextEditingController(
+      text: editarLote && lote!.fechaCaducidad != null
+          ? lote.fechaCaducidad!.toIso8601String().split('T')[0]
+          : '',
+    );
+    final fechaCompraController = TextEditingController(
+      text: editarLote && lote!.fechaCompra != null
+          ? lote.fechaCompra!.toIso8601String().split('T')[0]
+          : DateTime.now().toIso8601String().split('T')[0],
+    );
+
+    final ValueNotifier<int> cantidadPerdida =
+        ValueNotifier<int>(editarLote ? (lote!.cantidadPerdida ?? 0) : 0);
+    final ValueNotifier<int> cantidadComprada =
+        ValueNotifier<int>(editarLote ? lote!.cantidadActual : 0);
+
+    DateTime selectedFechaCompra = editarLote && lote!.fechaCompra != null
+        ? lote.fechaCompra!
+        : DateTime.now();
+    DateTime? selectedDate =
+        editarLote && lote!.fechaCaducidad != null ? lote.fechaCaducidad : null;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Nuevo Lote'),
+        title: Text(editarLote ? 'Editar Lote' : 'Nuevo Lote'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -323,168 +354,73 @@ class _ProductPageState extends State<ProductPage> {
                     context: context,
                     initialDate: selectedFechaCompra,
                     firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    selectedFechaCompra = picked;
-                    fechaCompraController.text =
-                        picked.toIso8601String().split('T')[0];
-                  }
-                },
-              ),
-              TextField(
-                controller: cantidadController,
-                decoration: const InputDecoration(
-                  labelText: 'Cantidad Asignada',
-                  suffixText: 'unidades',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: precioController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio de Compra Total',
-                  prefixText: 'S/. ',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: fechaCaducidadController,
-                decoration: const InputDecoration(
-                  labelText: 'Fecha de Caducidad',
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
                     lastDate: DateTime(2100),
                   );
                   if (picked != null) {
-                    selectedDate = picked;
-                    fechaCaducidadController.text =
-                        picked.toIso8601String().split('T')[0];
-                  }
-                },
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (cantidadController.text.isEmpty ||
-                  precioController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Por favor, complete todos los campos')),
-                );
-                return;
-              }
-
-              final nuevoLote = Lote(
-                idProducto: widget.idProducto,
-                cantidadActual: int.parse(cantidadController.text),
-                cantidadComprada: int.parse(cantidadController.text),
-                precioCompra: double.parse(precioController.text),
-                precioCompraUnidad: double.parse(precioController.text) /
-                    int.parse(cantidadController
-                        .text), // Calculamos el precio unitario
-                fechaCaducidad: selectedDate,
-                fechaCompra: selectedFechaCompra,
-              );
-
-              final creado = await Lote.crearLote(nuevoLote);
-              if (creado) {
-                final nuevosLotes =
-                    await Lote.obtenerLotesDeProducto(widget.idProducto);
-                setState(() {
-                  lotesProducto = nuevosLotes;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Lote creado exitosamente')),
-                );
-              }
-            },
-            child: const Text('Crear'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showEditLoteDialog(Lote lote) {
-    final cantidadController =
-        TextEditingController(text: lote.cantidadActual.toString());
-    final precioController =
-        TextEditingController(text: lote.precioCompra.toString());
-    final fechaCaducidadController = TextEditingController(
-      text: lote.fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
-    );
-    final fechaCompraController = TextEditingController(
-      text: lote.fechaCompra?.toIso8601String().split('T')[0] ??
-          DateTime.now().toIso8601String().split('T')[0],
-    );
-    DateTime selectedFechaCompra = lote.fechaCompra ?? DateTime.now();
-    DateTime? selectedDate = lote.fechaCaducidad;
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Editar Lote'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: fechaCompraController,
-                decoration: const InputDecoration(
-                  labelText: 'Fecha de Compra',
-                  suffixIcon: Icon(Icons.calendar_today),
-                ),
-                readOnly: true,
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedFechaCompra,
-                    firstDate: DateTime(2000),
-                    lastDate:
-                        DateTime(2100), // Permite seleccionar cualquier fecha
-                  );
-                  if (picked != null) {
                     selectedFechaCompra = picked;
                     fechaCompraController.text =
                         picked.toIso8601String().split('T')[0];
                   }
                 },
               ),
-              TextField(
-                controller: cantidadController,
-                decoration: const InputDecoration(
-                  labelText: 'Cantidad Asignada',
-                  suffixText: 'unidades',
-                ),
+              SizedBox(height: 15),
+              CustomTextField(
+                label: "Cantidad Comprada",
+                controller: cantidadCompradaController,
                 keyboardType: TextInputType.number,
+                unidad: unidadProducto,
+                isRequired: true,
+                onChanged: (value) {
+                  cantidadComprada.value = int.tryParse(value) ?? 0;
+                },
               ),
-              TextField(
+              SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Text(
+                      "Cantidad de pérdida",
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.remove),
+                    onPressed: () {
+                      if (cantidadPerdida.value > 0) {
+                        cantidadPerdida.value--;
+                      }
+                    },
+                  ),
+                  ValueListenableBuilder<int>(
+                    valueListenable: cantidadPerdida,
+                    builder: (context, value, child) {
+                      return Text(value.toString());
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      cantidadPerdida.value++;
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: 15),
+              CustomTextField(
+                label: "Precio Compra Total",
                 controller: precioController,
-                decoration: const InputDecoration(
-                  labelText: 'Precio de Compra Total',
-                  prefixText: 'S/. ',
-                ),
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                isRequired: true,
+                unidad: unidadProducto,
+                isPrice: true,
               ),
+              SizedBox(height: 15),
               TextField(
                 controller: fechaCaducidadController,
                 decoration: const InputDecoration(
                   labelText: 'Fecha de Caducidad',
+                  suffixIcon: Icon(Icons.calendar_today),
                 ),
                 readOnly: true,
                 onTap: () async {
@@ -501,52 +437,132 @@ class _ProductPageState extends State<ProductPage> {
                   }
                 },
               ),
+              SizedBox(height: 30),
+              ValueListenableBuilder<int>(
+                valueListenable: cantidadComprada,
+                builder: (context, cantidadValue, child) {
+                  return ValueListenableBuilder<int>(
+                    valueListenable: cantidadPerdida,
+                    builder: (context, cantidadPerdidaValue, child) {
+                      int cantidadDisponible =
+                          cantidadValue - cantidadPerdidaValue;
+                      return Text(
+                        "Cantidad Disponible: ${cantidadDisponible < 0 ? "Cantidad inválida!" : cantidadDisponible}",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: cantidadDisponible < 0
+                              ? Colors.red
+                              : Color(0xFF493d9e),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              SizedBox(height: 10),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.red,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+            onPressed: () => context.pop(),
             child: const Text('Cancelar'),
           ),
           ElevatedButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.green,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
             onPressed: () async {
-              if (cantidadController.text.isEmpty ||
+              if (cantidadCompradaController.text.isEmpty ||
                   precioController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Por favor, complete todos los campos')),
+                ErrorDialog(
+                  context: context,
+                  errorMessage: "Por favor completar los campos obligatorios",
                 );
                 return;
               }
 
-              final loteEditado = Lote(
-                idLote: lote.idLote,
-                idProducto: lote.idProducto,
-                cantidadActual: int.parse(cantidadController.text),
-                cantidadComprada: lote.cantidadComprada,
-                precioCompra: double.parse(precioController.text),
-                precioCompraUnidad: double.parse(precioController.text) /
-                    lote.cantidadComprada, // Calculamos el precio unitario
-                fechaCaducidad: selectedDate,
-                fechaCompra: selectedFechaCompra,
-              );
-
-              final actualizado = await Lote.actualizarLote(loteEditado);
-              if (actualizado) {
-                final nuevosLotes =
-                    await Lote.obtenerLotesDeProducto(widget.idProducto);
-                setState(() {
-                  lotesProducto = nuevosLotes;
-                });
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Lote actualizado exitosamente')),
+              if (cantidadPerdida.value >
+                  int.parse(cantidadCompradaController.text)) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage:
+                      "La cantidad comprada no puede ser menor que la cantidad perdida",
                 );
+                return;
+              }
+
+              if (fechaCaducidadController.text.isNotEmpty &&
+                  (selectedDate != null &&
+                      selectedDate!.isBefore(selectedFechaCompra))) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage:
+                      "La fecha de compra no puede ser después que la fecha de caducidad",
+                );
+                return;
+              }
+
+              if (editarLote) {
+                final loteEditado = Lote(
+                  idProducto: widget.idProducto,
+                  idLote: lote!.idLote,
+                  cantidadActual: int.parse(cantidadCompradaController.text) -
+                      cantidadPerdida.value,
+                  cantidadComprada: int.parse(cantidadCompradaController.text),
+                  cantidadPerdida: cantidadPerdida.value,
+                  precioCompra: double.parse(precioController.text),
+                  precioCompraUnidad: double.parse(precioController.text) /
+                      int.parse(cantidadCompradaController.text),
+                  fechaCaducidad: selectedDate,
+                  fechaCompra: selectedFechaCompra,
+                  estaDisponible: lote.estaDisponible,
+                );
+
+                final actualizado = await Lote.actualizarLote(loteEditado);
+
+                if (actualizado) {
+                  obtenerProducto();
+                  SuccessDialog(
+                    context: context,
+                    successMessage: "Lote actualizado exitosamente!",
+                    btnOkOnPress: () => context.pop(),
+                  );
+                }
+              } else {
+                final nuevoLote = Lote(
+                  idProducto: widget.idProducto,
+                  cantidadActual: int.parse(cantidadCompradaController.text) -
+                      cantidadPerdida.value,
+                  cantidadComprada: int.parse(cantidadCompradaController.text),
+                  cantidadPerdida: cantidadPerdida.value,
+                  precioCompra: double.parse(precioController.text),
+                  precioCompraUnidad: double.parse(precioController.text) /
+                      int.parse(cantidadCompradaController.text),
+                  fechaCaducidad: selectedDate,
+                  fechaCompra: selectedFechaCompra,
+                );
+
+                final creado = await Lote.crearLote(nuevoLote);
+                if (creado) {
+                  obtenerProducto();
+                  SuccessDialog(
+                    context: context,
+                    successMessage: "Lote creado exitosamente!",
+                    btnOkOnPress: () => context.pop(),
+                  );
+                }
               }
             },
-            child: const Text('Guardar'),
+            child: Text(editarLote ? 'Guardar' : 'Crear'),
           ),
         ],
       ),
@@ -554,37 +570,20 @@ class _ProductPageState extends State<ProductPage> {
   }
 
   void _showDeleteDialog(Lote lote) {
-    showDialog(
+    ConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Eliminar Lote", textAlign: TextAlign.center),
-          content:
-              const Text("¿Estás seguro de que deseas eliminar este lote?"),
-          actions: [
-            TextButton(
-              onPressed: () {
-                context.pop();
-              },
-              child: const Text("Cancelar"),
-            ),
-            TextButton(
-              onPressed: () async {
-                bool eliminado = await Lote.eliminarLote(lote.idLote!);
-                if (eliminado) {
-                  final nuevosLotes =
-                      await Lote.obtenerLotesDeProducto(widget.idProducto);
-                  setState(() {
-                    lotesProducto = nuevosLotes;
-                  });
-                }
-                context.pop();
-              },
-              child:
-                  const Text("Eliminar", style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
+      title: "Eliminar Lote",
+      message: "¿Estás seguro de que deseas eliminar este lote?",
+      btnOkOnPress: () async {
+        bool eliminado = await Lote.eliminarLote(lote);
+        debugPrint("Eliminado: $eliminado");
+        if (eliminado) {
+          obtenerProducto();
+          SuccessDialog(
+            context: context,
+            successMessage: "Lote eliminado exitosamente!",
+          );
+        }
       },
     );
   }

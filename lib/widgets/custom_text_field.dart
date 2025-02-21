@@ -5,10 +5,13 @@ class CustomTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final TextInputType keyboardType;
+  final Widget? suffixIcon;
   final Unidad? unidad;
   final bool isPrice;
   final bool isRequired;
+  final bool readOnly;
   final Function(String)? onChanged;
+  final Function()? onTap;
 
   const CustomTextField({
     super.key,
@@ -18,7 +21,10 @@ class CustomTextField extends StatelessWidget {
     this.unidad,
     this.isPrice = false,
     this.isRequired = false,
+    this.readOnly = false,
     this.onChanged,
+    this.suffixIcon,
+    this.onTap,
   });
 
   @override
@@ -31,8 +37,11 @@ class CustomTextField extends StatelessWidget {
           TextFormField(
             controller: controller,
             keyboardType: keyboardType,
+            onTap: onTap,
             onChanged: onChanged,
+            readOnly: readOnly,
             decoration: InputDecoration(
+              suffixIcon: suffixIcon,
               hintText: isPrice ? '0.00' : null,
               prefixText: isPrice ? 'S/ ' : null,
               suffixText: isPrice ? '' : (unidad?.tipoUnidad ?? ''),

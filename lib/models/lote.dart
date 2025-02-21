@@ -11,6 +11,7 @@ class Lote {
   double precioCompraUnidad;
   DateTime? fechaCaducidad;
   DateTime? fechaCompra;
+  bool? estaDisponible;
 
   // Constructor
   Lote({
@@ -23,18 +24,33 @@ class Lote {
     required this.precioCompraUnidad,
     this.fechaCaducidad,
     this.fechaCompra,
+    this.estaDisponible,
   });
 
   static Future<bool> crearLote(Lote lote) async {
     try {
       final db = await DatabaseController().database;
 
+      // Obtener el próximo ID de lote
+      final result = await db.rawQuery(
+        '''
+      SELECT MAX(idLote) + 1 AS nextId FROM Lotes WHERE idProducto = ?
+      ''',
+        [lote.idProducto],
+      );
+
+      int nextIdLote = (result.first['nextId'] as int?) ?? 1;
+
+      // Insertar el nuevo lote
       final insertResult = await db.rawInsert(
         '''
-        INSERT INTO Lotes (idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''',
+      INSERT INTO Lotes (idLote, idProducto, cantidadActual, 
+      cantidadComprada, cantidadPerdida, precioCompra, 
+      precioCompraUnidad, fechaCaducidad, fechaCompra, estaDisponible)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ''',
         [
+          nextIdLote,
           lote.idProducto,
           lote.cantidadActual,
           lote.cantidadComprada,
@@ -43,15 +59,56 @@ class Lote {
           lote.precioCompraUnidad,
           lote.fechaCaducidad?.toIso8601String(),
           lote.fechaCompra?.toIso8601String(),
+          lote.estaDisponible ?? 1
         ],
       );
 
-      debugPrint("Resultado de inserción: $insertResult");
-      return insertResult > 0;
+      if (insertResult > 0) {
+        return actualizarStockProducto(lote);
+      }
     } catch (e) {
       debugPrint("Error al crear lote: ${e.toString()}");
-      return false;
     }
+
+    return false;
+  }
+
+  static Future<Lote?> obtenerLotePorId(int idProducto, int idLote) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+      SELECT idLote, idProducto, cantidadActual, cantidadComprada, 
+      cantidadPerdida, precioCompra, precioCompraUnidad, 
+      fechaCaducidad, fechaCompra, estaDisponible
+      FROM Lotes
+      WHERE idProducto = ? AND idLote = ? AND estaDisponible = 1
+      LIMIT 1
+    ''', [idProducto, idLote]);
+
+      if (result.isNotEmpty) {
+        return Lote(
+          idLote: result.first['idLote'] as int,
+          idProducto: result.first['idProducto'] as int,
+          cantidadActual: result.first['cantidadActual'] as int,
+          cantidadComprada: result.first['cantidadComprada'] as int,
+          cantidadPerdida: result.first['cantidadPerdida'] as int?,
+          precioCompra: (result.first['precioCompra'] as num).toDouble(),
+          precioCompraUnidad:
+              (result.first['precioCompraUnidad'] as num).toDouble(),
+          fechaCaducidad: result.first['fechaCaducidad'] != null
+              ? DateTime.parse(result.first['fechaCaducidad'] as String)
+              : null,
+          fechaCompra: result.first['fechaCompra'] != null
+              ? DateTime.parse(result.first['fechaCompra'] as String)
+              : null,
+          estaDisponible: (result.first['estaDisponible'] as int) == 1,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error al obtener el lote: ${e.toString()}");
+    }
+
+    return null;
   }
 
   static Future<List<Lote>> obtenerLotesDeProducto(int idProducto) async {
@@ -59,36 +116,41 @@ class Lote {
 
     try {
       final db = await DatabaseController().database;
-      final List<Map<String, dynamic>> result = await db.rawQuery(
+      final result = await db.rawQuery(
         '''
-        SELECT idLote, idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra 
-        FROM Lotes 
-        WHERE idProducto = ? 
-        ORDER BY idLote ASC
-        ''',
+      SELECT idLote, idProducto, cantidadActual, cantidadComprada, 
+      cantidadPerdida, precioCompra, precioCompraUnidad, 
+      fechaCaducidad, fechaCompra, estaDisponible
+      FROM Lotes 
+      WHERE idProducto = ? AND estaDisponible = 1
+      ORDER BY idLote ASC
+      ''',
         [idProducto],
       );
 
       for (var item in result) {
-        lotes.add(Lote(
-          idLote: item['idLote'] as int?,
-          idProducto: item['idProducto'] as int,
-          cantidadActual: item['cantidadActual'] as int,
-          cantidadComprada: item['cantidadComprada'] as int,
-          cantidadPerdida: item['cantidadPerdida'] as int? ?? 0,
-          precioCompra: (item['precioCompra'] as num).toDouble(),
-          precioCompraUnidad: (item['precioCompraUnidad'] as num).toDouble(),
-          fechaCaducidad: item['fechaCaducidad'] != null
-              ? DateTime.parse(item['fechaCaducidad'])
-              : null,
-          fechaCompra: item['fechaCompra'] != null
-              ? DateTime.parse(item['fechaCompra'])
-              : null,
-        ));
+        lotes.add(
+          Lote(
+            idLote: item['idLote'] as int,
+            idProducto: item['idProducto'] as int,
+            cantidadActual: item['cantidadActual'] as int,
+            cantidadComprada: item['cantidadComprada'] as int,
+            cantidadPerdida: item['cantidadPerdida'] as int?,
+            precioCompra: (item['precioCompra'] as num).toDouble(),
+            precioCompraUnidad: (item['precioCompraUnidad'] as num).toDouble(),
+            fechaCaducidad: item['fechaCaducidad'] != null
+                ? DateTime.parse(item['fechaCaducidad'] as String)
+                : null,
+            fechaCompra: item['fechaCompra'] != null
+                ? DateTime.parse(item['fechaCompra'] as String)
+                : null,
+            estaDisponible: (item['estaDisponible'] as int) == 1,
+          ),
+        );
       }
     } catch (e) {
       debugPrint(
-          "Error al obtener los lotes del producto $idProducto: ${e.toString()}");
+          "Error al obtener lotes del producto $idProducto: ${e.toString()}");
     }
     return lotes;
   }
@@ -96,12 +158,16 @@ class Lote {
   static Future<bool> actualizarLote(Lote lote) async {
     try {
       final db = await DatabaseController().database;
+
+      // Actualizar el lote
       int result = await db.rawUpdate(
         '''
-        UPDATE Lotes 
-        SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, precioCompra = ?, precioCompraUnidad = ?, fechaCaducidad = ?, fechaCompra = ? 
-        WHERE idLote = ?
-        ''',
+      UPDATE Lotes 
+      SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, 
+      precioCompra = ?, precioCompraUnidad = ?, 
+      fechaCaducidad = ?, fechaCompra = ?
+      WHERE idProducto = ? AND idLote = ?
+      ''',
         [
           lote.cantidadActual,
           lote.cantidadComprada,
@@ -110,64 +176,109 @@ class Lote {
           lote.precioCompraUnidad,
           lote.fechaCaducidad?.toIso8601String(),
           lote.fechaCompra?.toIso8601String(),
+          lote.idProducto,
           lote.idLote,
         ],
       );
 
-      return result > 0;
-    } catch (e) {
-      debugPrint("Error al actualizar el lote ${lote.idLote}: ${e.toString()}");
-      return false;
-    }
-  }
-
-  static Future<bool> eliminarLote(int idLote) async {
-    try {
-      final db = await DatabaseController().database;
-      int result = await db.rawDelete(
-        'DELETE FROM Lotes WHERE idLote = ?',
-        [idLote],
-      );
-      return result > 0;
-    } catch (e) {
-      debugPrint("Error al eliminar lote $idLote: ${e.toString()}");
-      return false;
-    }
-  }
-
-  static Future<Lote?> obtenerLotePorId(int idLote) async {
-    try {
-      final db = await DatabaseController().database;
-      final List<Map<String, dynamic>> result = await db.rawQuery(
-        '''
-      SELECT idLote, idProducto, cantidadActual, cantidadComprada, cantidadPerdida, precioCompra, precioCompraUnidad, fechaCaducidad, fechaCompra 
-      FROM Lotes 
-      WHERE idLote = ?
-      ''',
-        [idLote],
-      );
-
-      if (result.isNotEmpty) {
-        var item = result.first;
-        return Lote(
-          idLote: item['idLote'] as int?,
-          idProducto: item['idProducto'] as int,
-          cantidadActual: item['cantidadActual'] as int,
-          cantidadComprada: item['cantidadComprada'] as int,
-          cantidadPerdida: item['cantidadPerdida'] as int? ?? 0,
-          precioCompra: (item['precioCompra'] as num).toDouble(),
-          precioCompraUnidad: (item['precioCompraUnidad'] as num).toDouble(),
-          fechaCaducidad: item['fechaCaducidad'] != null
-              ? DateTime.parse(item['fechaCaducidad'])
-              : null,
-          fechaCompra: item['fechaCompra'] != null
-              ? DateTime.parse(item['fechaCompra'])
-              : null,
-        );
+      if (result > 0) {
+        return actualizarStockProducto(lote);
       }
     } catch (e) {
-      debugPrint("Error al obtener el lote $idLote: ${e.toString()}");
+      debugPrint("Error al actualizar el lote ${lote.idLote}: ${e.toString()}");
     }
-    return null;
+
+    return false;
+  }
+
+  static Future<bool> actualizarStockProducto(Lote lote) async {
+    try {
+      final db = await DatabaseController().database;
+
+      int result = 0;
+
+      debugPrint("Esta disponible?: ${lote.estaDisponible}");
+      if (lote.estaDisponible == null) {
+        result = await db.rawUpdate(
+          '''
+        UPDATE Productos
+        SET stockActual = stockActual + ?
+        WHERE idProducto = ?
+        ''',
+          [
+            lote.cantidadActual,
+            lote.idProducto,
+          ],
+        );
+      } else {
+        if (!(lote.estaDisponible!)) {
+          result = await db.rawUpdate(
+            '''
+            UPDATE Productos
+            SET stockActual = stockActual - ?
+            WHERE idProducto = ?
+            ''',
+            [
+              lote.cantidadActual,
+              lote.idProducto,
+            ],
+          );
+        } else {
+          if (lote.cantidadActual == lote.cantidadComprada) {
+            result = await db.rawUpdate(
+              '''
+              UPDATE Productos
+              SET stockActual = stockActual + (? - stockActual)
+              WHERE idProducto = ?
+              ''',
+              [
+                lote.cantidadActual,
+                lote.idProducto,
+              ],
+            );
+          } else {
+            result = await db.rawUpdate(
+              '''
+              UPDATE Productos
+              SET stockActual = stockActual - (? - ?)
+              WHERE idProducto = ?
+              ''',
+              [
+                lote.cantidadComprada,
+                lote.cantidadActual,
+                lote.idProducto,
+              ],
+            );
+          }
+        }
+      }
+
+      return result > 0;
+    } catch (e) {
+      debugPrint(
+          "Error al actualizar el stock del producto ${lote.idProducto}: $e");
+    }
+
+    return false;
+  }
+
+  static Future<bool> eliminarLote(Lote lote) async {
+    try {
+      final db = await DatabaseController().database;
+
+      int result = await db.rawUpdate(
+        'UPDATE Lotes SET estaDisponible = 0 WHERE idProducto = ? AND idLote = ?',
+        [lote.idProducto, lote.idLote],
+      );
+
+      if (result > 0) {
+        lote.estaDisponible = false;
+        return actualizarStockProducto(lote);
+      }
+    } catch (e) {
+      debugPrint("Error al eliminar el lote ${lote.idLote}: ${e.toString()}");
+    }
+
+    return false;
   }
 }

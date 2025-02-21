@@ -4,7 +4,7 @@ import 'package:multiinventario/models/categoria.dart';
 
 class FilterProductPage extends StatefulWidget {
   final List<Categoria> categoriasSeleccionadas;
-  final bool isStockBajo;
+  final bool? isStockBajo;
 
   const FilterProductPage({
     super.key,
@@ -20,12 +20,14 @@ class _FilterProductState extends State<FilterProductPage> {
   List<Categoria> categoriasObtenidas = [];
   List<Categoria> categoriasSeleccionadas = [];
   bool? isStockBajo;
+  bool habilitarFiltro = false;
 
   @override
   void initState() {
     super.initState();
     categoriasSeleccionadas = List.from(widget.categoriasSeleccionadas);
     isStockBajo = widget.isStockBajo;
+    habilitarFiltro = isStockBajo != null;
     obtenerCategorias();
   }
 
@@ -118,15 +120,28 @@ class _FilterProductState extends State<FilterProductPage> {
               }).toList(),
             ),
             const SizedBox(height: 20),
-            CheckboxListTile(
-              title: const Text("Stock Bajo"),
-              value: isStockBajo,
-              onChanged: (bool? value) {
+            SwitchListTile(
+              title: const Text("Filtrar por Stock Bajo"),
+              value: habilitarFiltro,
+              onChanged: (bool value) {
                 setState(() {
-                  isStockBajo = value ?? false;
+                  habilitarFiltro = value;
+                  if (!habilitarFiltro) {
+                    isStockBajo = null;
+                  }
                 });
               },
             ),
+            if (habilitarFiltro)
+              CheckboxListTile(
+                title: const Text("Stock Bajo"),
+                value: isStockBajo ?? false,
+                onChanged: (bool? value) {
+                  setState(() {
+                    isStockBajo = value;
+                  });
+                },
+              ),
           ],
         ),
       ),

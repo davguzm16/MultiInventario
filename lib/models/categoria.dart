@@ -4,7 +4,6 @@ import 'package:multiinventario/controllers/db_controller.dart';
 class Categoria {
   int? idCategoria;
   String nombreCategoria;
-  String? rutaImagen;
 
   // Constructor
   Categoria({

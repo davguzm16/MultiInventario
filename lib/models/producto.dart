@@ -40,7 +40,7 @@ class Producto {
       final db = await DatabaseController().database;
       final result = await db.rawInsert('''
       INSERT INTO Productos (
-        idUnidad, codigoProducto, nombreProducto, precioProducto, stockActual,
+        idUnidad, codigoProducto, nombreProducto, precioProducto,
         stockMinimo, stockMaximo, rutaImagen
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     ''', [
@@ -48,7 +48,6 @@ class Producto {
         producto.codigoProducto,
         producto.nombreProducto,
         producto.precioProducto,
-        producto.stockActual,
         producto.stockMinimo,
         producto.stockMaximo,
         producto.rutaImagen,
@@ -138,6 +137,51 @@ class Producto {
     return null;
   }
 
+  static Future<bool> actualizarProducto(Producto producto) async {
+    try {
+      final db = await DatabaseController().database;
+      int result = await db.rawUpdate('''
+      UPDATE Productos
+      SET idUnidad = ?, codigoProducto = ?, nombreProducto = ?, 
+          precioProducto = ?, stockMinimo = ?, 
+          stockMaximo = ?, rutaImagen = ?, fechaModificacion = ?
+      WHERE idProducto = ?
+    ''', [
+        producto.idUnidad,
+        producto.codigoProducto,
+        producto.nombreProducto,
+        producto.precioProducto,
+        producto.stockMinimo,
+        producto.stockMaximo,
+        producto.rutaImagen,
+        DateTime.now().toIso8601String(),
+        producto.idProducto
+      ]);
+
+      return result > 0;
+    } catch (e) {
+      debugPrint("Error al actualizar el producto: ${e.toString()}");
+      return false;
+    }
+  }
+
+  static Future<bool> eliminarProducto(int idProducto) async {
+    try {
+      final db = await DatabaseController().database;
+      int result = await db.rawUpdate('''
+      UPDATE Productos
+      SET estaDisponible = 0, fechaModificacion = ?
+      WHERE idProducto = ?
+    ''', [DateTime.now().toIso8601String(), idProducto]);
+
+      return result > 0;
+    } catch (e) {
+      debugPrint(
+          "Error al eliminar el producto (deshabilitar): ${e.toString()}");
+      return false;
+    }
+  }
+
   static Future<void> insertarProductosPorDefecto() async {
     if (await DatabaseController.tableHasData("Productos")) return;
 
@@ -161,7 +205,6 @@ class Producto {
           nombreProducto: "Producto ${index + 1}",
           precioProducto:
               double.parse(precio.toStringAsFixed(2)), // Redondeo a 2 decimales
-          stockActual: double.parse(stockActual.toStringAsFixed(2)),
           stockMinimo: double.parse(stockMinimo.toStringAsFixed(2)),
           stockMaximo: double.parse(stockMaximo.toStringAsFixed(2)),
           rutaImagen: null,

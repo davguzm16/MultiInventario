@@ -5,12 +5,13 @@ class ErrorDialog extends AwesomeDialog {
   ErrorDialog({
     required super.context,
     required String errorMessage,
+    dynamic Function()? okOnPress,
   }) : super(
           dialogType: DialogType.error,
           animType: AnimType.topSlide,
           title: "Error",
           desc: errorMessage,
-          btnOkOnPress: () {},
+          btnOkOnPress: okOnPress ?? () {},
           btnOkIcon: Icons.cancel,
           btnOkColor: Colors.red,
         ) {

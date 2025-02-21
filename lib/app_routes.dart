@@ -81,8 +81,13 @@ class AppRoutes {
                     builder: (context, state) {
                       final extra = state.extra as Map<String, dynamic>;
                       final categoriasSeleccionadas =
-                          extra['categoriasSeleccionadas'] as List<Categoria>;
-                      final isStockBajo = extra['isStockBajo'] as bool;
+                          (extra['categoriasSeleccionadas'] as List)
+                              .map((map) => Categoria(
+                                    idCategoria: map['idCategoria'],
+                                    nombreCategoria: map['nombreCategoria'],
+                                  ))
+                              .toList();
+                      final isStockBajo = extra['isStockBajo'] as bool?;
 
                       return FilterProductPage(
                         categoriasSeleccionadas: categoriasSeleccionadas,
@@ -115,10 +120,25 @@ class AppRoutes {
                     builder: (context, state) => const CreateSalePage(),
                     routes: [
                       GoRoute(
-                        path: 'payment-page',
+                        path: '/payment-page',
                         builder: (context, state) {
-                          final detallesVenta =
-                              state.extra as List<DetalleVenta>;
+                          final List<dynamic> extraList =
+                              state.extra as List<dynamic>;
+
+                          final detallesVenta = extraList
+                              .map((map) => DetalleVenta(
+                                    idProducto: map['idProducto'],
+                                    idLote: map['idLote'],
+                                    idVenta: map['idVenta'],
+                                    cantidadProducto: map['cantidadProducto'],
+                                    precioUnidadProducto:
+                                        map['precioUnidadProducto'],
+                                    subtotalProducto: map['subtotalProducto'],
+                                    gananciaProducto: map['gananciaProducto'],
+                                    descuentoProducto: map['descuentoProducto'],
+                                  ))
+                              .toList();
+
                           return PaymentPage(detallesVenta: detallesVenta);
                         },
                       ),

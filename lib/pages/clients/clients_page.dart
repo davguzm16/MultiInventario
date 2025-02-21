@@ -40,13 +40,12 @@ class _ClientsPageState extends State<ClientsPage>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-  
 
-  
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    GoRouter.of(context).refresh();
-                  });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      GoRouter.of(context).refresh();
+    });
+  }
+
   void _detectarScrollFinal() {
     if (_scrollController.position.pixels >=
             _scrollController.position.maxScrollExtent - 100 &&
@@ -261,38 +260,13 @@ class _ClientsPageState extends State<ClientsPage>
                                         );
                                       },
                                     ),
-                                    FutureBuilder<bool?>(
-                                      future: cliente.esDeudor(),
-                                      builder: (context, snapshot) {
-                                        if (snapshot.connectionState ==
-                                            ConnectionState.waiting) {
-                                          return const Text("Cargando...");
-                                        }
-
-                                        if (snapshot.hasError) {
-                                          return Text(
-                                              "Error: ${snapshot.error}");
-                                        }
-
-                                        final estadoCliente =
-                                            snapshot.data == null
-                                                ? "---"
-                                                : snapshot.data!
-                                                    ? "Pendiente de pago"
-                                                    : "Sin deudas";
-
-                                        final estadoColor = (estadoCliente ==
-                                                "Pendiente de pago")
+                                    Text(
+                                      "Estado: ${cliente.esDeudor}",
+                                      style: TextStyle(
+                                        color: cliente.esDeudor
                                             ? Colors.red
-                                            : Colors.black;
-
-                                        return Text(
-                                          "Estado: $estadoCliente",
-                                          style: TextStyle(
-                                            color: estadoColor,
-                                          ),
-                                        );
-                                      },
+                                            : Colors.green,
+                                      ),
                                     ),
                                   ],
                                 ),

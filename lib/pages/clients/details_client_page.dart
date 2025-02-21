@@ -155,35 +155,12 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                             );
                           },
                         ),
-                        FutureBuilder<bool?>(
-                          future: cliente?.esDeudor(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const Text("Cargando...");
-                            }
-
-                            if (snapshot.hasError) {
-                              return Text("Error: ${snapshot.error}");
-                            }
-
-                            final estadoCliente = snapshot.data == null
-                                ? "---"
-                                : snapshot.data!
-                                    ? "Deudor"
-                                    : "Regular";
-
-                            final estadoColor = (estadoCliente == "Deudor")
-                                ? Colors.red
-                                : Colors.black;
-
-                            return Text(
-                              "Estado: $estadoCliente",
-                              style: TextStyle(
-                                color: estadoColor,
-                              ),
-                            );
-                          },
+                        Text(
+                          "Estado: ${cliente!.esDeudor}",
+                          style: TextStyle(
+                            color:
+                                cliente!.esDeudor ? Colors.red : Colors.green,
+                          ),
                         ),
                       ],
                     )),
@@ -244,10 +221,10 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                       Text(
                                         "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
                                         style: TextStyle(
-                                              color: venta.esAlContado!
-                                                ? Colors.red
-                                                : Colors.black,
-                                          ),
+                                          color: venta.esAlContado!
+                                              ? Colors.red
+                                              : Colors.black,
+                                        ),
                                       ),
                                     ],
                                   ),

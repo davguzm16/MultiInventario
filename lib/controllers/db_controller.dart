@@ -90,9 +90,10 @@ class DatabaseController {
         await db.execute('''
           CREATE TABLE Clientes (
             idCliente INTEGER PRIMARY KEY,
-            nombreCliente TEXT NOT NULL,
+            nombreCliente TEXT UNIQUE,
             dniCliente TEXT UNIQUE,
-            correoCliente TEXT
+            correoCliente TEXT,
+            esDeudor BOOLEAN DEFAULT 0
           )
         ''');
 
@@ -127,7 +128,7 @@ class DatabaseController {
 
         await db.execute('''
           CREATE TABLE Lotes (
-            idLote INTEGER PRIMARY KEY,
+            idLote INTEGER,
             idProducto INTEGER,
             cantidadActual INTEGER NOT NULL,
             cantidadComprada INTEGER NOT NULL,
@@ -136,6 +137,7 @@ class DatabaseController {
             precioCompraUnidad REAL NOT NULL,
             fechaCaducidad DATE,
             fechaCompra DATE,
+            estaDisponible BOOLEAN DEFAULT 1,
             FOREIGN KEY (idProducto) REFERENCES Productos(idProducto)
           )
         ''');

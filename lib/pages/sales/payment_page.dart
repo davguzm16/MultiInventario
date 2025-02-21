@@ -1,13 +1,11 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/venta.dart';
-import 'package:multiinventario/widgets/custom_text_field.dart';
-import 'package:multiinventario/widgets/error_dialog.dart';
+import 'package:multiinventario/widgets/all_custom_widgets.dart';
 
 class PaymentPage extends StatefulWidget {
   final List<DetalleVenta> detallesVenta;
@@ -116,7 +114,6 @@ class _PaymentPageState extends State<PaymentPage> {
                   label: "DNI",
                   controller: _dniController,
                   keyboardType: TextInputType.number,
-                  isRequired: true,
                 ),
                 CustomTextField(
                   label: "Correo Electrónico",
@@ -124,56 +121,64 @@ class _PaymentPageState extends State<PaymentPage> {
                   keyboardType: TextInputType.emailAddress,
                 ),
               ] else ...[
-                TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: "Buscar cliente...",
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          nombreClienteBuscado = "";
-                        });
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5),
-                      borderSide: const BorderSide(color: Color(0xFF493D9e)),
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      nombreClienteBuscado = value;
-                    });
-                    _buscarClientesPorNombre(value);
-                  },
-                ),
-                const SizedBox(height: 10),
                 SizedBox(
                   height: 150,
                   child: clientesFiltrados.isEmpty
                       ? const Center(child: Text("No hay clientes encontrados"))
-                      : ListView.builder(
-                          itemCount: clientesFiltrados.length,
-                          itemBuilder: (context, index) {
-                            final cliente = clientesFiltrados[index];
-                            return ListTile(
-                              title: Text(cliente.nombreCliente),
-                              subtitle: Text("DNI: ${cliente.dniCliente}"),
-                              onTap: () {
+                      : Column(
+                          children: [
+                            TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                hintText: "Buscar cliente...",
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    _searchController.clear();
+                                    setState(() {
+                                      nombreClienteBuscado = "";
+                                    });
+                                  },
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5),
+                                  borderSide: const BorderSide(
+                                      color: Color(0xFF493D9e)),
+                                ),
+                              ),
+                              onChanged: (value) {
                                 setState(() {
-                                  _searchController.text =
-                                      cliente.nombreCliente;
-                                  clienteSeleccionado = cliente;
+                                  nombreClienteBuscado = value;
                                 });
+                                _buscarClientesPorNombre(value);
                               },
-                            );
-                          },
+                            ),
+                            const SizedBox(height: 10),
+                            Expanded(
+                              child: ListView.builder(
+                                itemCount: clientesFiltrados.length,
+                                itemBuilder: (context, index) {
+                                  final cliente = clientesFiltrados[index];
+                                  return ListTile(
+                                    title: Text(cliente.nombreCliente),
+                                    subtitle:
+                                        Text("DNI: ${cliente.dniCliente}"),
+                                    onTap: () {
+                                      setState(() {
+                                        _searchController.text =
+                                            cliente.nombreCliente;
+                                        clienteSeleccionado = cliente;
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
-                ),
+                )
               ],
 
               const SizedBox(height: 6),
@@ -193,93 +198,12 @@ class _PaymentPageState extends State<PaymentPage> {
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF493D9E)),
               ),
-              _buildTipoPago(esAlContado),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: validateInputs,
-                  child: const Text("Confirmar",
-                      style: TextStyle(fontSize: 18, color: Colors.white)),
-                ),
-              ),
+              _buildTipoPago(),
             ],
           ),
         ),
       ),
     );
-  }
-
-  Future<void> validateInputs() async {
-    if (crearCliente) {
-      if (_nombreController.text.isEmpty || _dniController.text.isEmpty) {
-        ErrorDialog(
-          context: context,
-          errorMessage: "Por favor, complete todos los campos obligatorios.",
-        );
-        return;
-      }
-
-      clienteSeleccionado = Cliente(
-        nombreCliente: _nombreController.text,
-        dniCliente: _dniController.text,
-        correoCliente:
-            _correoController.text.isNotEmpty ? _correoController.text : null,
-      );
-
-      int? idCliente = await Cliente.crearCliente(clienteSeleccionado!);
-
-      if (idCliente != null) {
-        clienteSeleccionado!.idCliente = idCliente;
-      } else {
-        ErrorDialog(
-          context: context,
-          errorMessage: "Hubo un error al crear el cliente.",
-        );
-        return;
-      }
-    }
-
-    venta = Venta(
-      idCliente: clienteSeleccionado!.idCliente!,
-      codigoVenta: generarCodigoVenta(),
-      montoTotal: _calcularTotalVenta(),
-      montoCancelado: cantidadRecibida,
-      esAlContado: esAlContado,
-    );
-
-    if (!(await Venta.crearVenta(venta!, widget.detallesVenta))) {
-      ErrorDialog(
-        context: context,
-        errorMessage: "Hubo un error al crear la venta.",
-      );
-    }
-
-    AwesomeDialog(
-      context: context,
-      dialogType: DialogType.info,
-      animType: AnimType.topSlide,
-      title: 'Confirmación',
-      desc: '¿Estás seguro de realizar la venta?',
-      btnCancelOnPress: () {},
-      btnOkOnPress: () async {
-        // Venta exitosa
-        AwesomeDialog(
-          context: context,
-          dialogType: DialogType.success,
-          animType: AnimType.scale,
-          title: 'Venta Exitosa',
-          desc: 'La venta se ha realizado correctamente.',
-          btnOkOnPress: () {
-            context.pushReplacement('/sales');
-          },
-        ).show();
-      },
-    ).show();
   }
 
   Widget _buildClienteButton(String text, bool isSelected) {
@@ -323,7 +247,7 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 
-  Widget _buildTipoPago(bool isAlContado) {
+  Widget _buildTipoPago() {
     // Calcular la diferencia entre el monto total y la cantidad recibida
     double diferencia = _calcularTotalVenta() - cantidadRecibida;
 
@@ -337,7 +261,6 @@ class _PaymentPageState extends State<PaymentPage> {
           isPrice: true,
           onChanged: (value) {
             setState(() {
-              // Si el valor está vacío, no actualizamos cantidadRecibida, para permitir borrarlo.
               cantidadRecibida =
                   (value.isEmpty ? null : double.tryParse(value)) ?? 0.0;
             });
@@ -345,19 +268,120 @@ class _PaymentPageState extends State<PaymentPage> {
         ),
         const SizedBox(height: 8),
         Text(
-          isAlContado
+          esAlContado
               ? (cantidadRecibida == 0.0)
                   ? 'Vuelto: ---'
                   : (cantidadRecibida - _calcularTotalVenta()) < 0
-                      ? 'Vuelto: S/${(cantidadRecibida - _calcularTotalVenta()).toStringAsFixed(2)} (Monto Insuficiente)'
+                      ? 'Vuelto: Monto Insuficiente'
                       : 'Vuelto: S/${(cantidadRecibida - _calcularTotalVenta()).toStringAsFixed(2)}'
-              : (cantidadRecibida == 0.0)
+              : (cantidadRecibida >= 0.0)
                   ? 'Por cancelar: S/${_calcularTotalVenta().toStringAsFixed(2)}'
                   : 'Por cancelar: S/${diferencia.toStringAsFixed(2)}',
           style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
               color: Color(0xFF493D9E)),
+        ),
+        const SizedBox(height: 20),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            onPressed: () async {
+              if (crearCliente) {
+                if (_nombreController.text.isEmpty) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage:
+                        "Por favor, complete todos los campos obligatorios.",
+                  );
+                  return;
+                }
+
+                if (esAlContado &&
+                    (cantidadRecibida - _calcularTotalVenta()) < 0) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage:
+                        "Monto insuficiente. \nSi desea continuar con este monto, considere cambiarlo a una venta a crédito.",
+                  );
+                  return;
+                }
+
+                clienteSeleccionado = Cliente(
+                  nombreCliente: _nombreController.text,
+                  dniCliente: _dniController.text,
+                  correoCliente: _correoController.text.isNotEmpty
+                      ? _correoController.text
+                      : null,
+                  esDeudor: !esAlContado,
+                );
+
+                int? idCliente =
+                    await Cliente.crearCliente(clienteSeleccionado!);
+
+                if (idCliente == null) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage: "Hubo un error al crear el cliente.",
+                  );
+                  return;
+                }
+
+                clienteSeleccionado!.idCliente = idCliente;
+              }
+
+              // Asegurar que idCliente no es nulo
+              if (clienteSeleccionado?.idCliente == null) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage: "No se pudo obtener el ID del cliente.",
+                );
+                return;
+              }
+
+              venta = Venta(
+                idCliente: clienteSeleccionado!.idCliente!,
+                codigoVenta: generarCodigoVenta(),
+                montoTotal: _calcularTotalVenta(),
+                montoCancelado: cantidadRecibida,
+                esAlContado: esAlContado,
+              );
+
+              bool ventaCreada =
+                  await Venta.crearVenta(venta!, widget.detallesVenta);
+
+              if (!ventaCreada) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage: "Hubo un error al crear la venta.",
+                );
+                return;
+              }
+
+              ConfirmDialog(
+                context: context,
+                title: "Confirmación",
+                message: "¿Estás seguro de realizar la venta?",
+                btnOkOnPress: () {
+                  SuccessDialog(
+                    context: context,
+                    successMessage: "¡La venta se ha realizado exitosamente!",
+                    btnOkOnPress: () {
+                      context.pushReplacement('/sales');
+                    },
+                  );
+                },
+              );
+            },
+            child: const Text(
+              "Confirmar",
+              style: TextStyle(fontSize: 18, color: Colors.white),
+            ),
+          ),
         ),
       ],
     );

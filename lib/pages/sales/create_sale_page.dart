@@ -45,19 +45,10 @@ class _CreateSalePageState extends State<CreateSalePage> {
     });
   }
 
-  Producto? _obtenerProductoSeleccionado() {
-    try {
-      return productosFiltrados.firstWhere(
-        (p) => p.nombreProducto == _searchController.text,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
-  double _calcularTotal(int cantidad, double? descuento) {
-    Producto? productoSeleccionado = _obtenerProductoSeleccionado();
+  double _calcularTotal(
+      Producto? productoSeleccionado, int cantidad, double? descuento) {
     if (productoSeleccionado == null) return 0.0;
+
     return (productoSeleccionado.precioProducto * cantidad -
         (descuento ?? 0.0));
   }
@@ -85,8 +76,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
 
     if (editarProducto) {
       productoSeleccionado = productosVenta[index!];
-      loteSeleccionado =
-          await Lote.obtenerLotePorId(detallesVenta[index].idLote);
+      loteSeleccionado = await Lote.obtenerLotePorId(
+          detallesVenta[index].idProducto, detallesVenta[index].idLote);
     }
 
     showDialog(
@@ -152,29 +143,37 @@ class _CreateSalePageState extends State<CreateSalePage> {
                                   final producto = productosFiltrados[index];
 
                                   return ListTile(
-                                    title: Text(producto.nombreProducto),
-                                    subtitle: Text(
-                                        "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
-                                    onTap: () async {
-                                      FocusScope.of(context).unfocus();
+                                      title: Text(producto.nombreProducto),
+                                      subtitle: Text(
+                                          "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
+                                      onTap: () async {
+                                        FocusScope.of(context).unfocus();
 
-                                      setDialogState(() {
-                                        _searchController.text = producto.nombreProducto;
-                                        productoSeleccionado = producto;
+                                        setDialogState(() {
+                                          _searchController.text =
+                                              producto.nombreProducto;
+                                          productoSeleccionado = producto;
+                                        });
+
+                                        Unidad? unidad =
+                                            await Unidad.obtenerUnidadPorId(
+                                                producto.idUnidad!);
+                                        List<Lote> lotesDisponibles =
+                                            await Lote.obtenerLotesDeProducto(
+                                                producto.idProducto!);
+
+                                        setDialogState(() {
+                                          unidadProducto = unidad;
+                                          lotesProducto = lotesDisponibles;
+                                          loteSeleccionado =
+                                              lotesDisponibles.isNotEmpty
+                                                  ? lotesDisponibles.first
+                                                  : null;
+                                        });
+
+                                        debugPrint(
+                                            "Tipo de unidad: ${unidad!.tipoUnidad}");
                                       });
-
-                                      Unidad? unidad = await Unidad.obtenerUnidadPorId(producto.idUnidad!);
-                                      List<Lote> lotesDisponibles = await Lote.obtenerLotesDeProducto(producto.idProducto!);
-
-                                      setDialogState(() {
-                                        unidadProducto = unidad;
-                                        lotesProducto = lotesDisponibles;
-                                        loteSeleccionado = lotesDisponibles.isNotEmpty ? lotesDisponibles.first : null;
-                                      });
-
-                                      debugPrint("Tipo de unidad: ${unidad!.tipoUnidad}");
-                                    }
-                                  );
                                 },
                               ),
                       ),
@@ -185,20 +184,26 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         children: [
                           Text(
                             "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 10),
                           SizedBox(
                             width: double.infinity,
                             child: DropdownButtonFormField<Lote>(
                               isExpanded: true,
-                              value: lotesProducto.isNotEmpty ? loteSeleccionado : null,
+                              value: lotesProducto.isNotEmpty
+                                  ? loteSeleccionado
+                                  : null,
                               hint: Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(lotesProducto.isEmpty ? "No hay lotes disponibles" : "Seleccione un lote"),
+                                child: Text(lotesProducto.isEmpty
+                                    ? "No hay lotes disponibles"
+                                    : "Seleccione un lote"),
                               ),
                               decoration: InputDecoration(
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(5)),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(5)),
                               ),
                               onChanged: lotesProducto.isNotEmpty
                                   ? (Lote? newValue) {
@@ -227,6 +232,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Text("Cantidad de productos"),
                         IconButton(
                           icon: const Icon(Icons.remove),
                           onPressed: () {
@@ -268,8 +274,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         return ValueListenableBuilder(
                           valueListenable: descuento,
                           builder: (context, descuentoValue, child) {
-                            double total =
-                                _calcularTotal(cantidadValue, descuentoValue);
+                            double total = _calcularTotal(productoSeleccionado,
+                                cantidadValue, descuentoValue);
                             return Text(
                               "Total: S/ ${total.toStringAsFixed(2)}",
                               style: const TextStyle(
@@ -299,14 +305,14 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         idLote: loteSeleccionado!.idLote!,
                         cantidadProducto: cantidad.value,
                         descuentoProducto: descuento.value,
-                        subtotalProducto:
-                            _calcularTotal(cantidad.value, descuento.value),
+                        subtotalProducto: _calcularTotal(productoSeleccionado,
+                            cantidad.value, descuento.value),
                         precioUnidadProducto:
                             productoSeleccionado!.precioProducto,
-                        gananciaProducto:
-                            _calcularTotal(cantidad.value, descuento.value) -
-                                (productoSeleccionado!.precioProducto *
-                                    cantidad.value),
+                        gananciaProducto: _calcularTotal(productoSeleccionado,
+                                cantidad.value, descuento.value) -
+                            (productoSeleccionado!.precioProducto *
+                                cantidad.value),
                       );
                     } else {
                       ErrorDialog(
@@ -571,13 +577,27 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         context: context,
                         errorMessage:
                             "No se ha seleccionado ningun producto en la venta",
+                        okOnPress: () => context.pop(),
                       );
-                      return;
                     }
 
-                    context.push('/sales/create-sale/payment-page',
-                        extra: detallesVenta);
-                  }, // Aquí iría la funcionalidad de confirmar
+                    context.go(
+                      '/sales/create-sale/payment-page',
+                      extra: detallesVenta
+                          .map((detalle) => {
+                                'idProducto': detalle.idProducto,
+                                'idLote': detalle.idLote,
+                                'idVenta': detalle.idVenta,
+                                'cantidadProducto': detalle.cantidadProducto,
+                                'precioUnidadProducto':
+                                    detalle.precioUnidadProducto,
+                                'subtotalProducto': detalle.subtotalProducto,
+                                'gananciaProducto': detalle.gananciaProducto,
+                                'descuentoProducto': detalle.descuentoProducto,
+                              })
+                          .toList(),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(

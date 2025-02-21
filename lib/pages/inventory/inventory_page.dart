@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
+import 'package:multiinventario/models/unidad.dart';
 
 class InventoryPage extends StatefulWidget {
   const InventoryPage({super.key});
@@ -213,7 +214,12 @@ class _InventoryPageState extends State<InventoryPage>
               final filtros = await context.push<Map<String, dynamic>>(
                 '/inventory/filter-products',
                 extra: {
-                  'categoriasSeleccionadas': categoriasSeleccionadas,
+                  'categoriasSeleccionadas': categoriasSeleccionadas
+                      .map((c) => {
+                            'idCategoria': c.idCategoria,
+                            'nombreCategoria': c.nombreCategoria
+                          })
+                      .toList(),
                   'isStockBajo': isStockBajo,
                 },
               );
@@ -222,7 +228,7 @@ class _InventoryPageState extends State<InventoryPage>
                 setState(() {
                   categoriasSeleccionadas =
                       filtros['categoriasSeleccionadas'] as List<Categoria>;
-                  isStockBajo = filtros['isStockBajo'] as bool;
+                  isStockBajo = filtros['isStockBajo'] as bool?;
                 });
               }
 
@@ -307,17 +313,23 @@ class _InventoryPageState extends State<InventoryPage>
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(fontSize: 12),
                                   ),
-                                  Text(
-                                    "Stock: ${producto.stockActual} ud",
-                                    style: TextStyle(
-                                      color: producto.stockActual <
-                                              producto.stockMinimo
-                                          ? Colors.red
-                                          : Colors.black,
-                                      fontSize: 12,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
+                                  FutureBuilder<Unidad?>(
+                                    future: Unidad.obtenerUnidadPorId(
+                                        producto.idUnidad!),
+                                    builder: (context, snapshot) {
+                                      return Text(
+                                        "Stock: ${producto.stockActual} ${snapshot.data?.tipoUnidad ?? "---"}",
+                                        style: TextStyle(
+                                          color: producto.stockActual <
+                                                  producto.stockMinimo
+                                              ? Colors.red
+                                              : Colors.black,
+                                          fontSize: 12,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      );
+                                    },
+                                  )
                                 ],
                               ),
                             ),
@@ -330,16 +342,14 @@ class _InventoryPageState extends State<InventoryPage>
           if (isLoading)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.5), // Fondo semi-transparente
+                color: Colors.black.withOpacity(0.5),
                 child: const Center(
                   child: SizedBox(
-                    width:
-                        50, // Tamaño personalizado para que no sea tan grande
+                    width: 50,
                     height: 50,
                     child: CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                          Colors.white), // Color del indicador
-                      strokeWidth: 6, // Grosor del indicador
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      strokeWidth: 6,
                     ),
                   ),
                 ),

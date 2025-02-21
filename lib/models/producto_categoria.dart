@@ -104,7 +104,7 @@ class ProductoCategoria {
       }
 
       final List<Map<String, dynamic>> result = await db.rawQuery('''
-      SELECT DISTINCT p.idProducto, p.nombreProducto, p.precioProducto, 
+      SELECT DISTINCT p.idProducto, p.idUnidad, p.nombreProducto, p.precioProducto, 
                       p.stockActual, p.stockMinimo, p.rutaImagen
       FROM Productos p
       LEFT JOIN ProductosCategorias pc ON p.idProducto = pc.idProducto
@@ -117,6 +117,7 @@ class ProductoCategoria {
       for (var item in result) {
         productos.add(Producto(
           idProducto: item['idProducto'] as int,
+          idUnidad: item['idUnidad'] as int?,
           nombreProducto: item['nombreProducto'] as String,
           precioProducto: item['precioProducto'] as double,
           stockActual: item['stockActual'] as double,
