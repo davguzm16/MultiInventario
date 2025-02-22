@@ -340,7 +340,7 @@ Future<Map<String, dynamic>> obtenerDatosTabla(DateTime selectedFechaInicio, sel
       
   
   for (int i = 0; i < detalles.length; i++) {
-    Lote? lote = await Lote.obtenerLotePorId(detalles[i].idLote);
+    Lote? lote = await Lote.obtenerLotePorId(detalles[i].idProducto, detalles[i].idLote);
     Producto? producto = await Producto.obtenerProductoPorID(detalles[i].idProducto);
     Venta? ventas;
     if (detalles[i].idVenta != null) {
