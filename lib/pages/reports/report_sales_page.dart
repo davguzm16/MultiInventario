@@ -3,26 +3,24 @@ import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
-import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:multiinventario/models/cliente.dart';
-import 'package:multiinventario/models/lote.dart';
 
 
-
-class ReportDetailsPage extends StatefulWidget {
-  const ReportDetailsPage({super.key});
+class ReportSalesPage extends StatefulWidget {
+  const ReportSalesPage({super.key});
 
   @override
-  State<ReportDetailsPage> createState() => _ReportDetailsPageState();
+  State<ReportSalesPage> createState() => _ReportSalesPageState();
 }
 
-class _ReportDetailsPageState extends State<ReportDetailsPage> {
+class _ReportSalesPageState extends State<ReportSalesPage> {
     late TextEditingController fechaInicio;
     late TextEditingController fechaFinal;
     DateTime selectedFechaInicio = DateTime.now();
     DateTime selectedFechaFinal = DateTime.now();
-    String _selectedReport = "Reporte general detallado de ventas";
+    String _selectedReport = "Reporte general de ventas"; 
+
     bool _isLoading = false;
 
     //pantalla de carga
@@ -31,14 +29,19 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
     _isLoading = true;
   });
 
-  if (_selectedReport == "Reporte general detallado de ventas") {
-    await generarDetallesVentas(context, selectedFechaInicio, selectedFechaFinal);
+  if (_selectedReport == "Reporte general de ventas") {
+    await generarVentasGeneral(context, selectedFechaInicio, selectedFechaFinal);
+  } else if(_selectedReport == "Reporte de ventas al contado"){
+    await generarVentasTipo(context, selectedFechaInicio, selectedFechaFinal, true);
+  } else if(_selectedReport == "Reporte de ventas al crédito"){
+    await generarVentasTipo(context, selectedFechaInicio, selectedFechaFinal, false);
   }
 
   setState(() {
     _isLoading = false;
   });
 }
+
 
   @override
   void initState() {
@@ -73,17 +76,18 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
       
       Container(
         alignment: Alignment.center,
+        
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
         children: [
-          
-                    Padding(
+
+          Padding(
             padding: EdgeInsets.only(left: 16), // Ajusta el espacio según necesites
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                "Reporte detallado de ventas", 
+                "Reporte Ventas", 
                 style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
@@ -99,35 +103,35 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
               ),
             ),
           ),
+          
+          SizedBox(height: 16,),
 
-          SizedBox(height: 16),
-
-          _buildButton("Reporte general detallado de ventas", _selectedReport, context, (selected) {
+          _buildButton("Reporte general de ventas", _selectedReport, context, (selected) {
             setState(() {
               _selectedReport = selected;
             });
           }),
 
-          SizedBox(height: 16),
-
-          _buildButton("Reporte detallado de ventas al contado", _selectedReport, context, (selected) {
+          SizedBox(height: 16,),
+          
+          _buildButton("Reporte de ventas al contado", _selectedReport, context, (selected) {
             setState(() {
               _selectedReport = selected;
             });
           }),
 
-          SizedBox(height: 16),
+          SizedBox(height: 16,),
 
-          _buildButton("Reporte detallado de ventas al crédito", _selectedReport, context, (selected) {
+          _buildButton("Reporte de ventas al crédito", _selectedReport, context, (selected) {
             setState(() {
               _selectedReport = selected;
             });
           }),
-
 
           SizedBox(height: 16,),
 
           Text("Elegir rango", style: TextStyle(color: Color(0xFF493D9E)),),
+
           SizedBox(height: 16,),
           Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -261,15 +265,20 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
 
 
 
+
+
   
-  Future<void> generarDetallesVentas(BuildContext context, DateTime selectedFechaInicio, DateTime selectedFechaFinal) async {
+  Future<void> generarVentasGeneral(BuildContext context, DateTime selectedFechaInicio, DateTime selectedFechaFinal) async {
+
     final ReportController report  = ReportController(); 
     final pdf = pw.Document();
-    final datosTablaGeneral = await obtenerDatosTabla(selectedFechaInicio, selectedFechaFinal);
-    final datosTabla = datosTablaGeneral["data"] as List<List<String>>;
-    final ganancia = datosTablaGeneral["ganancia"] as double;
-    final total = datosTablaGeneral["total"] as double;
+    final datosTablaGeneral = await obtenerDatosTablaGeneral(selectedFechaInicio, selectedFechaFinal);
+    final datos = datosTablaGeneral["data"] as List<List<String>>;
+    final gananciaTotal = datosTablaGeneral["totalGanancias"] as double;
+    final ventasContado = datosTablaGeneral["ventasContado"] as int;
+    final ventasCredito = datosTablaGeneral["ventasCredito"] as int;
     try{
+      
 
       pdf.addPage(
         pw.MultiPage(
@@ -282,15 +291,17 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-              pw.Text("Total: S/ ${total}"),
-              pw.Text("Ganancias estimadas: S/ ${ganancia}"),
+              pw.Text("Total: S/ ${1}"),
+              pw.Text("Ganancias estimadas: ${gananciaTotal}"),
+              pw.Text("Ventas al contado: ${ventasContado}"),
+              pw.Text("Ventas al crédito: ${ventasCredito}"),
               pw.SizedBox(height: 10),
               pw.Table.fromTextArray(
                 headers: [
-                  "#", "Fecha y hora", "Codigo de venta", "Tipo", "Cliente","Codigo del producto", "Descripcion del producto", "Cantidad", "Precio de compra por unidad (S/)","Precio de ventar por unidad (S/)" ,"Descuento (S/)", "Subtotal (S/)", "Ganancia estimada (S/)", "Estado"
+                  "#", "Fecha y hora", "Codigo de venta", "Tipo", "Cliente", "Subtotal (S/)","Descuento (S/)" ,"Monto total (S/)","Monto cancelado (S/)","Ganancia estimada (S/)", "Estado"
                 ],
                 //generar filas
-                data: datosTabla,
+                data: datos,
                 
                 border: pw.TableBorder.all(),
                 cellStyle: pw.TextStyle(fontSize: 10),
@@ -302,17 +313,13 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
                   0: pw.FixedColumnWidth(35),  // Índice
                   1: pw.FixedColumnWidth(60),  // Fecha y hora
                   2: pw.FixedColumnWidth(50),  // Código de venta
-                  3: pw.FixedColumnWidth(50),  // Tipos
+                  3: pw.FixedColumnWidth(50),  // Tipo
                   4: pw.FixedColumnWidth(80),  // Cliente
-                  5: pw.FixedColumnWidth(60), // Codigo del producto
-                  6: pw.FixedColumnWidth(80),  // Descripcion
-                  7: pw.FixedColumnWidth(35),  // Cantidad
-                  8: pw.FixedColumnWidth(55),  // Precio de compra
-                  9: pw.FixedColumnWidth(55),  // Precio de venta
-                  10: pw.FixedColumnWidth(60), // Descuento
-                  11: pw.FixedColumnWidth(60), // Subtotal 
-                  12: pw.FixedColumnWidth(60), // ganancia
-                  13: pw.FixedColumnWidth(60) //estado
+                  5: pw.FixedColumnWidth(60), // Subtotal
+                  6: pw.FixedColumnWidth(80),  // Descuento
+                  7: pw.FixedColumnWidth(35),  // Monto total
+                  8: pw.FixedColumnWidth(55),  // Monto cancelado
+                  9: pw.FixedColumnWidth(55),  // Ganacias estimadas
                 },
               ),
             ];
@@ -330,58 +337,196 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
     report.mostrarPDF(context, path);
   }
 
-Future<Map<String, dynamic>> obtenerDatosTabla(DateTime selectedFechaInicio, selectedFechaFinal) async {
-  List<DetalleVenta> detalles = [];
+Future<Map<String, dynamic>> obtenerDatosTablaGeneral(DateTime selectedFechaInicio, selectedFechaFinal) async {
+  List<Venta> ventas = [];
   List<List<String>> data = [];
+
+  ventas = await Venta.obtenerVentasporFecha(selectedFechaInicio, selectedFechaFinal);
+  double subtotal = 0;  
+  double descuento = 0;
   double ganancia = 0;
-  double total = 0;
+  double totalGanancias = 0;
+  int ventasContado = 0;
+  int ventasCredito = 0;
+  for (int i = 0; i < ventas.length; i++) {
 
-  detalles = await DetalleVenta.obtenerDetallesPorFechas(selectedFechaInicio, selectedFechaFinal);
-      
-  
-  for (int i = 0; i < detalles.length; i++) {
-    Lote? lote = await Lote.obtenerLotePorId(detalles[i].idLote);
-    Producto? producto = await Producto.obtenerProductoPorID(detalles[i].idProducto);
-    Venta? ventas;
-    if (detalles[i].idVenta != null) {
-      ventas = await Venta.obtenerVentaPorID(detalles[i].idVenta!);
-    }
-    Cliente? cliente;
-    if (ventas != null) {
-      cliente = await Cliente.obtenerClientePorId(ventas.idCliente);
-    }
+    List<DetalleVenta> detalles = await DetalleVenta.obtenerDetallesPorVenta(ventas[i].idVenta!);
+    Cliente? cliente = await Cliente.obtenerClientePorId(ventas[i].idCliente);
     String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
-    String nombreProducto = producto != null? producto.nombreProducto : "Desconocido";
-    double precioCompraUnidad = lote != null ? lote.precioCompra : 0;
-    double precioVenta = producto != null ? producto.precioProducto : 0;
-    String estado = (ventas?.montoCancelado == ventas?.montoTotal) ? "Cancelado" : "No cancelado";
 
-    ganancia = detalles[i].gananciaProducto;
-    total = detalles[i].subtotalProducto;
+    String estado = (ventas[i].montoCancelado == ventas[i].montoTotal) ? "Cancelado" : "No cancelado";
+    
+    //calculo de la suma de subtotales, descuentos y ganancias
+    for(int j = 0; j<detalles.length; i++){
+
+
+      subtotal = detalles[j].subtotalProducto+subtotal;
+      if(detalles[j].descuentoProducto != null){
+        descuento = detalles[j].descuentoProducto! + descuento;
+      }
+      ganancia = detalles[j].gananciaProducto + ganancia;
+      
+    }
+    totalGanancias += ganancia;
+
+    if(ventas[i].esAlContado == true){
+      ventasContado++;
+    } else{
+      ventasCredito++;
+    }
+
 
     data.add([
-      "${i + 1}",  
-      "${ventas?.fechaVenta}",       
-      "${ventas?.idVenta}", 
-      "${(ventas?.esAlContado == true) ? "Contado" : "Crédito"}" , 
-      nombreCliente, 
-      "${detalles[i].idProducto}", 
-      nombreProducto, 
-      "${detalles[i].cantidadProducto}",
-      "${detalles[i].precioUnidadProducto}",
-      "${precioCompraUnidad}",
-      "${precioVenta}",
-      "${detalles[i].descuentoProducto}",
-      "${detalles[i].subtotalProducto}",
-      "${detalles[i].gananciaProducto}",
-      estado
+      "${i + 1}",  //indice
+      "${ventas[i].fechaVenta}",       //fecha y hora
+      "${ventas[i].idVenta}", //Codigo de venta
+      "${(ventas[i].esAlContado == true) ? "Contado" : "Crédito"}" , //Tipos
+      nombreCliente, //Cliente
+      "${subtotal}",
+      "${descuento}",
+      "${ventas[i].montoTotal}",
+      "${ventas[i].montoCancelado}",
+      "${ganancia}",
+      estado,
     ]);
-  
+  subtotal = 0;
+  descuento = 0;
+  ganancia = 0;
 }
 return {
   "data": data,
-  "ganancia": ganancia,
-  "total" : total
+  "totalGanancias": totalGanancias,
+  "ventasContado": ventasContado,
+  "ventasCredito": ventasCredito,
   
+  };
+}
+
+
+  Future<void> generarVentasTipo(BuildContext context, DateTime selectedFechaInicio, DateTime selectedFechaFinal, bool tipo) async {
+
+    final ReportController report  = ReportController(); 
+    final pdf = pw.Document();
+    final datosTablaGeneral = await obtenerDatosTablaTipo(selectedFechaInicio, selectedFechaFinal, tipo);
+    final datos = datosTablaGeneral['data'] as List<List<String>>;
+    final ganancias = datosTablaGeneral['totalGanancias'] as double;
+    final total = datosTablaGeneral['total'] as double;
+    String tipoVenta = "";
+    if(tipo == true){
+      tipoVenta = "Reporte de ventas al contado";
+    }else{
+      tipoVenta = "Reporte de ventas al crédito";
+    }
+    try{
+      
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4.landscape, 
+          
+          margin: pw.EdgeInsets.all(20),
+          build: (pw.Context context) {
+            return [
+              pw.Text(tipoVenta,
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
+              pw.Text("Total: S/ ${total}"),
+              pw.Text("Ganancias estimadas: S/ ${ganancias}"),
+              pw.SizedBox(height: 10),
+              pw.Table.fromTextArray(
+                headers: [
+                  "#", "Fecha y hora", "Codigo de venta", "Cliente", "Subtotal (S/)","Descuento (S/)" ,"Monto total (S/)","Ganancia estimada"
+                ],
+                //generar filas
+                data: datos,
+                
+                border: pw.TableBorder.all(),
+                cellStyle: pw.TextStyle(fontSize: 10),
+                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                headerDecoration: pw.BoxDecoration(color: PdfColors.black, borderRadius: pw.BorderRadius.circular(2)),
+                headerAlignments: {0: pw.Alignment.center, 1: pw.Alignment.center, 2: pw.Alignment.centerLeft, 3: pw.Alignment.center, 4: pw.Alignment.center, 5: pw.Alignment.center, 6: pw.Alignment.center, 7: pw.Alignment.center, 8: pw.Alignment.center, 9: pw.Alignment.center, 10: pw.Alignment.center, 11: pw.Alignment.center, 12: pw.Alignment.center, 13: pw.Alignment.center},
+                //Ajustar tamaño
+                columnWidths: {
+                  0: pw.FixedColumnWidth(35),  // Índice
+                  1: pw.FixedColumnWidth(60),  // Fecha y hora
+                  2: pw.FixedColumnWidth(50),  // Código de venta
+                  3: pw.FixedColumnWidth(50),  // Tipo
+                  4: pw.FixedColumnWidth(80),  // Cliente
+                  5: pw.FixedColumnWidth(60), // Subtotal
+                  6: pw.FixedColumnWidth(80),  // Descuento
+                  7: pw.FixedColumnWidth(35),  // Monto total
+                  8: pw.FixedColumnWidth(55),  // Monto cancelado
+                  9: pw.FixedColumnWidth(55),  // Ganacias estimadas
+                },
+              ),
+            ];
+          },
+        ),
+      );
+    }catch(e){
+      debugPrint("Error ${e}");
+    };
+    //metodos de report_controller.dart
+    
+    //generar pdf
+    final path = await report.generarPDF(pdf, "ventas_contado.pdf");
+    //mostrar pdf
+    report.mostrarPDF(context, path);
+  }
+
+  Future<Map<String, dynamic>> obtenerDatosTablaTipo(DateTime selectedFechaInicio, selectedFechaFinal, bool tipo) async {
+  List<Venta> ventas = [];
+  List<List<String>> data = [];
+
+  ventas = await Venta.obtenerVentasporFecha(selectedFechaInicio, selectedFechaFinal);
+  double subtotal = 0;  
+  double descuento = 0;
+  double ganancia = 0;
+  double totalGanancias = 0;
+  double total = 0;
+  for (int i = 0; i < ventas.length; i++) {
+    if(ventas[i].esAlContado == tipo)
+    {List<DetalleVenta> detalles = await DetalleVenta.obtenerDetallesPorVenta(ventas[i].idVenta!);
+    Cliente? cliente = await Cliente.obtenerClientePorId(ventas[i].idCliente);
+    String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
+
+    String estado = (ventas[i].montoCancelado == ventas[i].montoTotal) ? "Cancelado" : "No cancelado";
+    
+    //calculo de la suma de subtotales, descuentos y ganancias
+    for(int j = 0; j<detalles.length; i++){
+      
+      subtotal = detalles[j].subtotalProducto+subtotal;
+      if(detalles[j].descuentoProducto != null){
+        descuento = detalles[j].descuentoProducto! + descuento;
+      }
+      ganancia = detalles[j].gananciaProducto + ganancia;
+      
+    }
+    totalGanancias += ganancia;
+    total = subtotal;
+    
+
+    data.add([
+      "${i + 1}",  //indice
+      "${ventas[i].fechaVenta}",       //fecha y hora
+      "${ventas[i].idVenta}", //Codigo de venta
+      nombreCliente, //Cliente
+      "${subtotal}",
+      "${descuento}",
+      "${ventas[i].montoTotal}",
+      "${ventas[i].montoCancelado}",
+      "${ganancia}",
+      estado,
+    ]);
+  subtotal = 0;
+  descuento = 0;
+  ganancia = 0;}
+}
+return {
+  "data" : data,
+  "totalGanancias": totalGanancias,
+  "total": total, 
+
   };
 }
