@@ -66,13 +66,22 @@ class _ProductPageState extends State<ProductPage> {
       appBar: AppBar(
         title: Text(
           producto?.nombreProducto ?? "Cargando...",
-          style:
-              const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.black),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.black),
+            onPressed: () async {
+              bool? updated = await _showEditProductDialog(context, producto!);
+              if (updated == true) {
+                setState(() {}); // Refresca la UI después de editar
+              }
+            },
+          ),
+
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
             onPressed: () => _showLoteDialog(),
@@ -195,13 +204,33 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const Text(
-                  "Categorías del producto",
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                      color: Colors.black),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Categorías del producto",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: Colors.black,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.black),
+                      onPressed: () async {
+                        bool? updated = await editarCategoriasProducto(context, producto?.idProducto??0);
+                        if (updated == true) {
+                          setState(() {}); // Solo recarga la UI si hubo cambios
+                        }
+                      },
+                    ),
+
+                  ],
                 ),
+
+
+
+
                 const SizedBox(height: 15),
                 Wrap(
                   spacing: 8,
@@ -586,5 +615,252 @@ class _ProductPageState extends State<ProductPage> {
         }
       },
     );
+  }
+}
+
+
+Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
+  TextEditingController productCodeController =
+  TextEditingController(text: producto.codigoProducto);
+  TextEditingController productNameController =
+  TextEditingController(text: producto.nombreProducto);
+  TextEditingController minStockController =
+  TextEditingController(text: producto.stockMinimo.toString());
+  TextEditingController maxStockController =
+  TextEditingController(text: producto.stockMaximo?.toString() ?? "");
+  TextEditingController priceController =
+  TextEditingController(text: producto.precioProducto.toString());
+
+  String? rutaImagen = producto.rutaImagen;
+
+  return showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text("Editar Producto"),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () async {
+                      rutaImagen = await context.push("/image-picker") as String?;
+                      setState(() {});
+                    },
+                    icon: SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: rutaImagen == null
+                          ? Image.asset(
+                        'lib/assets/iconos/iconoImagen.png',
+                        fit: BoxFit.cover,
+                      )
+                          : Image.file(
+                        File(rutaImagen!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Código del producto',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        productCodeController.text,
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      IconButton(
+                        onPressed: () async {
+                          final String? result =
+                          await context.push('/barcode-scanner');
+                          if (result != null && result.isNotEmpty) {
+                            setState(() {
+                              productCodeController.text = result;
+                            });
+                          }
+                        },
+                        icon: Image.asset('lib/assets/iconos/iconoBarras.png',
+                            height: 40),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    label: 'Nombre del producto',
+                    controller: productNameController,
+                    keyboardType: TextInputType.text,
+                    isRequired: true,
+                  ),
+                  CustomTextField(
+                    label: 'Stock mínimo',
+                    controller: minStockController,
+                    keyboardType: TextInputType.number,
+                  ),
+                  CustomTextField(
+                    label: 'Stock máximo',
+                    controller: maxStockController,
+                    keyboardType: TextInputType.number,
+                  ),
+                  CustomTextField(
+                    label: 'Precio por medida',
+                    controller: priceController,
+                    keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                    isPrice: true,
+                    isRequired: true,
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Cancelar"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  if (productNameController.text.isEmpty ||
+                      priceController.text.isEmpty ||
+                      minStockController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Por favor, completa los campos obligatorios."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  double? precio = double.tryParse(priceController.text);
+                  double? stockMin = double.tryParse(minStockController.text);
+                  double? stockMax =
+                  double.tryParse(maxStockController.text);
+
+                  if (precio == null ||
+                      stockMin == null ||
+                      (maxStockController.text.isNotEmpty && stockMax == null)) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Los valores numéricos son inválidos."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  Producto productoActualizado = Producto(
+                    idProducto: producto.idProducto,
+                    idUnidad: producto.idUnidad,
+                    codigoProducto: productCodeController.text,
+                    nombreProducto: productNameController.text,
+                    precioProducto: precio,
+                    stockMinimo: stockMin,
+                    stockMaximo: stockMax,
+                    rutaImagen: rutaImagen,
+                  );
+
+                  bool actualizado =
+                  await Producto.actualizarProducto(productoActualizado);
+
+                  if (actualizado) {
+                    SuccessDialog(
+                      context: context,
+                      successMessage: "Producto actualizado correctamente.",
+                      btnOkOnPress: () => Navigator.pop(context, true),
+                    );
+                  } else {
+                    SuccessDialog(
+                      context: context,
+                      successMessage: "Error al actualizar el producto.",
+                    );
+                  }
+                },
+                child: const Text("Guardar"),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+
+
+Future<bool?> editarCategoriasProducto(BuildContext context, int idProducto) async {
+  try {
+    // Obtener las categorías actuales del producto
+    List<Categoria> categoriasProducto = await ProductoCategoria.obtenerCategoriasDeProducto(idProducto);
+    // Obtener todas las categorías disponibles
+    List<Categoria> todasLasCategorias = await Categoria.obtenerCategorias();
+
+    // Convertimos las categorías actuales en un Set para fácil manipulación
+    Set<int> seleccionadas = categoriasProducto.map((cat) => cat.idCategoria!).toSet();
+
+    return await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Seleccionar Categorías"),
+              content: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 8.0,
+                  children: todasLasCategorias.map((categoria) {
+                    bool estaSeleccionada = seleccionadas.contains(categoria.idCategoria);
+
+                    return ChoiceChip(
+                      label: Text(categoria.nombreCategoria),
+                      selected: estaSeleccionada,
+                      selectedColor: const Color(0xFF493d9e),
+                      labelStyle: TextStyle(
+                        color: estaSeleccionada ? Colors.white : Colors.black,
+                      ),
+                      onSelected: (selected) {
+                        setState(() {
+                          if (selected) {
+                            seleccionadas.add(categoria.idCategoria!);
+                          } else {
+                            seleccionadas.remove(categoria.idCategoria);
+                          }
+                        });
+                      },
+                    );
+                  }).toList(),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text("Cancelar"),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    // Guardamos los cambios en la BD
+                    await ProductoCategoria.actualizarCategoriasProducto(idProducto, seleccionadas.toList());
+                    Navigator.pop(context, true); // Indicamos que se hicieron cambios
+                  },
+                  child: const Text("Guardar"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error al actualizar categorías: $e")),
+    );
+    return false;
   }
 }
