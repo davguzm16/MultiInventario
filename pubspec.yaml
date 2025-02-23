@@ -27,8 +27,11 @@ dependencies:
   http: ^1.3.0
   pdf: ^3.10.7
   flutter_pdfview: ^1.3.2  # Eliminada la duplicada
-  share_plus: ^7.2.2  # Actualizada a la versión más reciente
+  share_plus: ^10.1.4  # Actualizada a la versión más reciente
   printing: ^5.11.1
+  googleapis: ^13.2.0
+  googleapis_auth: ^1.6.0
+  shared_preferences: ^2.5.2
   
 dev_dependencies:
   flutter_test:
@@ -38,7 +41,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
+  - "lib/.env"
   - "lib/assets/imagenes/"
   - "lib/assets/iconos/"
-  - "lib/.env"
 

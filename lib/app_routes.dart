@@ -14,6 +14,7 @@ import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/sales/all_sales_pages.dart';
 import 'package:multiinventario/pages/clients/all_clients_pages.dart';
 import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:multiinventario/pages/config_page.dart';
 
 // Modulos auxiales
 import 'package:multiinventario/controllers/barcode_scanner.dart';
@@ -178,6 +179,12 @@ class AppRoutes {
               ),
             ],
           ),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/config',
+              builder: (context, state) => const ConfigPage(),
+            ),
+          ])
         ],
       ),
       GoRoute(

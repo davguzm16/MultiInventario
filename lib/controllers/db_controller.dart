@@ -22,6 +22,18 @@ class DatabaseController {
     return _database!;
   }
 
+  Future<String> getDatabasePath() async {
+    if (kIsWeb) {
+      return 'multiinventario_web.db';
+    } else if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      final documentsDirectory = await getApplicationDocumentsDirectory();
+      return join(documentsDirectory.path, 'multiinventario.db');
+    } else {
+      return join(await getDatabasesPath(), 'multiinventario.db');
+    }
+  }
+
   Future<Database> _initDatabase() async {
     String path;
 

@@ -85,8 +85,6 @@ class Credenciales {
   static Future<void> crearCredencialesPorDefecto() async {
     if (await DatabaseController.tableHasData("Credenciales")) return;
 
-    await dotenv.load(fileName: "lib/.env");
-
     String? addressSendEmail = dotenv.env['ADDRESS_SEND_EMAIL'];
     String? passwordSendEmail = dotenv.env['PASSWORD_SEND_EMAIL'];
 
