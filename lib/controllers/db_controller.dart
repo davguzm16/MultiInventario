@@ -102,7 +102,7 @@ class DatabaseController {
         await db.execute('''
           CREATE TABLE Clientes (
             idCliente INTEGER PRIMARY KEY,
-            nombreCliente TEXT,
+            nombreCliente TEXT UNIQUE,
             dniCliente TEXT,
             correoCliente TEXT,
             telefonoCliente TEXT,

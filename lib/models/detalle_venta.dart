@@ -41,11 +41,6 @@ class DetalleVenta {
         detalle.descuentoProducto ?? 0.0,
       ]);
 
-      // Actualizar stock del producto
-      await db.rawUpdate('''
-        UPDATE Productos SET stockActual = stockActual - ? WHERE idProducto = ?
-      ''', [detalle.cantidadProducto, detalle.idProducto]);
-
       return true;
     } catch (e) {
       debugPrint(
@@ -58,18 +53,6 @@ class DetalleVenta {
     try {
       final db = await DatabaseController().database;
 
-      // Obtener detalles de la venta para restaurar stock
-      final detalles = await db.rawQuery('''
-        SELECT idProducto, cantidadProducto FROM DetallesVentas WHERE idVenta = ?
-      ''', [idVenta]);
-
-      for (var detalle in detalles) {
-        await db.rawUpdate('''
-          UPDATE Productos SET stockActual = stockActual + ? WHERE idProducto = ?
-        ''', [detalle['cantidadProducto'], detalle['idProducto']]);
-      }
-
-      // Eliminar detalles de la venta
       await db.rawDelete('''
         DELETE FROM DetallesVentas WHERE idVenta = ?
       ''', [idVenta]);
@@ -113,17 +96,20 @@ class DetalleVenta {
     }
   }
 
-  static Future<List<DetalleVenta>> obtenerDetallesPorFechas(DateTime fechaInicio, DateTime fechaFinal) async{
+  static Future<List<DetalleVenta>> obtenerDetallesPorFechas(
+      DateTime fechaInicio, DateTime fechaFinal) async {
     List<DetalleVenta> detalles = [];
-    List<Venta> ventas = await Venta.obtenerVentasporFecha(fechaInicio,fechaFinal);
-    List<int> idsVentas = ventas.map((venta) => venta.idVenta).whereType<int>().toList();
+    List<Venta> ventas =
+        await Venta.obtenerVentasporFecha(fechaInicio, fechaFinal);
+    List<int> idsVentas =
+        ventas.map((venta) => venta.idVenta).whereType<int>().toList();
 
-    try{
-      for(var id in idsVentas){
+    try {
+      for (var id in idsVentas) {
         List<DetalleVenta> detallesVenta = await obtenerDetallesPorVenta(id);
         detalles.addAll(detallesVenta);
       }
-    }catch(e){
+    } catch (e) {
       debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
     }
     return detalles;

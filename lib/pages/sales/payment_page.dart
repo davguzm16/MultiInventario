@@ -44,7 +44,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() {
       clientesFiltrados = clientes;
-      debugPrint("Clientes encontrados: ${clientesFiltrados.length}");
     });
   }
 
@@ -112,48 +111,49 @@ class _PaymentPageState extends State<PaymentPage> {
               ] else ...[
                 SizedBox(
                   height: 150,
-                  child: clientesFiltrados.isEmpty
-                      ? const Center(child: Text("No hay clientes encontrados"))
-                      : Column(
-                          children: [
-                            TextField(
-                              controller: _searchController,
-                              autofocus: true,
-                              decoration: InputDecoration(
-                                hintText: "Buscar cliente...",
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.close),
-                                  onPressed: () {
-                                    _searchController.clear();
-                                    setState(() {
-                                      nombreClienteBuscado = "";
-                                    });
-                                  },
-                                ),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(5),
-                                  borderSide: const BorderSide(
-                                      color: Color(0xFF493D9e)),
-                                ),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  nombreClienteBuscado = value;
-                                });
-                                _buscarClientesPorNombre(value);
-                              },
-                            ),
-                            const SizedBox(height: 10),
-                            Expanded(
-                              child: ListView.builder(
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _searchController,
+                        autofocus: true,
+                        decoration: InputDecoration(
+                          hintText: "Buscar cliente...",
+                          prefixIcon: const Icon(Icons.search),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                nombreClienteBuscado = "";
+                              });
+                            },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF493D9e)),
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            nombreClienteBuscado = value;
+                          });
+                          _buscarClientesPorNombre(value);
+                        },
+                      ),
+                      const SizedBox(height: 10),
+                      Expanded(
+                        child: clientesFiltrados.isEmpty
+                            ? const Center(
+                                child: Text("No hay clientes encontrados"))
+                            : ListView.builder(
                                 itemCount: clientesFiltrados.length,
                                 itemBuilder: (context, index) {
                                   final cliente = clientesFiltrados[index];
                                   return ListTile(
                                     title: Text(cliente.nombreCliente),
-                                    subtitle:
-                                        Text("DNI: ${cliente.dniCliente}"),
+                                    subtitle: Text(
+                                        "DNI: ${cliente.dniCliente ?? "---"}"),
                                     onTap: () {
                                       setState(() {
                                         _searchController.text =
@@ -164,13 +164,15 @@ class _PaymentPageState extends State<PaymentPage> {
                                   );
                                 },
                               ),
-                            ),
-                          ],
-                        ),
-                )
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Text("Cliente: ${clienteSeleccionado?.nombreCliente ?? "---"}"),
+                const SizedBox(height: 15),
               ],
 
-              const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -359,7 +361,7 @@ class _PaymentPageState extends State<PaymentPage> {
                     context: context,
                     successMessage: "¡La venta se ha realizado exitosamente!",
                     btnOkOnPress: () {
-                      context.pushReplacement('/sales');
+                      context.go('/sales');
                     },
                   );
                 },

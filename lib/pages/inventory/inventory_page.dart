@@ -257,7 +257,7 @@ class _InventoryPageState extends State<InventoryPage>
                           crossAxisCount: 2,
                           crossAxisSpacing: 15,
                           mainAxisSpacing: 15,
-                          childAspectRatio: 1.0,
+                          childAspectRatio: 0.8,
                         ),
                         itemCount: productos.length,
                         itemBuilder: (context, index) {
@@ -271,16 +271,14 @@ class _InventoryPageState extends State<InventoryPage>
                               isSearching = false;
                             },
                             child: Container(
-                              width: 150,
-                              height: 150,
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                 border: Border.all(color: Colors.purple),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   SizedBox(
                                     width: 80,
@@ -290,31 +288,32 @@ class _InventoryPageState extends State<InventoryPage>
                                       child: producto.rutaImagen == null
                                           ? Image.asset(
                                               'lib/assets/iconos/iconoImagen.png',
-                                              fit: BoxFit.cover,
+                                              fit: BoxFit.contain,
                                             )
                                           : Image.file(
                                               File(producto.rutaImagen!),
-                                              fit: BoxFit.cover,
+                                              fit: BoxFit.contain,
                                             ),
                                     ),
                                   ),
-                                  const SizedBox(height: 5),
-                                  Flexible(
-                                    child: Text(
-                                      producto.nombreProducto,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
-                                      textAlign: TextAlign.center,
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 1,
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    producto.nombreProducto,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
                                     ),
+                                    textAlign: TextAlign.center,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
                                   ),
+                                  const SizedBox(height: 5),
                                   Text(
                                     "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(fontSize: 12),
                                   ),
+                                  const SizedBox(height: 5),
                                   FutureBuilder<Unidad?>(
                                     future: Unidad.obtenerUnidadPorId(
                                         producto.idUnidad!),

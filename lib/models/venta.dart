@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
+import 'package:multiinventario/models/lote.dart';
 import 'package:sqflite/sqflite.dart';
 
 class Venta {
@@ -63,6 +64,12 @@ class Venta {
         }
 
         for (var detalle in detallesVentas) {
+          final lote =
+              await Lote.obtenerLotePorId(detalle.idProducto, detalle.idLote);
+          lote!.cantidadActual -= detalle.cantidadProducto;
+
+          Lote.actualizarLote(lote);
+
           DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
 

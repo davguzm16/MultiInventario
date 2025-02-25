@@ -66,7 +66,8 @@ class _ProductPageState extends State<ProductPage> {
       appBar: AppBar(
         title: Text(
           producto?.nombreProducto ?? "Cargando...",
-          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
+          style:
+              const TextStyle(fontWeight: FontWeight.bold, color: Colors.black),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -81,7 +82,6 @@ class _ProductPageState extends State<ProductPage> {
               }
             },
           ),
-
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
             onPressed: () => _showLoteDialog(),
@@ -218,18 +218,15 @@ class _ProductPageState extends State<ProductPage> {
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.black),
                       onPressed: () async {
-                        bool? updated = await editarCategoriasProducto(context, producto?.idProducto??0);
+                        bool? updated = await editarCategoriasProducto(
+                            context, producto?.idProducto ?? 0);
                         if (updated == true) {
                           setState(() {}); // Solo recarga la UI si hubo cambios
                         }
                       },
                     ),
-
                   ],
                 ),
-
-
-
 
                 const SizedBox(height: 15),
                 Wrap(
@@ -618,18 +615,17 @@ class _ProductPageState extends State<ProductPage> {
   }
 }
 
-
 Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
   TextEditingController productCodeController =
-  TextEditingController(text: producto.codigoProducto);
+      TextEditingController(text: producto.codigoProducto);
   TextEditingController productNameController =
-  TextEditingController(text: producto.nombreProducto);
+      TextEditingController(text: producto.nombreProducto);
   TextEditingController minStockController =
-  TextEditingController(text: producto.stockMinimo.toString());
+      TextEditingController(text: producto.stockMinimo.toString());
   TextEditingController maxStockController =
-  TextEditingController(text: producto.stockMaximo?.toString() ?? "");
+      TextEditingController(text: producto.stockMaximo?.toString() ?? "");
   TextEditingController priceController =
-  TextEditingController(text: producto.precioProducto.toString());
+      TextEditingController(text: producto.precioProducto.toString());
 
   String? rutaImagen = producto.rutaImagen;
 
@@ -647,7 +643,8 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                 children: [
                   IconButton(
                     onPressed: () async {
-                      rutaImagen = await context.push("/image-picker") as String?;
+                      rutaImagen =
+                          await context.push("/image-picker") as String?;
                       setState(() {});
                     },
                     icon: SizedBox(
@@ -655,13 +652,13 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                       height: 80,
                       child: rutaImagen == null
                           ? Image.asset(
-                        'lib/assets/iconos/iconoImagen.png',
-                        fit: BoxFit.cover,
-                      )
+                              'lib/assets/iconos/iconoImagen.png',
+                              fit: BoxFit.cover,
+                            )
                           : Image.file(
-                        File(rutaImagen!),
-                        fit: BoxFit.cover,
-                      ),
+                              File(rutaImagen!),
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -680,7 +677,7 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                       IconButton(
                         onPressed: () async {
                           final String? result =
-                          await context.push('/barcode-scanner');
+                              await context.push('/barcode-scanner');
                           if (result != null && result.isNotEmpty) {
                             setState(() {
                               productCodeController.text = result;
@@ -713,7 +710,7 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                     label: 'Precio por medida',
                     controller: priceController,
                     keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                        const TextInputType.numberWithOptions(decimal: true),
                     isPrice: true,
                     isRequired: true,
                   ),
@@ -732,7 +729,8 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                       minStockController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text("Por favor, completa los campos obligatorios."),
+                        content: Text(
+                            "Por favor, completa los campos obligatorios."),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -741,12 +739,12 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
 
                   double? precio = double.tryParse(priceController.text);
                   double? stockMin = double.tryParse(minStockController.text);
-                  double? stockMax =
-                  double.tryParse(maxStockController.text);
+                  double? stockMax = double.tryParse(maxStockController.text);
 
                   if (precio == null ||
                       stockMin == null ||
-                      (maxStockController.text.isNotEmpty && stockMax == null)) {
+                      (maxStockController.text.isNotEmpty &&
+                          stockMax == null)) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text("Los valores numéricos son inválidos."),
@@ -768,7 +766,7 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                   );
 
                   bool actualizado =
-                  await Producto.actualizarProducto(productoActualizado);
+                      await Producto.actualizarProducto(productoActualizado);
 
                   if (actualizado) {
                     SuccessDialog(
@@ -793,17 +791,18 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
   );
 }
 
-
-
-Future<bool?> editarCategoriasProducto(BuildContext context, int idProducto) async {
+Future<bool?> editarCategoriasProducto(
+    BuildContext context, int idProducto) async {
   try {
     // Obtener las categorías actuales del producto
-    List<Categoria> categoriasProducto = await ProductoCategoria.obtenerCategoriasDeProducto(idProducto);
+    List<Categoria> categoriasProducto =
+        await ProductoCategoria.obtenerCategoriasDeProducto(idProducto);
     // Obtener todas las categorías disponibles
     List<Categoria> todasLasCategorias = await Categoria.obtenerCategorias();
 
     // Convertimos las categorías actuales en un Set para fácil manipulación
-    Set<int> seleccionadas = categoriasProducto.map((cat) => cat.idCategoria!).toSet();
+    Set<int> seleccionadas =
+        categoriasProducto.map((cat) => cat.idCategoria!).toSet();
 
     return await showDialog<bool>(
       context: context,
@@ -816,7 +815,8 @@ Future<bool?> editarCategoriasProducto(BuildContext context, int idProducto) asy
                 child: Wrap(
                   spacing: 8.0,
                   children: todasLasCategorias.map((categoria) {
-                    bool estaSeleccionada = seleccionadas.contains(categoria.idCategoria);
+                    bool estaSeleccionada =
+                        seleccionadas.contains(categoria.idCategoria);
 
                     return ChoiceChip(
                       label: Text(categoria.nombreCategoria),
@@ -846,8 +846,10 @@ Future<bool?> editarCategoriasProducto(BuildContext context, int idProducto) asy
                 TextButton(
                   onPressed: () async {
                     // Guardamos los cambios en la BD
-                    await ProductoCategoria.actualizarCategoriasProducto(idProducto, seleccionadas.toList());
-                    Navigator.pop(context, true); // Indicamos que se hicieron cambios
+                    await ProductoCategoria.actualizarCategoriasProducto(
+                        idProducto, seleccionadas.toList());
+                    Navigator.pop(
+                        context, true); // Indicamos que se hicieron cambios
                   },
                   child: const Text("Guardar"),
                 ),

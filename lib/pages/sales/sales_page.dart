@@ -281,8 +281,10 @@ class _SalesPageState extends State<SalesPage>
                                         ),
                                         Text(
                                           "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
-                                          style: const TextStyle(
-                                              color: Colors.black),
+                                          style: TextStyle(
+                                              color: venta.esAlContado!
+                                                  ? Colors.black
+                                                  : Colors.red),
                                         ),
                                       ],
                                     ),
