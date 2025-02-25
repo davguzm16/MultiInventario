@@ -104,7 +104,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          venta?.codigoVenta ?? "-" * 13,
+                          venta?.codigoBoleta ?? "-" * 13,
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,

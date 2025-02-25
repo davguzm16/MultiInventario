@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 class Venta {
   int? idVenta;
   int idCliente;
-  String codigoVenta;
+  String? codigoBoleta;
   DateTime? fechaVenta;
   double montoTotal;
   double? montoCancelado;
@@ -16,7 +16,7 @@ class Venta {
   Venta({
     this.idVenta,
     required this.idCliente,
-    required this.codigoVenta,
+    this.codigoBoleta,
     this.fechaVenta,
     required this.montoTotal,
     this.montoCancelado,
@@ -27,13 +27,28 @@ class Venta {
       Venta venta, List<DetalleVenta> detallesVentas) async {
     try {
       final db = await DatabaseController().database;
+
+      if (venta.montoTotal > 5.00) {
+        final result = await db.rawQuery('''
+        SELECT MAX(CAST(SUBSTR(codigoBoleta, 5) AS INTEGER)) as ultimoNumero
+        FROM Ventas WHERE codigoBoleta IS NOT NULL
+      ''');
+
+        int ultimoNumero = result.first['ultimoNumero'] != null
+            ? (result.first['ultimoNumero'] as int)
+            : 0;
+
+        String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
+        venta.codigoBoleta = '002-$numeroFormateado';
+      }
+
       final result = await db.rawInsert('''
-      INSERT INTO Ventas (
-        idCliente, codigoVenta, montoTotal, montoCancelado, esAlContado
-      ) VALUES (?, ?, ?, ?, ?)
-    ''', [
+          INSERT INTO Ventas (
+            idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
+          ) VALUES (?, ?, ?, ?, ?)
+        ''', [
         venta.idCliente,
-        venta.codigoVenta,
+        venta.codigoBoleta,
         venta.montoTotal,
         venta.montoCancelado,
         venta.esAlContado,
@@ -44,8 +59,6 @@ class Venta {
         int? idVentaInsertada = Sqflite.firstIntValue(resultId);
 
         if (idVentaInsertada == null) {
-          debugPrint(
-              "El id de la venta insertada no se pudo obtener: $idVentaInsertada");
           return false;
         }
 
@@ -53,7 +66,8 @@ class Venta {
           DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
 
-        debugPrint("Venta ${venta.codigoVenta} creada con exito!");
+        debugPrint(
+            "Venta ${venta.codigoBoleta ?? 'sin boleta'} creada con éxito!");
         return true;
       }
     } catch (e) {
@@ -63,23 +77,23 @@ class Venta {
     return false;
   }
 
-  static Future<List<Venta>> obtenerVentasPorCodigo(String codigoVenta) async {
+  static Future<List<Venta>> obtenerVentasPorCodigo(String codigoBoleta) async {
     try {
       final db = await DatabaseController().database;
       final result = await db.rawQuery(
         '''
-      SELECT idVenta, idCliente, codigoVenta, fechaVenta, 
+      SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
       montoTotal, montoCancelado, esAlContado 
-      FROM Ventas WHERE codigoVenta LIKE ?
+      FROM Ventas WHERE codigoBoleta LIKE ?
       ''',
-        ['%$codigoVenta%'],
+        ['%$codigoBoleta%'],
       );
 
       return result.map((map) {
         return Venta(
           idVenta: map['idVenta'] as int,
           idCliente: map['idCliente'] as int,
-          codigoVenta: map['codigoVenta'] as String,
+          codigoBoleta: map['codigoBoleta'] as String,
           fechaVenta: DateTime.parse(map['fechaVenta'] as String),
           montoTotal: (map['montoTotal'] as num).toDouble(),
           montoCancelado: (map['montoCancelado'] as num).toDouble(),
@@ -97,7 +111,7 @@ class Venta {
       final db = await DatabaseController().database;
       final result = await db.rawQuery(
         '''
-      SELECT idVenta, idCliente, codigoVenta, fechaVenta, 
+      SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
       montoTotal, montoCancelado, esAlContado
       FROM Ventas WHERE idVenta = ?
       ''',
@@ -108,7 +122,7 @@ class Venta {
         return Venta(
           idVenta: result.first['idVenta'] as int,
           idCliente: result.first['idCliente'] as int,
-          codigoVenta: result.first['codigoVenta'] as String,
+          codigoBoleta: result.first['codigoBoleta'] as String,
           fechaVenta: DateTime.parse(result.first['fechaVenta'] as String),
           montoTotal: (result.first['montoTotal'] as num).toDouble(),
           montoCancelado: (result.first['montoCancelado'] as num).toDouble(),
@@ -135,16 +149,16 @@ class Venta {
 
       String esAlContadoQuery = "";
 
-      if(esAlContado != null){
-        if(esAlContado){
+      if (esAlContado != null) {
+        if (esAlContado) {
           esAlContadoQuery = "WHERE esAlContado = 1";
-        }else{
+        } else {
           esAlContadoQuery = "WHERE NOT esAlContado = 1";
         }
       }
 
       final result = await db.rawQuery('''
-      SELECT idVenta, idCliente, codigoVenta, fechaVenta, 
+      SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
              montoTotal, montoCancelado, esAlContado
       FROM Ventas
       $esAlContadoQuery
@@ -155,7 +169,7 @@ class Venta {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: item['idCliente'] as int,
-          codigoVenta: item['codigoVenta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -174,7 +188,7 @@ class Venta {
     try {
       final db = await DatabaseController().database;
       final result = await db.rawQuery('''
-        SELECT idVenta, codigoVenta, fechaVenta, 
+        SELECT idVenta, codigoBoleta, fechaVenta, 
              montoTotal, montoCancelado, esAlContado
         FROM Ventas
         WHERE idCliente = ?
@@ -184,7 +198,7 @@ class Venta {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: idCliente,
-          codigoVenta: item['codigoVenta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -198,36 +212,34 @@ class Venta {
     return ventas;
   }
 
-  static Future<List<Venta>> obtenerVentasporFecha(DateTime fechaInicio, DateTime fechaFinal) async{
+  static Future<List<Venta>> obtenerVentasporFecha(
+      DateTime fechaInicio, DateTime fechaFinal) async {
     List<Venta> ventas = [];
-  
-  try{
-    final db = await DatabaseController().database;
-    final result = await db.rawQuery('''
-      SELECT idVenta, idCliente, CodigoVenta, fechaVenta,
-              montoTotal, montoCancelado, esAlcontado
-      FROM Ventas 
-      WHERE fechaVenta BETWEEN ? AND ?
-      ORDER BY fechaVenta ASC
-      ''', [fechaInicio.toIso8601String(),fechaFinal.toIso8601String()]);
-      if(result.isNotEmpty){
-        for (var item in result){
-          ventas.add(Venta(
+
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
+        SELECT idVenta, idCliente, codigoBoleta, fechaVenta,
+                montoTotal, montoCancelado, esAlContado
+        FROM Ventas 
+        WHERE fechaVenta BETWEEN ? AND ?
+        ORDER BY fechaVenta ASC
+      ''', [fechaInicio.toIso8601String(), fechaFinal.toIso8601String()]);
+
+      for (var item in result) {
+        ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: item['idCliente'] as int,
-          codigoVenta: item['CodigoVenta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
-          montoTotal: item['montoTotal'] as double,
-          montoCancelado: item['montoCancelado'] as double,
-          esAlContado: (item['esAlcontado'] as int) == 1,
-        )
-        );
+          montoTotal: (item['montoTotal'] as num).toDouble(),
+          montoCancelado: (item['montoCancelado'] as num).toDouble(),
+          esAlContado: (item['esAlContado'] as int) == 1,
+        ));
       }
-      }
-
-  }catch(e) {
-    debugPrint("Error al obtener las ventas en la fechas: ${e.toString()}");
+    } catch (e) {
+      debugPrint("Error al obtener las ventas en la fechas: ${e.toString()}");
+    }
+    return ventas;
   }
-  return ventas;
-}
 }

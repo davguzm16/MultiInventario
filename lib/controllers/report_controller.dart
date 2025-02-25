@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:io';
@@ -7,7 +9,6 @@ import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:multiinventario/helpers/database_helper.dart';
 
 class ReportController {
   Future<String> generarPDF(pw.Document pdf, String filename) async {
@@ -49,7 +50,7 @@ class ReportController {
 
 class _PDFViewerScreen extends StatefulWidget {
   final String pdfPath;
-  const _PDFViewerScreen({Key? key, required this.pdfPath}) : super(key: key);
+  const _PDFViewerScreen({required this.pdfPath});
 
   @override
   _PDFViewerScreenState createState() => _PDFViewerScreenState();

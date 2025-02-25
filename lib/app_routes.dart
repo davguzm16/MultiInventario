@@ -86,11 +86,11 @@ class AppRoutes {
                                     nombreCategoria: map['nombreCategoria'],
                                   ))
                               .toList();
-                      final isStockBajo = extra['isStockBajo'] as bool?;
+                      final stockBajo = extra['stockBajo'] as bool?;
 
                       return FilterProductPage(
                         categoriasSeleccionadas: categoriasSeleccionadas,
-                        isStockBajo: isStockBajo,
+                        isStockBajo: stockBajo,
                       );
                     },
                   ),

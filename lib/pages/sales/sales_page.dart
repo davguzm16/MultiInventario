@@ -189,8 +189,7 @@ class _SalesPageState extends State<SalesPage>
                   cantidadCargas = 0;
                   hayMasCargas = true;
                 });
-                Future.delayed(
-                    const Duration(milliseconds: 300), _cargarVentas);
+                _cargarVentas(reiniciarListaVentas: true);
               },
             ),
           if (!isSearching)
@@ -257,7 +256,7 @@ class _SalesPageState extends State<SalesPage>
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          venta.codigoVenta,
+                                          "Venta ${venta.idVenta}",
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 20,
@@ -300,6 +299,10 @@ class _SalesPageState extends State<SalesPage>
                                         onPressed: () {
                                           context.push(
                                               '/sales/details-sale/${venta.idVenta}');
+
+                                          _cargarVentas(
+                                              reiniciarListaVentas: true);
+                                          isSearching = false;
                                         },
                                         child: const Text("Detalles"),
                                       ),

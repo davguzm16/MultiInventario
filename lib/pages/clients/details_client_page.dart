@@ -79,7 +79,7 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          cliente?.dniCliente ?? '---',
+                          cliente?.dniCliente ?? '-' * 7,
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -156,7 +156,7 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                           },
                         ),
                         Text(
-                          "Estado: ${cliente!.esDeudor}",
+                          "Estado: ${cliente!.esDeudor ? "Deudor" : "Regular"}",
                           style: TextStyle(
                             color:
                                 cliente!.esDeudor ? Colors.red : Colors.green,
@@ -202,7 +202,7 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        venta.codigoVenta,
+                                        venta.codigoBoleta ?? "---",
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 20,

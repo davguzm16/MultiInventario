@@ -22,6 +22,7 @@ class _ClientsPageState extends State<ClientsPage>
   // Clientes
   List<Cliente> clientes = [];
   String nombreBuscado = "";
+  bool? esDeudor;
 
   // Variables de carga dinámica
   int cantidadCargas = 0;
@@ -71,6 +72,7 @@ class _ClientsPageState extends State<ClientsPage>
 
     List<Cliente> nuevosClientes = await Cliente.obtenerClientesPorCarga(
       numeroCarga: cantidadCargas,
+      esDeudor: esDeudor,
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -91,7 +93,7 @@ class _ClientsPageState extends State<ClientsPage>
     });
   }
 
-  void _buscarClientes(String nombre) {
+  void _buscarClientesPorNombre(String nombre) {
     if (_searchTimer?.isActive ?? false) _searchTimer!.cancel();
 
     _searchTimer = Timer(const Duration(milliseconds: 300), () async {
@@ -146,7 +148,7 @@ class _ClientsPageState extends State<ClientsPage>
                   ),
                   onChanged: (value) {
                     setState(() => nombreBuscado = value);
-                    _buscarClientes(value);
+                    _buscarClientesPorNombre(value);
                   },
                 )
               : const Text(
@@ -280,6 +282,9 @@ class _ClientsPageState extends State<ClientsPage>
                                     onPressed: () {
                                       context.push(
                                           '/clients/details-client/${cliente.idCliente}');
+
+                                      _cargarClientes(reiniciarLista: true);
+                                      isSearching = false;
                                     },
                                     child: const Text("Detalles"),
                                   ),

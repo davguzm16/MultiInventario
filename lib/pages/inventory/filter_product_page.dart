@@ -19,15 +19,15 @@ class FilterProductPage extends StatefulWidget {
 class _FilterProductState extends State<FilterProductPage> {
   List<Categoria> categoriasObtenidas = [];
   List<Categoria> categoriasSeleccionadas = [];
-  bool? isStockBajo;
+  bool? stockBajo;
   bool habilitarFiltro = false;
 
   @override
   void initState() {
     super.initState();
     categoriasSeleccionadas = List.from(widget.categoriasSeleccionadas);
-    isStockBajo = widget.isStockBajo;
-    habilitarFiltro = isStockBajo != null;
+    stockBajo = widget.isStockBajo;
+    habilitarFiltro = stockBajo != null;
     obtenerCategorias();
   }
 
@@ -48,7 +48,7 @@ class _FilterProductState extends State<FilterProductPage> {
       debugPrint(categoria.toString());
     }
 
-    debugPrint("isStockBajo: $isStockBajo");
+    debugPrint("isStockBajo: $stockBajo");
   }
 
   void aplicarFiltros() {
@@ -57,11 +57,11 @@ class _FilterProductState extends State<FilterProductPage> {
       debugPrint(categoria.toString());
     }
 
-    debugPrint("isStockBajo nuevo: $isStockBajo");
+    debugPrint("isStockBajo nuevo: $stockBajo");
 
     context.pop({
       'categoriasSeleccionadas': categoriasSeleccionadas,
-      'isStockBajo': isStockBajo,
+      'isStockBajo': stockBajo,
     });
   }
 
@@ -127,7 +127,7 @@ class _FilterProductState extends State<FilterProductPage> {
                 setState(() {
                   habilitarFiltro = value;
                   if (!habilitarFiltro) {
-                    isStockBajo = null;
+                    stockBajo = null;
                   }
                 });
               },
@@ -135,10 +135,10 @@ class _FilterProductState extends State<FilterProductPage> {
             if (habilitarFiltro)
               CheckboxListTile(
                 title: const Text("Stock Bajo"),
-                value: isStockBajo ?? false,
+                value: stockBajo ?? false,
                 onChanged: (bool? value) {
                   setState(() {
-                    isStockBajo = value;
+                    stockBajo = value;
                   });
                 },
               ),

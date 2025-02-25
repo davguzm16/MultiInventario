@@ -1,0 +1,2 @@
+C:/Users/MSI/Desktop/MultiInventario/android/app/.cxx/RelWithDebInfo/1h5m462e/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/MSI/Desktop/MultiInventario/android/app/.cxx/RelWithDebInfo/1h5m462e/arm64-v8a/CMakeFiles/rebuild_cache.dir

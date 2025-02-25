@@ -44,24 +44,13 @@ class _PaymentPageState extends State<PaymentPage> {
 
     setState(() {
       clientesFiltrados = clientes;
-      debugPrint("Productos encontrados: ${clientesFiltrados.length}");
+      debugPrint("Clientes encontrados: ${clientesFiltrados.length}");
     });
   }
 
   double _calcularTotalVenta() {
     return widget.detallesVenta
         .fold(0.0, (total, detalle) => total + detalle.subtotalProducto);
-  }
-
-  String generarCodigoVenta() {
-    DateTime now = DateTime.now();
-    String dia = now.day.toString().padLeft(2, '0');
-    String mes = now.month.toString().padLeft(2, '0');
-    String anio = now.year.toString().substring(2);
-    String hora = now.hour.toString().padLeft(2, '0');
-    String minuto = now.minute.toString().padLeft(2, '0');
-    String segundo = now.second.toString().padLeft(2, '0');
-    return "V${widget.detallesVenta.length}$dia$mes$anio$hora$minuto$segundo";
   }
 
   @override
@@ -345,7 +334,6 @@ class _PaymentPageState extends State<PaymentPage> {
 
               venta = Venta(
                 idCliente: clienteSeleccionado!.idCliente!,
-                codigoVenta: generarCodigoVenta(),
                 montoTotal: _calcularTotalVenta(),
                 montoCancelado: cantidadRecibida,
                 esAlContado: esAlContado,

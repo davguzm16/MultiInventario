@@ -28,7 +28,7 @@ class _InventoryPageState extends State<InventoryPage>
 
   // Variables de filtrado
   List<Categoria> categoriasSeleccionadas = [];
-  bool? isStockBajo;
+  bool? stockBajo;
   String nombreProductoBuscado = "";
 
   // Manejo de resultados por carga
@@ -82,7 +82,7 @@ class _InventoryPageState extends State<InventoryPage>
         await ProductoCategoria.obtenerProductosPorCargaFiltrados(
       numeroCarga: cantidadCargas,
       categorias: categoriasSeleccionadas,
-      stockBajo: isStockBajo,
+      stockBajo: stockBajo,
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -220,7 +220,7 @@ class _InventoryPageState extends State<InventoryPage>
                               'nombreCategoria': c.nombreCategoria
                             })
                         .toList(),
-                    'isStockBajo': isStockBajo,
+                    'stockBajo': stockBajo,
                   },
                 );
 
@@ -228,7 +228,7 @@ class _InventoryPageState extends State<InventoryPage>
                   setState(() {
                     categoriasSeleccionadas =
                         filtros['categoriasSeleccionadas'] as List<Categoria>;
-                    isStockBajo = filtros['isStockBajo'] as bool?;
+                    stockBajo = filtros['isStockBajo'] as bool?;
                   });
                 }
 
@@ -267,6 +267,8 @@ class _InventoryPageState extends State<InventoryPage>
                             onTap: () {
                               context.push(
                                   '/inventory/product/${producto.idProducto}');
+                              _cargarProductos(reiniciarListaProductos: true);
+                              isSearching = false;
                             },
                             child: Container(
                               width: 150,
