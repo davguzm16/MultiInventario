@@ -19,15 +19,12 @@ class CreateSalePage extends StatefulWidget {
 }
 
 class _CreateSalePageState extends State<CreateSalePage> {
-  final TextEditingController _searchController = TextEditingController();
-
   // Datos de la venta
   List<DetalleVenta> detallesVenta = [];
   List<Producto> productosVenta = [];
 
   // Datos de los productos para agregar
   List<Producto> productosFiltrados = [];
-  String nombreProductoBuscado = "";
 
   void _buscarProductosPorNombre(String nombre) async {
     if (nombre.isEmpty) {
@@ -68,14 +65,20 @@ class _CreateSalePageState extends State<CreateSalePage> {
     TextEditingController descuentoController = editarProducto
         ? TextEditingController(text: descuento.value.toString())
         : TextEditingController();
+    TextEditingController searchController = TextEditingController();
 
     Producto? productoSeleccionado;
     List<Lote> lotesProducto = [];
     Unidad? unidadProducto;
     Lote? loteSeleccionado;
+    bool isSearching = false;
 
     if (editarProducto) {
       productoSeleccionado = productosVenta[index!];
+      unidadProducto =
+          await Unidad.obtenerUnidadPorId(productoSeleccionado.idUnidad!);
+      lotesProducto =
+          await Lote.obtenerLotesDeProducto(productoSeleccionado.idProducto!);
       loteSeleccionado = await Lote.obtenerLotePorId(
           detallesVenta[index].idProducto, detallesVenta[index].idLote);
     }
@@ -102,132 +105,230 @@ class _CreateSalePageState extends State<CreateSalePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: _searchController,
-                      autofocus: true,
-                      decoration: InputDecoration(
-                        hintText: "Buscar producto...",
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () {
-                            _searchController.clear();
-                            setDialogState(() {
-                              nombreProductoBuscado = "";
-                            });
-                          },
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            child: isSearching
+                                ? TextField(
+                                    controller: searchController,
+                                    autofocus: true,
+                                    textAlignVertical: TextAlignVertical.center,
+                                    decoration: InputDecoration(
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              vertical: 8, horizontal: 12),
+                                      hintText: "Buscar producto...",
+                                      prefixIcon: const Icon(Icons.search),
+                                      suffixIcon: IconButton(
+                                        icon: const Icon(Icons.close),
+                                        onPressed: () {
+                                          searchController.clear();
+                                          setDialogState(() {
+                                            isSearching = false;
+                                          });
+                                        },
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(5),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFF493d9e)),
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      setDialogState(() {});
+                                      _buscarProductosPorNombre(value);
+                                    },
+                                  )
+                                : Container(height: 0),
+                          ),
                         ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5),
-                          borderSide:
-                              const BorderSide(color: Color(0xFF493d9e)),
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: isSearching ? 0 : 48,
+                          child: IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () {
+                              setDialogState(() {
+                                isSearching = true;
+                              });
+                            },
+                          ),
                         ),
-                      ),
-                      onChanged: (value) {
-                        setDialogState(() {
-                          nombreProductoBuscado = value;
-                        });
-                        _buscarProductosPorNombre(value);
-                      },
+                        if (!isSearching)
+                          IconButton(
+                            icon: Image.asset(
+                              "lib/assets/iconos/iconoBarras.png",
+                              width: 30,
+                              height: 30,
+                            ),
+                            onPressed: () async {
+                              final String? result =
+                                  await context.push('/barcode-scanner');
+
+                              debugPrint("Código Escaneado: $result");
+                              if (result != null && result.isNotEmpty) {
+                                final producto =
+                                    await Producto.obtenerProductoPorCodigo(
+                                        result);
+
+                                setDialogState(() {
+                                  productoSeleccionado = producto;
+                                });
+
+                                Unidad? unidad =
+                                    await Unidad.obtenerUnidadPorId(
+                                        producto!.idUnidad!);
+                                List<Lote> lotesDisponibles =
+                                    await Lote.obtenerLotesDeProducto(
+                                        producto.idProducto!);
+
+                                setDialogState(() {
+                                  unidadProducto = unidad;
+                                  lotesProducto = lotesDisponibles;
+                                  loteSeleccionado = lotesDisponibles.isNotEmpty
+                                      ? lotesDisponibles.first
+                                      : null;
+                                });
+                              }
+                            },
+                          ),
+                      ],
                     ),
-                    const SizedBox(height: 10),
-                    if (!editarProducto)
+                    if (!editarProducto && isSearching)
                       SizedBox(
                         height: 150,
                         child: productosFiltrados.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Text("No hay productos encontrados"))
                             : ListView.builder(
                                 itemCount: productosFiltrados.length,
                                 itemBuilder: (context, index) {
                                   final producto = productosFiltrados[index];
+
                                   return ListTile(
-                                      title: Text(producto.nombreProducto),
-                                      subtitle: Text(
-                                          "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
-                                      onTap: () async {
-                                        FocusScope.of(context).unfocus();
+                                    leading: SizedBox(
+                                      width: 50,
+                                      height: 50,
+                                      child: producto.rutaImagen == null
+                                          ? Image.asset(
+                                              'lib/assets/iconos/iconoImagen.png',
+                                              fit: BoxFit.cover,
+                                            )
+                                          : Image.file(
+                                              File(producto.rutaImagen!),
+                                              fit: BoxFit.cover,
+                                            ),
+                                    ),
+                                    title: Text(producto.nombreProducto),
+                                    subtitle: Text(
+                                        "S/ ${producto.precioProducto.toStringAsFixed(2)}"),
+                                    onTap: () async {
+                                      FocusScope.of(context).unfocus();
 
-                                        setDialogState(() {
-                                          _searchController.text =
-                                              producto.nombreProducto;
-                                          productoSeleccionado = producto;
-                                        });
-
-                                        Unidad? unidad =
-                                            await Unidad.obtenerUnidadPorId(
-                                                producto.idUnidad!);
-                                        List<Lote> lotesDisponibles =
-                                            await Lote.obtenerLotesDeProducto(
-                                                producto.idProducto!);
-
-                                        setDialogState(() {
-                                          unidadProducto = unidad;
-                                          lotesProducto = lotesDisponibles;
-                                          loteSeleccionado =
-                                              lotesDisponibles.isNotEmpty
-                                                  ? lotesDisponibles.first
-                                                  : null;
-                                        });
-
-                                        debugPrint(
-                                            "Tipo de unidad: ${unidad!.tipoUnidad}");
+                                      setDialogState(() {
+                                        searchController.text =
+                                            producto.nombreProducto;
+                                        productoSeleccionado = producto;
                                       });
+
+                                      Unidad? unidad =
+                                          await Unidad.obtenerUnidadPorId(
+                                              producto.idUnidad!);
+                                      List<Lote> lotesDisponibles =
+                                          await Lote.obtenerLotesDeProducto(
+                                              producto.idProducto!);
+
+                                      setDialogState(() {
+                                        unidadProducto = unidad;
+                                        lotesProducto = lotesDisponibles;
+                                        loteSeleccionado =
+                                            lotesDisponibles.isNotEmpty
+                                                ? lotesDisponibles.first
+                                                : null;
+                                      });
+                                    },
+                                  );
                                 },
                               ),
                       ),
-                    const SizedBox(height: 10),
-                    if (productoSeleccionado != null)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 10),
-                          SizedBox(
-                            width: double.infinity,
-                            child: DropdownButtonFormField<Lote>(
-                              isExpanded: true,
-                              value: lotesProducto.isNotEmpty
-                                  ? loteSeleccionado
-                                  : null,
-                              hint: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(lotesProducto.isEmpty
-                                    ? "No hay lotes disponibles"
-                                    : "Seleccione un lote"),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 30),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Producto: ",
+                              style: const TextStyle(
+                                color:
+                                    Color.fromARGB(255, 124, 33, 243), // Morado
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(5)),
-                              ),
-                              onChanged: lotesProducto.isNotEmpty
-                                  ? (Lote? newValue) {
-                                      setDialogState(() {
-                                        loteSeleccionado = newValue;
-                                      });
-                                    }
-                                  : null,
-                              items: lotesProducto.map((Lote lote) {
-                                return DropdownMenuItem<Lote>(
-                                  value: lote,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: Text(
-                                      "Lote ${lote.idLote}: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? '---'}",
-                                      textAlign: TextAlign.left,
-                                    ),
-                                  ),
-                                );
-                              }).toList(),
                             ),
+                            Text(
+                              productoSeleccionado?.nombreProducto ??
+                                  "No seleccionado",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 30),
+                        Text(
+                          "Precio: S/ ${productoSeleccionado?.precioProducto.toStringAsFixed(2) ?? '---'}",
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 15),
+                        SizedBox(
+                          width: double.infinity,
+                          child: DropdownButtonFormField<Lote>(
+                            isExpanded: true,
+                            value: lotesProducto.isNotEmpty &&
+                                    lotesProducto.any((lote) =>
+                                        lote.idLote == loteSeleccionado?.idLote)
+                                ? lotesProducto.firstWhere((lote) =>
+                                    lote.idLote == loteSeleccionado?.idLote)
+                                : null,
+                            hint: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(lotesProducto.isEmpty
+                                  ? "No hay lotes disponibles"
+                                  : "Seleccione un lote"),
+                            ),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(5)),
+                            ),
+                            onChanged: lotesProducto.isNotEmpty
+                                ? (Lote? newValue) {
+                                    setDialogState(() {
+                                      loteSeleccionado = newValue;
+                                    });
+                                  }
+                                : null,
+                            items: lotesProducto.map((Lote lote) {
+                              return DropdownMenuItem<Lote>(
+                                value: lote,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    "Lote ${lote.idLote}: ${lote.cantidadActual} ${unidadProducto?.tipoUnidad ?? '---'}",
+                                    textAlign: TextAlign.left,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ),
-                        ],
-                      ),
-                    const SizedBox(height: 10),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 15),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -259,7 +360,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 15),
                     CustomTextField(
                       label: "Descuento",
                       controller: descuentoController,
@@ -271,7 +372,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         descuento.value = double.tryParse(value) ?? 0.00;
                       },
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 15),
                     ValueListenableBuilder(
                       valueListenable: cantidad,
                       builder: (context, cantidadValue, child) {

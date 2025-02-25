@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/venta.dart';
-import 'package:multiinventario/widgets/error_dialog.dart';
 
 class DetailsClientPage extends StatefulWidget {
   final int idCliente;
@@ -28,20 +27,15 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
   Future<void> _cargarDatosCliente() async {
     Cliente? cliente = await Cliente.obtenerClientePorId(widget.idCliente);
 
-    if (cliente != null) {
-      setState(() {
-        this.cliente = cliente;
-      });
+    setState(() {
+      this.cliente = cliente;
+    });
 
-      List<Venta> ventasCliente =
-          await Venta.obtenerVentasDeCliente(cliente.idCliente!);
-      setState(() {
-        this.ventasCliente = ventasCliente;
-      });
-    } else {
-      ErrorDialog(
-          context: context, errorMessage: "No se pudo encontrar el cliente.");
-    }
+    List<Venta> ventasCliente =
+        await Venta.obtenerVentasDeCliente(cliente!.idCliente!);
+    setState(() {
+      this.ventasCliente = ventasCliente;
+    });
   }
 
   @override
@@ -79,7 +73,9 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                       FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          cliente?.dniCliente ?? '-' * 7,
+                          (cliente?.dniCliente?.isNotEmpty ?? false)
+                              ? cliente!.dniCliente as String
+                              : '-------',
                           style: const TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -113,6 +109,8 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                             fontSize: 18,
                           ),
                         ),
+                        Text(
+                            'Correo electrónico: ${(cliente?.dniCliente?.isNotEmpty ?? false) ? cliente!.dniCliente : '---'}'),
                         FutureBuilder<DateTime?>(
                           future: cliente?.obtenerFechaUltimaVenta(),
                           builder: (context, snapshot) {
@@ -156,10 +154,11 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                           },
                         ),
                         Text(
-                          "Estado: ${cliente!.esDeudor ? "Deudor" : "Regular"}",
+                          "Estado: ${cliente?.esDeudor == true ? "Deudor" : "Regular"}",
                           style: TextStyle(
-                            color:
-                                cliente!.esDeudor ? Colors.red : Colors.green,
+                            color: cliente?.esDeudor == true
+                                ? Colors.red
+                                : Colors.green,
                           ),
                         ),
                       ],

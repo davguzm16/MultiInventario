@@ -139,6 +139,39 @@ class Producto {
     return null;
   }
 
+  static Future<Producto?> obtenerProductoPorCodigo(
+      String codigoProducto) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery(
+        '''
+      SELECT * FROM Productos WHERE codigoProducto = ?
+      ''',
+        [codigoProducto],
+      );
+
+      if (result.isNotEmpty) {
+        return Producto(
+          idProducto: result.first['idProducto']! as int,
+          idUnidad: result.first['idUnidad']! as int,
+          codigoProducto: result.first['codigoProducto'] as String?,
+          nombreProducto: result.first['nombreProducto'] as String,
+          precioProducto: (result.first['precioProducto'] as num).toDouble(),
+          stockActual: (result.first['stockActual'] as num).toDouble(),
+          stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
+          stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
+          estaDisponible: (result.first['estaDisponible'] as int) == 1,
+          rutaImagen: result.first['rutaImagen'] as String?,
+        );
+      }
+    } catch (e) {
+      debugPrint(
+          "Error al obtener el producto con código $codigoProducto: ${e.toString()}");
+    }
+
+    return null;
+  }
+
   static Future<bool> actualizarProducto(Producto producto) async {
     try {
       final db = await DatabaseController().database;

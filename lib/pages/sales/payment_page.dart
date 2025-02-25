@@ -282,6 +282,8 @@ class _PaymentPageState extends State<PaymentPage> {
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
             onPressed: () async {
+              FocusScope.of(context).unfocus();
+
               if (crearCliente) {
                 if (_nombreController.text.isEmpty) {
                   ErrorDialog(
