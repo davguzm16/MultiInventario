@@ -5,7 +5,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
@@ -29,6 +28,7 @@ class ReportController {
       final file = File(path);
       if (await file.exists()) {
         Navigator.push(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (context) => _PDFViewerScreen(pdfPath: path),

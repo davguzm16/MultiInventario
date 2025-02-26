@@ -274,6 +274,12 @@ class Lote {
 
     try {
       final db = await DatabaseController().database;
+
+      String fechaInicioStr =
+          "${fechaInicio.year}-${fechaInicio.month.toString().padLeft(2, '0')}-${fechaInicio.day.toString().padLeft(2, '0')} 00:00:00";
+      String fechaFinalStr =
+          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')} 23:59:59";
+
       final result = await db.rawQuery('''
       SELECT idLote, idProducto, cantidadActual, cantidadComprada,
               cantidadPerdida, precioCompra, precioCompraUnidad,
@@ -281,23 +287,70 @@ class Lote {
       FROM lotes 
       WHERE fechaCompra BETWEEN ? AND ?
       ORDER BY fechaCompra ASC
-      ''', [fechaInicio.toIso8601String(), fechaFinal.toIso8601String()]);
+      ''', [fechaInicioStr, fechaFinalStr]);
+
       if (result.isNotEmpty) {
         for (var item in result) {
           lote.add(Lote(
-              idLote: item['idLote'] as int,
-              idProducto: item['idProducto'] as int,
-              cantidadActual: item['cantidadActual'] as int,
-              cantidadComprada: item['cantidadComprada'] as int,
-              cantidadPerdida: item['cantidadPerdida'] as int,
-              precioCompra: item['precioCompra'] as double,
-              precioCompraUnidad: item['preciocompraUnidad'] as double,
-              fechaCaducidad: DateTime.parse(item['fechaCaducidad'] as String),
-              fechaCompra: DateTime.parse(item['fechaCompra'] as String)));
+            idLote: item['idLote'] as int,
+            idProducto: item['idProducto'] as int,
+            cantidadActual: item['cantidadActual'] as int,
+            cantidadComprada: item['cantidadComprada'] as int,
+            cantidadPerdida: item['cantidadPerdida'] as int,
+            precioCompra: item['precioCompra'] as double,
+            precioCompraUnidad: item['precioCompraUnidad'] as double,
+            fechaCaducidad: DateTime.parse(item['fechaCaducidad'] as String),
+            fechaCompra: DateTime.parse(item['fechaCompra'] as String),
+          ));
         }
       }
     } catch (e) {
-      debugPrint("Error al obtener los loten en la fechas: ${e.toString()}");
+      debugPrint("Error al obtener los lotes en las fechas: ${e.toString()}");
+    }
+    return lote;
+  }
+
+  static Future<List<Lote>> obtenerLotesPorRangoDeFechasYDias(
+      DateTime fechaInicio,
+      DateTime fechaFinal,
+      int diasAntesVencimiento) async {
+    List<Lote> lote = [];
+
+    try {
+      final db = await DatabaseController().database;
+
+      String fechaInicioStr =
+          "${fechaInicio.year}-${fechaInicio.month.toString().padLeft(2, '0')}-${fechaInicio.day.toString().padLeft(2, '0')} 00:00:00";
+      String fechaFinalStr =
+          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')} 23:59:59";
+
+      final result = await db.rawQuery('''
+      SELECT idLote, idProducto, cantidadActual, cantidadComprada,
+              cantidadPerdida, precioCompra, precioCompraUnidad,
+              fechaCaducidad, fechaCompra
+      FROM lotes 
+      WHERE fechaCompra BETWEEN ? AND ?
+      AND fechaCaducidad <= DATE(?, '+$diasAntesVencimiento days')
+      ORDER BY fechaCompra ASC
+      ''', [fechaInicioStr, fechaFinalStr, fechaFinalStr]);
+
+      if (result.isNotEmpty) {
+        for (var item in result) {
+          lote.add(Lote(
+            idLote: item['idLote'] as int,
+            idProducto: item['idProducto'] as int,
+            cantidadActual: item['cantidadActual'] as int,
+            cantidadComprada: item['cantidadComprada'] as int,
+            cantidadPerdida: item['cantidadPerdida'] as int,
+            precioCompra: item['precioCompra'] as double,
+            precioCompraUnidad: item['precioCompraUnidad'] as double,
+            fechaCaducidad: DateTime.parse(item['fechaCaducidad'] as String),
+            fechaCompra: DateTime.parse(item['fechaCompra'] as String),
+          ));
+        }
+      }
+    } catch (e) {
+      debugPrint("Error al obtener los lotes en las fechas: ${e.toString()}");
     }
     return lote;
   }

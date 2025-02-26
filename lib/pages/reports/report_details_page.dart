@@ -23,6 +23,7 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
     DateTime selectedFechaInicio = DateTime.now();
     DateTime selectedFechaFinal = DateTime.now();
     String _selectedReport = "Reporte general detallado de ventas";
+    // ignore: unused_field
     bool _isLoading = false;
 
     //pantalla de carga
@@ -33,6 +34,10 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
 
   if (_selectedReport == "Reporte general detallado de ventas") {
     await generarDetallesVentas(context, selectedFechaInicio, selectedFechaFinal);
+  }else if(_selectedReport == "Reporte detallado de ventas al contado"){
+    await generarDetallesTipo(context, selectedFechaInicio, selectedFechaFinal, true);
+  }else if(_selectedReport == "Reporte detallado de ventas al crédito"){
+    await generarDetallesTipo(context, selectedFechaInicio, selectedFechaFinal, false);
   }
 
   setState(() {
@@ -61,6 +66,7 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
   }
 
   
+  // ignore: non_constant_identifier_names
   bool Selected = true;
   @override
   Widget build(BuildContext context) {
@@ -195,7 +201,7 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
                           selectedFechaFinal = picked;
                           fechaFinal.text =
                               picked.toIso8601String().split('T')[0];
-                        if(selectedFechaInicio!.isAfter(selectedFechaFinal)){
+                        if(selectedFechaInicio.isAfter(selectedFechaFinal)){
                           selectedFechaInicio = selectedFechaFinal;
                           fechaInicio.text = selectedFechaFinal.toIso8601String().split('T')[0];
                         }
@@ -282,9 +288,10 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-              pw.Text("Total: S/ ${total}"),
-              pw.Text("Ganancias estimadas: S/ ${ganancia}"),
+              pw.Text("Total: S/ $total"),
+              pw.Text("Ganancias estimadas: S/ $ganancia"),
               pw.SizedBox(height: 10),
+              // ignore: deprecated_member_use
               pw.Table.fromTextArray(
                 headers: [
                   "#", "Fecha y hora", "Codigo de venta", "Tipo", "Cliente","Codigo del producto", "Descripcion del producto", "Cantidad", "Precio de compra por unidad (S/)","Precio de ventar por unidad (S/)" ,"Descuento (S/)", "Subtotal (S/)", "Ganancia estimada (S/)", "Estado"
@@ -320,13 +327,14 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
         ),
       );
     }catch(e){
-      debugPrint("Error ${e}");
-    };
+      debugPrint("Error $e");
+    }
     //metodos de report_controller.dart
     
     //generar pdf
-    final path = await report.generarPDF(pdf, "ventas_contado.pdf");
+    final path = await report.generarPDF(pdf, "reporte_detalles_general.pdf");
     //mostrar pdf
+    // ignore: use_build_context_synchronously
     report.mostrarPDF(context, path);
   }
 
@@ -353,29 +361,157 @@ Future<Map<String, dynamic>> obtenerDatosTabla(DateTime selectedFechaInicio, sel
     String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
     String nombreProducto = producto != null? producto.nombreProducto : "Desconocido";
     double precioCompraUnidad = lote != null ? lote.precioCompra : 0;
-    double precioVenta = producto != null ? producto.precioProducto : 0;
     String estado = (ventas?.montoCancelado == ventas?.montoTotal) ? "Cancelado" : "No cancelado";
 
     ganancia = detalles[i].gananciaProducto;
     total = detalles[i].subtotalProducto;
 
     data.add([
-      "${i + 1}",  
-      "${ventas?.fechaVenta}",       
-      "${ventas?.idVenta}", 
-      "${(ventas?.esAlContado == true) ? "Contado" : "Crédito"}" , 
-      nombreCliente, 
-      "${detalles[i].idProducto}", 
-      nombreProducto, 
-      "${detalles[i].cantidadProducto}",
-      "${detalles[i].precioUnidadProducto}",
-      "${precioCompraUnidad}",
-      "${precioVenta}",
-      "${detalles[i].descuentoProducto}",
-      "${detalles[i].subtotalProducto}",
-      "${detalles[i].gananciaProducto}",
+      "${i + 1}",  //indice
+      "${ventas?.fechaVenta}", //fecha y hora       
+      "${ventas?.idVenta}", //codigo de venta
+      ((ventas?.esAlContado == true) ? "Contado" : "Crédito") , //tipo
+      nombreCliente, //cliente
+      "${detalles[i].idProducto}", //codigo del producto 
+      nombreProducto,  //nombre del produvto (descripcion del producto)
+      "${detalles[i].cantidadProducto}", //cantidad
+      "$precioCompraUnidad",       //precio compra unidad
+      "${detalles[i].precioUnidadProducto}", //precio venta por unidad
+      "${detalles[i].descuentoProducto}", //descuento
+      "${detalles[i].subtotalProducto}", //subtotal
+      "${detalles[i].gananciaProducto}", //ganancia
       estado
     ]);
+  
+}
+return {
+  "data": data,
+  "ganancia": ganancia,
+  "total" : total
+  
+  };
+}
+
+
+  Future<void> generarDetallesTipo(BuildContext context, DateTime selectedFechaInicio, DateTime selectedFechaFinal, bool tipo) async {
+    final ReportController report  = ReportController(); 
+    final pdf = pw.Document();
+    final datosTablaGeneral = await obtenerDatosTipoTabla(selectedFechaInicio, selectedFechaFinal, tipo);
+    final datosTabla = datosTablaGeneral["data"] as List<List<String>>;
+    final ganancia = datosTablaGeneral["ganancia"] as double;
+    final total = datosTablaGeneral["total"] as double;
+    try{
+
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4.landscape, 
+          
+          margin: pw.EdgeInsets.all(20),
+          build: (pw.Context context) {
+            return [
+              pw.Text("Reporte detallado de ventas al ${(tipo == true) ? "contado" : "crédito"}",
+                  style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+              pw.SizedBox(height: 10),
+              pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
+              pw.Text("Total: S/ $total"),
+              pw.Text("Ganancias estimadas: S/ $ganancia"),
+              pw.SizedBox(height: 10),
+              // ignore: deprecated_member_use
+              pw.Table.fromTextArray(
+                headers: [
+                  "#", "Fecha y hora", "Codigo de venta", "Tipo", "Cliente","Codigo del producto", "Descripcion del producto", "Cantidad", "Precio de compra por unidad (S/)","Precio de ventar por unidad (S/)" ,"Descuento (S/)", "Subtotal (S/)", "Ganancia estimada (S/)", "Estado"
+                ],
+                //generar filas
+                data: datosTabla,
+                
+                border: pw.TableBorder.all(),
+                cellStyle: pw.TextStyle(fontSize: 10),
+                headerStyle: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.white),
+                headerDecoration: pw.BoxDecoration(color: PdfColors.black, borderRadius: pw.BorderRadius.circular(2)),
+                headerAlignments: {0: pw.Alignment.center, 1: pw.Alignment.center, 2: pw.Alignment.centerLeft, 3: pw.Alignment.center, 4: pw.Alignment.center, 5: pw.Alignment.center, 6: pw.Alignment.center, 7: pw.Alignment.center, 8: pw.Alignment.center, 9: pw.Alignment.center, 10: pw.Alignment.center, 11: pw.Alignment.center, 12: pw.Alignment.center, 13: pw.Alignment.center},
+                //Ajustar tamaño
+                columnWidths: {
+                  0: pw.FixedColumnWidth(35),  // Índice
+                  1: pw.FixedColumnWidth(60),  // Fecha y hora
+                  2: pw.FixedColumnWidth(50),  // Código de venta
+                  3: pw.FixedColumnWidth(50),  // Tipos
+                  4: pw.FixedColumnWidth(80),  // Cliente
+                  5: pw.FixedColumnWidth(60), // Codigo del producto
+                  6: pw.FixedColumnWidth(80),  // Descripcion
+                  7: pw.FixedColumnWidth(35),  // Cantidad
+                  8: pw.FixedColumnWidth(55),  // Precio de compra
+                  9: pw.FixedColumnWidth(55),  // Precio de venta
+                  10: pw.FixedColumnWidth(60), // Descuento
+                  11: pw.FixedColumnWidth(60), // Subtotal 
+                  12: pw.FixedColumnWidth(60), // ganancia
+                  13: pw.FixedColumnWidth(60) //estado
+                },
+              ),
+            ];
+          },
+        ),
+      );
+    }catch(e){
+      debugPrint("Error $e");
+    }
+    //metodos de report_controller.dart
+    
+    //generar pdf
+    final path = await report.generarPDF(pdf, "reporte_detalles_${(tipo == true)? 'contado' : 'credito'}.pdf");
+    //mostrar pdf
+    // ignore: use_build_context_synchronously
+    report.mostrarPDF(context, path);
+  }
+
+Future<Map<String, dynamic>> obtenerDatosTipoTabla(DateTime selectedFechaInicio, selectedFechaFinal, bool tipo) async {
+  List<DetalleVenta> detalles = [];
+  List<List<String>> data = [];
+  double ganancia = 0;
+  double total = 0;
+
+  detalles = await DetalleVenta.obtenerDetallesPorFechas(selectedFechaInicio, selectedFechaFinal);
+      
+  
+  for (int i = 0; i < detalles.length; i++) {
+    
+
+    Venta? ventas;
+    if (detalles[i].idVenta != null) {
+      ventas = await Venta.obtenerVentaPorID(detalles[i].idVenta!);
+    }
+
+    if(ventas?.esAlContado == tipo){
+    
+    Lote? lote = await Lote.obtenerLotePorId(detalles[i].idProducto, detalles[i].idLote);
+    Producto? producto = await Producto.obtenerProductoPorID(detalles[i].idProducto);
+    Cliente? cliente;
+    if (ventas != null) {
+      cliente = await Cliente.obtenerClientePorId(ventas.idCliente);
+    }
+    String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
+    String nombreProducto = producto != null? producto.nombreProducto : "Desconocido";
+    double precioCompraUnidad = lote != null ? lote.precioCompra : 0;
+    String estado = (ventas?.montoCancelado == ventas?.montoTotal) ? "Cancelado" : "No cancelado";
+
+    ganancia = detalles[i].gananciaProducto;
+    total = detalles[i].subtotalProducto;
+
+    data.add([
+      "${i + 1}",  //indice
+      "${ventas?.fechaVenta}", //fecha y hora       
+      "${ventas?.idVenta}", //codigo de venta
+      ((ventas?.esAlContado == true) ? "Contado" : "Crédito") , //tipo
+      nombreCliente, //cliente
+      "${detalles[i].idProducto}", //codigo del producto 
+      nombreProducto,  //nombre del produvto (descripcion del producto)
+      "${detalles[i].cantidadProducto}", //cantidad
+      "$precioCompraUnidad",       //precio compra unidad
+      "${detalles[i].precioUnidadProducto}", //precio venta por unidad
+      "${detalles[i].descuentoProducto}", //descuento
+      "${detalles[i].subtotalProducto}", //subtotal
+      "${detalles[i].gananciaProducto}", //ganancia
+      estado
+    ]);}
   
 }
 return {

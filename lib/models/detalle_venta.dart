@@ -44,7 +44,7 @@ class DetalleVenta {
       return true;
     } catch (e) {
       debugPrint(
-          "Error al asignar la relación de detalle de venta: \${e.toString()}");
+          "Error al asignar la relación de detalle de venta: ${e.toString()}");
     }
     return false;
   }
@@ -60,7 +60,7 @@ class DetalleVenta {
       return true;
     } catch (e) {
       debugPrint(
-          "Error al deshacer la relación de detalle de venta: \${e.toString()}");
+          "Error al deshacer la relación de detalle de venta: ${e.toString()}");
     }
     return false;
   }
@@ -91,7 +91,7 @@ class DetalleVenta {
 
       return detalles;
     } catch (e) {
-      debugPrint("Error al obtener los detalles de venta: \${e.toString()}");
+      debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
       return [];
     }
   }
@@ -113,5 +113,26 @@ class DetalleVenta {
       debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
     }
     return detalles;
+  }
+
+  static Future<int> obtenerCantidadVendidaPorLote(int idLote) async {
+    try {
+      final db = await DatabaseController().database;
+
+      // Obtener la cantidad total vendida para el lote especificado
+      final result = await db.rawQuery('''
+      SELECT SUM(cantidadProducto) as cantidadVendida
+      FROM DetallesVentas
+      WHERE idLote = ?
+    ''', [idLote]);
+
+      if (result.isNotEmpty && result.first['cantidadVendida'] != null) {
+        return result.first['cantidadVendida'] as int;
+      }
+    } catch (e) {
+      debugPrint(
+          "Error al obtener la cantidad vendida por lote: ${e.toString()}");
+    }
+    return 0;
   }
 }

@@ -1,0 +1,2 @@
+D:/CzarProgramas/ProyectoGaMulti/MultiInventario/android/app/.cxx/Debug/4b602m36/x86/CMakeFiles/edit_cache.dir
+D:/CzarProgramas/ProyectoGaMulti/MultiInventario/android/app/.cxx/Debug/4b602m36/x86/CMakeFiles/rebuild_cache.dir

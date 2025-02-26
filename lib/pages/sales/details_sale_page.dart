@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:multiinventario/models/cliente.dart';
@@ -6,6 +6,9 @@ import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:multiinventario/widgets/error_dialog.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:pdf/pdf.dart';
+import 'package:multiinventario/controllers/report_controller.dart';
 
 class DetailsSalePage extends StatefulWidget {
   final int idVenta;
@@ -76,7 +79,9 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                 Icons.print,
                 size: 35,
               ),
-              onPressed: () {},
+              onPressed: () {
+                generateBoletaVenta();
+              },
             ),
           ),
         ],
@@ -272,5 +277,301 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
         style: TextStyle(fontSize: 13),
       ),
     );
+  }
+
+//metodo para generar la boleta
+  Future<void> generateBoletaVenta() async {
+    final pdf = pw.Document();
+    final ReportController report = ReportController();
+    final datos = await obtenerDatosTabla();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Expanded(
+                    flex: 4,
+                    child: pw.Column(
+                      children: [
+                        pw.Text("Multiservicios Emma",
+                            textAlign: pw.TextAlign.center,
+                            style: pw.TextStyle(
+                                fontSize: 20, fontWeight: pw.FontWeight.bold)),
+                        pw.Container(
+                          decoration: pw.BoxDecoration(
+                            borderRadius: pw.BorderRadius.circular(10),
+                            border: pw.Border.all(
+                              color: PdfColor.fromHex('#0e5087'),
+                              width: 1,
+                            ),
+                          ),
+                          padding: pw.EdgeInsets.all(5),
+                          child: pw.Column(
+                              children: [pw.Text('De: Emma Belido Melendez')]),
+                        ),
+                        pw.Text(
+                            "VENTA DE ABARROTES, ARTÍCULOS DE \n FERRETERIA, LIBRERÍA Y OTROS",
+                            textAlign: pw.TextAlign.center,
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        pw.Text(
+                            "Av. José Carlos Mariátegui N°200 Quinuapata Ayacucho - Huamanga - Ayacucho",
+                            textAlign: pw.TextAlign.center,
+                            style:
+                                pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                        pw.Text("Cel.: #999616681"),
+                        pw.SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                  pw.Expanded(
+                    flex: 3,
+                    child: pw.Column(
+                      children: [
+                        pw.Container(
+                          decoration: pw.BoxDecoration(
+                            borderRadius: pw.BorderRadius.circular(10),
+                            border: pw.Border.all(
+                              color: PdfColor.fromHex('#0e5087'),
+                              width: 2,
+                            ),
+                          ),
+                          padding: pw.EdgeInsets.all(8),
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.center,
+                            children: [
+                              pw.Text(
+                                'R.U.C N° 10282899618',
+                                textAlign: pw.TextAlign.center,
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColor.fromHex('#0e5087'),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              pw.Text(
+                                'BOLETA DE VENTA',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColor.fromHex('#0e5087'),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              pw.Text(
+                                '002 - ${venta?.codigoBoleta ?? "---"}',
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  color: PdfColor.fromHex('#0e5087'),
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        pw.SizedBox(height: 10),
+                        pw.Container(
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(
+                              color: PdfColor.fromHex('#0e5087'),
+                              width: 2,
+                            ),
+                          ),
+                          child: pw.Column(children: [
+                            pw.Row(
+                              children: [
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    color: PdfColor.fromHex('#0e5087'),
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      "DÍA",
+                                      style: pw.TextStyle(
+                                        color: PdfColors.white, // Texto blanco
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                pw.Container(
+                                  width: 2, // Línea divisoria
+                                  color: PdfColor.fromHex('#0e5087'),
+                                ),
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    color: PdfColor.fromHex('#0e5087'),
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      "MES",
+                                      style: pw.TextStyle(
+                                        color: PdfColors.white,
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                pw.Container(
+                                  width: 2,
+                                  color: PdfColor.fromHex('#0e5087'),
+                                ),
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    color: PdfColor.fromHex('#0e5087'),
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      "AÑO",
+                                      style: pw.TextStyle(
+                                        color: PdfColors.white,
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            pw.Row(
+                              children: [
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      venta?.fechaVenta?.day
+                                              .toString()
+                                              .padLeft(2, '0') ??
+                                          "--",
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                pw.Container(
+                                  width: 2, // Línea divisoria
+                                  color: PdfColor.fromHex('#0e5087'),
+                                ),
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      venta?.fechaVenta?.month
+                                              .toString()
+                                              .padLeft(2, '0') ??
+                                          "--",
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                pw.Container(
+                                  width: 2,
+                                  color: PdfColor.fromHex('#0e5087'),
+                                ),
+                                pw.Expanded(
+                                  child: pw.Container(
+                                    padding:
+                                        pw.EdgeInsets.symmetric(vertical: 5),
+                                    alignment: pw.Alignment.center,
+                                    child: pw.Text(
+                                      venta?.fechaVenta?.year.toString() ??
+                                          "---",
+                                      style: pw.TextStyle(
+                                        fontWeight: pw.FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ]),
+                        ),
+                        pw.SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              pw.Text("Cliente: ${cliente?.nombreCliente ?? '--'}",
+                  textAlign: pw.TextAlign.left),
+              pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]),
+              pw.SizedBox(height: 10),
+              pw.Table.fromTextArray(
+                border: pw.TableBorder.all(),
+                columnWidths: {
+                  0: pw.FixedColumnWidth(50),
+                  1: pw.FlexColumnWidth(),
+                  2: pw.FixedColumnWidth(80),
+                  3: pw.FixedColumnWidth(80),
+                },
+                headers: [
+                  pw.Text("CANT.", textAlign: pw.TextAlign.center),
+                  pw.Text("DESCRIPCIÓN", textAlign: pw.TextAlign.center),
+                  pw.Text("P. UNIT.", textAlign: pw.TextAlign.center),
+                  pw.Text("TOTAL", textAlign: pw.TextAlign.center),
+                ],
+                data: datos,
+              ),
+              pw.SizedBox(height: 20),
+              pw.Align(
+                  alignment: pw.Alignment.centerRight,
+                  child: pw.Text("TOTAL S/ ${venta?.montoTotal}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              pw.SizedBox(height: 20),
+            ],
+          );
+        },
+      ),
+    );
+
+    //metodos de report_controller.dart
+
+    //generar pdf
+    final path = await report.generarPDF(pdf, "boleta.pdf");
+    //mostrar pdf
+    report.mostrarPDF(context, path);
+  }
+
+  //extraer los datos para la tabla
+  Future<List<List<String>>> obtenerDatosTabla() async {
+    List<List<String>> data = [];
+    List<DetalleVenta> detalles = [];
+    try {
+      if (venta?.idVenta != null) {
+        detalles =
+            await DetalleVenta.obtenerDetallesPorVenta(venta!.idVenta as int);
+        for (int i = 0; i < detalles.length; i++) {
+          Producto? producto =
+              await Producto.obtenerProductoPorID(detalles[i].idProducto);
+          String nombreProducto =
+              producto != null ? producto.nombreProducto : "Desconocido";
+          data.add([
+            "${detallesVenta[i].cantidadProducto}",
+            nombreProducto,
+            "${detallesVenta[i].precioUnidadProducto}",
+            "${detallesVenta[i].subtotalProducto}"
+          ]);
+        }
+      }
+    } catch (e) {
+      debugPrint("error: ${e.toString()}");
+      return [];
+    }
+    return data;
   }
 }

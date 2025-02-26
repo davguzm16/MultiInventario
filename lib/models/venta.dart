@@ -225,24 +225,34 @@ class Venta {
 
     try {
       final db = await DatabaseController().database;
-      final result = await db.rawQuery('''
-        SELECT idVenta, idCliente, codigoBoleta, fechaVenta,
-                montoTotal, montoCancelado, esAlContado
-        FROM Ventas 
-        WHERE fechaVenta BETWEEN ? AND ?
-        ORDER BY fechaVenta ASC
-      ''', [fechaInicio.toIso8601String(), fechaFinal.toIso8601String()]);
 
-      for (var item in result) {
-        ventas.add(Venta(
-          idVenta: item['idVenta'] as int,
-          idCliente: item['idCliente'] as int,
-          codigoBoleta: item['codigoBoleta'] as String,
-          fechaVenta: DateTime.parse(item['fechaVenta'] as String),
-          montoTotal: (item['montoTotal'] as num).toDouble(),
-          montoCancelado: (item['montoCancelado'] as num).toDouble(),
-          esAlContado: (item['esAlContado'] as int) == 1,
-        ));
+      String fechaInicioStr =
+          "${fechaInicio.year}-${fechaInicio.month.toString().padLeft(2, '0')}-${fechaInicio.day.toString().padLeft(2, '0')} 00:00:00";
+      String fechaFinalStr =
+          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')} 23:59:59";
+      debugPrint(fechaInicioStr);
+      debugPrint(fechaFinalStr);
+      final result = await db.rawQuery('''
+      SELECT idVenta, idCliente, codigoBoleta, fechaVenta,
+              montoTotal, montoCancelado, esAlcontado
+      FROM Ventas 
+      WHERE fechaVenta BETWEEN ? AND ?
+      ORDER BY fechaVenta ASC
+      ''', [fechaInicioStr, fechaFinalStr]);
+      debugPrint('hola $result');
+      if (result.isNotEmpty) {
+        for (var item in result) {
+          ventas.add(Venta(
+            idVenta: item['idVenta'] as int,
+            idCliente: item['idCliente'] as int,
+            codigoBoleta: item['codigoBoleta'] as String,
+            fechaVenta: DateTime.parse(item['fechaVenta'] as String),
+            montoTotal: (item['montoTotal'] as num).toDouble(),
+            montoCancelado: (item['montoCancelado'] as num).toDouble(),
+            esAlContado: (item['esAlContado'] as int) == 1,
+          ));
+        }
+        debugPrint("Ventas: $ventas");
       }
     } catch (e) {
       debugPrint("Error al obtener las ventas en la fechas: ${e.toString()}");

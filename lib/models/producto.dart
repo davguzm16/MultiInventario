@@ -22,7 +22,8 @@ class Producto {
   String? rutaImagen;
   DateTime? fechaCreacion;
   DateTime? fechaModificacion;
-
+  
+String get descripcion => nombreProducto;
   // Constructor
   Producto({
     this.idProducto,

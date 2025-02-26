@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
-import 'package:pdf/widgets.dart' as pw;
+import 'package:multiinventario/pages/reports/report_lotes.dart';
 import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:go_router/go_router.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -15,16 +17,6 @@ class _ReportsPageState extends State<ReportsPage> {
   bool _isLoading = false;
   final ReportController report = ReportController();
 
-  void _generateReport() async {
-    setState(() {
-      _isLoading = true;
-    });
-    await generarVentasContado(context);
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -32,7 +24,10 @@ class _ReportsPageState extends State<ReportsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Mis Reportes"),
+        title: const Text(
+          "Mis ventas",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
         elevation: 0,
       ),
       body: _isLoading
@@ -49,29 +44,40 @@ class _ReportsPageState extends State<ReportsPage> {
                     4.0, // Ajustado para botones más anchos que altos
                 children: [
                   _buildReportButton(
-                    title: "Reporte Detallado de Ventas",
-                    icon: Icons.receipt_long,
-                    onPressed: () => _generateDetailedSalesReport(),
-                  ),
+                      title: "Reporte Detallado de Ventas",
+                      icon: Icons.receipt_long,
+                      onPressed: () async {
+                        await context.push('/reports/report-details-page');
+                      }),
                   _buildReportButton(
-                    title: "Reporte de Ventas",
-                    icon: Icons.point_of_sale,
-                    onPressed: () => _generateSalesReport(),
-                  ),
+                      title: "Reporte de Ventas",
+                      icon: Icons.point_of_sale,
+                      onPressed: () async {
+                        await context.push('/reports/report-sales-page');
+                      }),
                   _buildReportButton(
                     title: "Reporte de Productos Vendidos",
                     icon: Icons.shopping_cart,
-                    onPressed: () => _generateSoldProductsReport(),
+                    onPressed: () async {
+                      await context.push('/reports/report-productos-vendidos');
+                    },
                   ),
                   _buildReportButton(
-                    title: "Reporte de Inventario",
-                    icon: Icons.inventory,
-                    onPressed: () => _generateInventoryReport(),
-                  ),
+                      title: "Reporte de Inventario",
+                      icon: Icons.inventory,
+                      onPressed: () async {
+                        await context
+                            .push('/reports/report-general-inventario');
+                      }),
                   _buildReportButton(
                     title: "Reporte de Lotes",
                     icon: Icons.ballot,
-                    onPressed: () => _generateLotsReport(),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ReportLotesPage(),
+                      ),
+                    ),
                   ),
                   _buildReportButton(
                     title: "Reporte de Deudores",
@@ -105,7 +111,7 @@ class _ReportsPageState extends State<ReportsPage> {
               Icon(
                 icon,
                 size: 32,
-                color: Colors.purple,
+                color: const Color.fromRGBO(73, 61, 158, 1),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -130,6 +136,7 @@ class _ReportsPageState extends State<ReportsPage> {
   }
 
   // Métodos para generar cada tipo de reporte
+  // ignore: unused_element
   void _generateDetailedSalesReport() async {
     _showDateRangeDialog(
       'Reporte Detallado de Ventas',
@@ -139,147 +146,6 @@ class _ReportsPageState extends State<ReportsPage> {
           // Implementa la lógica para generar el reporte detallado de ventas
           debugPrint(
               'Generando reporte detallado de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
-        } finally {
-          setState(() => _isLoading = false);
-        }
-      },
-    );
-  }
-
-  void _generateSalesReport() async {
-    _showDateRangeDialog(
-      'Reporte de Ventas',
-      (DateTime startDate, DateTime endDate) async {
-        setState(() => _isLoading = true);
-        try {
-          // Implementa la lógica para generar el reporte de ventas
-          debugPrint(
-              'Generando reporte de ventas desde ${startDate.toString()} hasta ${endDate.toString()}');
-        } finally {
-          setState(() => _isLoading = false);
-        }
-      },
-    );
-  }
-
-  void _generateSoldProductsReport() {
-    _showDateRangeDialog(
-      'Reporte de Productos Vendidos',
-      (DateTime startDate, DateTime endDate) async {
-        setState(() => _isLoading = true);
-        try {
-          // Crear el documento PDF
-          final pdf = pw.Document();
-
-          // Obtener datos de la base de datos y generar el PDF
-          pdf.addPage(
-            pw.MultiPage(
-              pageFormat: PdfPageFormat.a4,
-              margin: const pw.EdgeInsets.all(20),
-              build: (pw.Context context) {
-                return [
-                  pw.Text("Reporte de Productos Vendidos",
-                      style: pw.TextStyle(
-                          fontSize: 18, fontWeight: pw.FontWeight.bold)),
-                  pw.SizedBox(height: 10),
-                  pw.Text(
-                      "Período: ${startDate.day}/${startDate.month}/${startDate.year} - ${endDate.day}/${endDate.month}/${endDate.year}"),
-                  pw.SizedBox(height: 20),
-                  pw.Table.fromTextArray(
-                    headers: [
-                      "Ranking",
-                      "Código",
-                      "Producto",
-                      "Cantidad Total",
-                      "Precio Unitario",
-                      "Descuento Total",
-                      "Total Ventas",
-                      "Ganancias"
-                    ],
-                    data: [
-                      [
-                        "1",
-                        "001",
-                        "Producto Ejemplo",
-                        "10",
-                        "S/. 50.00",
-                        "S/. 5.00",
-                        "S/. 495.00",
-                        "S/. 100.00"
-                      ],
-                      // Aquí irán los datos reales de tu base de datos
-                    ],
-                    border: pw.TableBorder.all(),
-                    cellStyle: pw.TextStyle(fontSize: 10),
-                    headerStyle: pw.TextStyle(
-                        fontSize: 12,
-                        fontWeight: pw.FontWeight.bold,
-                        color: PdfColors.white),
-                    headerDecoration: pw.BoxDecoration(
-                        color: PdfColors.black,
-                        borderRadius: pw.BorderRadius.circular(2)),
-                    headerAlignments: {
-                      0: pw.Alignment.center,
-                      1: pw.Alignment.center,
-                      2: pw.Alignment.centerLeft,
-                      3: pw.Alignment.center,
-                      4: pw.Alignment.center,
-                      5: pw.Alignment.center,
-                      6: pw.Alignment.center,
-                      7: pw.Alignment.center,
-                    },
-                  ),
-                ];
-              },
-            ),
-          );
-
-          // Generar y mostrar el PDF
-          final path = await report.generarPDF(pdf, "productos_vendidos.pdf");
-          if (mounted) {
-            await report.mostrarPDF(context, path);
-          }
-        } catch (e) {
-          debugPrint('Error en _generateSoldProductsReport: $e');
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Error al generar el reporte: $e')),
-            );
-          }
-        } finally {
-          if (mounted) {
-            setState(() => _isLoading = false);
-          }
-        }
-      },
-    );
-  }
-
-  void _generateInventoryReport() async {
-    _showDateRangeDialog(
-      'Reporte de Inventario',
-      (DateTime startDate, DateTime endDate) async {
-        setState(() => _isLoading = true);
-        try {
-          // Implementa la lógica para generar el reporte de inventario
-          debugPrint(
-              'Generando reporte de inventario desde ${startDate.toString()} hasta ${endDate.toString()}');
-        } finally {
-          setState(() => _isLoading = false);
-        }
-      },
-    );
-  }
-
-  void _generateLotsReport() async {
-    _showDateRangeDialog(
-      'Reporte de Lotes',
-      (DateTime startDate, DateTime endDate) async {
-        setState(() => _isLoading = true);
-        try {
-          // Implementa la lógica para generar el reporte de lotes
-          debugPrint(
-              'Generando reporte de lotes desde ${startDate.toString()} hasta ${endDate.toString()}');
         } finally {
           setState(() => _isLoading = false);
         }
@@ -320,6 +186,7 @@ class _ReportsPageState extends State<ReportsPage> {
             pw.Text("Total: S/ 1000.00"),
             pw.Text("Ganancias estimadas: S/ 300.00"),
             pw.SizedBox(height: 10),
+            // ignore: deprecated_member_use
             pw.Table.fromTextArray(
               headers: [
                 "Fecha y hora",
@@ -369,6 +236,7 @@ class _ReportsPageState extends State<ReportsPage> {
     //generar pdf
     final path = await report.generarPDF(pdf, "ventas_contado.pdf");
     //mostrar pdf
+    // ignore: use_build_context_synchronously
     report.mostrarPDF(context, path);
   }
 

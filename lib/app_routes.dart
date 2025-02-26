@@ -13,7 +13,7 @@ import 'package:multiinventario/pages/home_page.dart';
 import 'package:multiinventario/pages/inventory/all_inventory_pages.dart';
 import 'package:multiinventario/pages/sales/all_sales_pages.dart';
 import 'package:multiinventario/pages/clients/all_clients_pages.dart';
-import 'package:multiinventario/pages/reports/reports_page.dart';
+import 'package:multiinventario/pages/reports/all_report_page.dart';
 import 'package:multiinventario/pages/config_page.dart';
 
 // Modulos auxiales
@@ -174,9 +174,28 @@ class AppRoutes {
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/reports',
-                builder: (context, state) => const ReportsPage(),
-              ),
+                  path: '/reports',
+                  builder: (context, state) => const ReportsPage(),
+                  routes: [
+                    GoRoute(
+                      path: 'report-details-page',
+                      builder: (context, state) => const ReportDetailsPage(),
+                    ),
+                    GoRoute(
+                      path: 'report-sales-page',
+                      builder: (context, state) => const ReportSalesPage(),
+                    ),
+                    GoRoute(
+                      path: 'report-general-inventario',
+                      builder: (context, state) =>
+                          const ReportGeneralInventario(),
+                    ),
+                    GoRoute(
+                      path: 'report-productos-vendidos',
+                      builder: (context, state) =>
+                          const ReportProductosVendidos(),
+                    ),
+                  ]),
             ],
           ),
           StatefulShellBranch(routes: [

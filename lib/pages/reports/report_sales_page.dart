@@ -21,6 +21,7 @@ class _ReportSalesPageState extends State<ReportSalesPage> {
     DateTime selectedFechaFinal = DateTime.now();
     String _selectedReport = "Reporte general de ventas"; 
 
+    // ignore: unused_field
     bool _isLoading = false;
 
     //pantalla de carga
@@ -64,6 +65,7 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
   }
 
   
+  // ignore: non_constant_identifier_names
   bool Selected = true;
   @override
   Widget build(BuildContext context) {
@@ -99,7 +101,7 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
               alignment: Alignment.centerLeft,
               child: Text(
                 "Elegir tipo", 
-                style: TextStyle(color: Color(0xFF493D9E), fontSize: 14, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Color.fromRGBO(73, 61, 158, 1), fontSize: 14, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -199,7 +201,7 @@ void _generateReport(DateTime selectedFechaInicio, DateTime selectedFechaFinal) 
                           selectedFechaFinal = picked;
                           fechaFinal.text =
                               picked.toIso8601String().split('T')[0];
-                        if(selectedFechaInicio!.isAfter(selectedFechaFinal)){
+                        if(selectedFechaInicio.isAfter(selectedFechaFinal)){
                           selectedFechaInicio = selectedFechaFinal;
                           fechaInicio.text = selectedFechaFinal.toIso8601String().split('T')[0];
                         }
@@ -274,6 +276,7 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
     final pdf = pw.Document();
     final datosTablaGeneral = await obtenerDatosTablaGeneral(selectedFechaInicio, selectedFechaFinal);
     final datos = datosTablaGeneral["data"] as List<List<String>>;
+    final total = datosTablaGeneral["total"] as double;
     final gananciaTotal = datosTablaGeneral["totalGanancias"] as double;
     final ventasContado = datosTablaGeneral["ventasContado"] as int;
     final ventasCredito = datosTablaGeneral["ventasCredito"] as int;
@@ -291,11 +294,12 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-              pw.Text("Total: S/ ${1}"),
-              pw.Text("Ganancias estimadas: ${gananciaTotal}"),
-              pw.Text("Ventas al contado: ${ventasContado}"),
-              pw.Text("Ventas al crédito: ${ventasCredito}"),
+              pw.Text("Total: S/ ${total.toStringAsFixed(2)}"),
+              pw.Text("Ganancias estimadas: ${gananciaTotal.toStringAsFixed(2)}"),
+              pw.Text("Ventas al contado: $ventasContado"),
+              pw.Text("Ventas al crédito: $ventasCredito"),
               pw.SizedBox(height: 10),
+              // ignore: deprecated_member_use
               pw.Table.fromTextArray(
                 headers: [
                   "#", "Fecha y hora", "Codigo de venta", "Tipo", "Cliente", "Subtotal (S/)","Descuento (S/)" ,"Monto total (S/)","Monto cancelado (S/)","Ganancia estimada (S/)", "Estado"
@@ -327,13 +331,14 @@ Widget _buildButton(String text, String selectedReport, BuildContext context, Fu
         ),
       );
     }catch(e){
-      debugPrint("Error ${e}");
-    };
+      debugPrint("Error $e");
+    }
     //metodos de report_controller.dart
     
     //generar pdf
-    final path = await report.generarPDF(pdf, "ventas_contado.pdf");
+    final path = await report.generarPDF(pdf, "reporte_ventas.pdf");
     //mostrar pdf
+    // ignore: use_build_context_synchronously
     report.mostrarPDF(context, path);
   }
 
@@ -342,6 +347,7 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(DateTime selectedFechaInic
   List<List<String>> data = [];
 
   ventas = await Venta.obtenerVentasporFecha(selectedFechaInicio, selectedFechaFinal);
+  double total = 0;
   double subtotal = 0;  
   double descuento = 0;
   double ganancia = 0;
@@ -354,10 +360,10 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(DateTime selectedFechaInic
     Cliente? cliente = await Cliente.obtenerClientePorId(ventas[i].idCliente);
     String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
 
-    String estado = (ventas[i].montoCancelado == ventas[i].montoTotal) ? "Cancelado" : "No cancelado";
+    String estado = (ventas[i].montoCancelado! >= ventas[i].montoTotal) ? "Cancelado" : "No cancelado";
     
     //calculo de la suma de subtotales, descuentos y ganancias
-    for(int j = 0; j<detalles.length; i++){
+    for(int j = 0; j<detalles.length; j++){
 
 
       subtotal = detalles[j].subtotalProducto+subtotal;
@@ -374,19 +380,20 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(DateTime selectedFechaInic
     } else{
       ventasCredito++;
     }
+    total += subtotal;
 
 
     data.add([
       "${i + 1}",  //indice
       "${ventas[i].fechaVenta}",       //fecha y hora
       "${ventas[i].idVenta}", //Codigo de venta
-      "${(ventas[i].esAlContado == true) ? "Contado" : "Crédito"}" , //Tipos
+      ((ventas[i].esAlContado == true) ? "Contado" : "Crédito") , //Tipos
       nombreCliente, //Cliente
-      "${subtotal}",
-      "${descuento}",
-      "${ventas[i].montoTotal}",
+      subtotal.toStringAsFixed(2),
+      "$descuento",
+      ventas[i].montoTotal.toStringAsFixed(2),
       "${ventas[i].montoCancelado}",
-      "${ganancia}",
+      ganancia.toStringAsFixed(2),
       estado,
     ]);
   subtotal = 0;
@@ -395,6 +402,7 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(DateTime selectedFechaInic
 }
 return {
   "data": data,
+  "total": total,
   "totalGanancias": totalGanancias,
   "ventasContado": ventasContado,
   "ventasCredito": ventasCredito,
@@ -431,9 +439,10 @@ return {
                   style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text("Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-              pw.Text("Total: S/ ${total}"),
-              pw.Text("Ganancias estimadas: S/ ${ganancias}"),
+              pw.Text("Total: S/ $total"),
+              pw.Text("Ganancias estimadas: S/ $ganancias"),
               pw.SizedBox(height: 10),
+              // ignore: deprecated_member_use
               pw.Table.fromTextArray(
                 headers: [
                   "#", "Fecha y hora", "Codigo de venta", "Cliente", "Subtotal (S/)","Descuento (S/)" ,"Monto total (S/)","Ganancia estimada"
@@ -465,17 +474,18 @@ return {
         ),
       );
     }catch(e){
-      debugPrint("Error ${e}");
-    };
+      debugPrint("Error $e");
+    }
     //metodos de report_controller.dart
     
     //generar pdf
-    final path = await report.generarPDF(pdf, "ventas_contado.pdf");
+    final path = await report.generarPDF(pdf, "reporte_ventas_${(tipo == true)? 'contado' : 'credito'}.pdf");
     //mostrar pdf
+    // ignore: use_build_context_synchronously
     report.mostrarPDF(context, path);
   }
 
-  Future<Map<String, dynamic>> obtenerDatosTablaTipo(DateTime selectedFechaInicio, selectedFechaFinal, bool tipo) async {
+Future<Map<String, dynamic>> obtenerDatosTablaTipo(DateTime selectedFechaInicio, selectedFechaFinal, bool tipo) async {
   List<Venta> ventas = [];
   List<List<String>> data = [];
 
@@ -486,7 +496,7 @@ return {
   double totalGanancias = 0;
   double total = 0;
   for (int i = 0; i < ventas.length; i++) {
-    if(ventas[i].esAlContado == tipo)
+    if(ventas[i].esAlContado == tipo) //si es true = contado, si es false = crédito
     {List<DetalleVenta> detalles = await DetalleVenta.obtenerDetallesPorVenta(ventas[i].idVenta!);
     Cliente? cliente = await Cliente.obtenerClientePorId(ventas[i].idCliente);
     String nombreCliente = cliente != null ? cliente.nombreCliente : "Desconocido";
@@ -494,7 +504,7 @@ return {
     String estado = (ventas[i].montoCancelado == ventas[i].montoTotal) ? "Cancelado" : "No cancelado";
     
     //calculo de la suma de subtotales, descuentos y ganancias
-    for(int j = 0; j<detalles.length; i++){
+    for(int j = 0; j<detalles.length; j++){
       
       subtotal = detalles[j].subtotalProducto+subtotal;
       if(detalles[j].descuentoProducto != null){
@@ -511,13 +521,13 @@ return {
       "${i + 1}",  //indice
       "${ventas[i].fechaVenta}",       //fecha y hora
       "${ventas[i].idVenta}", //Codigo de venta
-      nombreCliente, //Cliente
-      "${subtotal}",
-      "${descuento}",
-      "${ventas[i].montoTotal}",
-      "${ventas[i].montoCancelado}",
-      "${ganancia}",
-      estado,
+       nombreCliente, //Cliente
+       subtotal.toStringAsFixed(2), //subtotal
+      "$descuento", //descuento
+      ventas[i].montoTotal.toStringAsFixed(2), //mon tototal
+      "${ventas[i].montoCancelado}", // monto cancelado
+      ganancia.toStringAsFixed(2), //ganacia
+      estado, //estado
     ]);
   subtotal = 0;
   descuento = 0;

@@ -133,10 +133,10 @@ packages:
     dependency: transitive
     description:
       name: dev_build
-      sha256: "43422b4e090a3bad7c1d612862bdf26c64e78a3624ecd780679df21384e8e91a"
+      sha256: "8e215c30e555d6f5b0619f50be2c3f49c0bf9bf4426a3dcddf0654f943420b4b"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.2+2"
+    version: "1.1.2+4"
   encrypt:
     dependency: "direct main"
     description:
@@ -292,10 +292,10 @@ packages:
     dependency: "direct main"
     description:
       name: go_router
-      sha256: "04539267a740931c6d4479a10d466717ca5901c6fdfd3fcda09391bbb8ebd651"
+      sha256: f02fd7d2a4dc512fec615529824fdd217fecb3a3d3de68360293a551f21634b3
       url: "https://pub.dev"
     source: hosted
-    version: "14.8.0"
+    version: "14.8.1"
   google_identity_services_web:
     dependency: transitive
     description:
