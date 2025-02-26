@@ -5,7 +5,7 @@ import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:mailer/smtp_server/gmail.dart';
 import 'package:mailer/mailer.dart';
-import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/credenciales.dart';
 import 'package:go_router/go_router.dart';
 
 class InputEmailPage extends StatelessWidget {

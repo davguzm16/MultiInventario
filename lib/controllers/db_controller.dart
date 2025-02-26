@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/credenciales.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/unidad.dart';
@@ -160,6 +160,15 @@ class DatabaseController {
             idCredencial INTEGER PRIMARY KEY,
             tipoCredencial TEXT NOT NULL UNIQUE,
             valorCredencial TEXT NOT NULL UNIQUE
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE Notificaciones (
+            idNotificacion INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            contenido TEXT NOT NULL,
+            fecha DATETIME DEFAULT CURRENT_TIMESTAMP
           )
         ''');
       },

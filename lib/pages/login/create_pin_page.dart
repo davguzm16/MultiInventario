@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/credenciales.dart';
 import 'package:pinput/pinput.dart';
 import 'package:go_router/go_router.dart';
 

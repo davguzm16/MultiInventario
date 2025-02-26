@@ -68,9 +68,9 @@ class Venta {
               await Lote.obtenerLotePorId(detalle.idProducto, detalle.idLote);
           lote!.cantidadActual -= detalle.cantidadProducto;
 
-          Lote.actualizarLote(lote);
+          await Lote.actualizarLote(lote);
 
-          DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
+          await DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
 
         debugPrint(

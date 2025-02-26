@@ -4,6 +4,9 @@ import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto_categoria.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
+import 'package:multiinventario/models/unidad.dart';
+import 'package:multiinventario/services/notification_service.dart'
+    show NotificationService;
 import 'package:sqflite/sqflite.dart';
 
 class Producto {
@@ -258,6 +261,32 @@ class Producto {
       debugPrint("Se insertaron correctamente ${productos.length} productos.");
     } catch (e) {
       debugPrint("Error al insertar productos: $e");
+    }
+  }
+
+  static Future<void> verificarStockBajo(int idProducto) async {
+    try {
+      final producto = await obtenerProductoPorID(idProducto);
+
+      if (producto != null) {
+        final unidadProducto =
+            await Unidad.obtenerUnidadPorId(producto.idUnidad!);
+
+        debugPrint(
+            "Stock actual ${producto.stockActual!}, Stock minimo: ${producto.stockMinimo}");
+
+        if (producto.stockActual! < producto.stockMinimo) {
+          await NotificationService.mostrarNotificacion(
+            titulo: "🚨 ¡Atención!",
+            contenido:
+                "📦 Solo hay ${producto.stockActual} ${unidadProducto!.tipoUnidad} del producto ${producto.nombreProducto}.\n🔄 Es momento de reabastecer.",
+          );
+          debugPrint("Mostrando la notificacion!");
+        }
+      }
+    } catch (e) {
+      debugPrint(
+          "Error al verificar stock bajo para producto $idProducto: ${e.toString()}");
     }
   }
 

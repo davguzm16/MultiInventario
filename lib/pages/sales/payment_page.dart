@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
+import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:multiinventario/widgets/all_custom_widgets.dart';
 
@@ -362,7 +363,10 @@ class _PaymentPageState extends State<PaymentPage> {
                   SuccessDialog(
                     context: context,
                     successMessage: "¡La venta se ha realizado exitosamente!",
-                    btnOkOnPress: () {
+                    btnOkOnPress: () async {
+                      for (var detalle in widget.detallesVenta) {
+                        await Producto.verificarStockBajo(detalle.idProducto);
+                      }
                       context.go('/sales');
                     },
                   );

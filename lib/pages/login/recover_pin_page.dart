@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server/gmail.dart';
-import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/credenciales.dart';
 import 'package:pinput/pinput.dart';
 
 class RecoverPinPage extends StatefulWidget {

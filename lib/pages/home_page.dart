@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
-import 'package:multiinventario/controllers/credenciales.dart';
+import 'package:multiinventario/models/credenciales.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/services/drive_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
