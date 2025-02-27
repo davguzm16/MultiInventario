@@ -9,16 +9,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_test:
-    sdk: flutter
   mockito: ^5.4.2
   build_runner: ^2.4.6
-  test: any
   path: ^1.9.0
   sqflite: ^2.3.0
-  sqflite_common_ffi: any
-  sqflite_common_ffi_web: any
-  sqlite3_flutter_libs: ^0.5.30
+  sqflite_common_ffi: any  # Considera especificar una versión
   awesome_dialog: ^3.2.1
   pinput: ^5.0.1
   mailer: ^6.4.1
@@ -40,6 +35,7 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   provider: ^6.1.2
   intl: ^0.20.2
+  sqflite_common_ffi_web: ^1.0.0
   
 dev_dependencies:
   flutter_lints: ^5.0.0
@@ -50,7 +46,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets: 
-  - "lib/.env"
-  - "lib/assets/imagenes/"
-  - "lib/assets/iconos/"
-
+    - "lib/.env"
+    - "lib/assets/imagenes/"
+    - "lib/assets/iconos/"

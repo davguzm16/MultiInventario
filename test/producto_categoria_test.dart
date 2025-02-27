@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/models/producto_categoria.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
@@ -52,7 +53,9 @@ void main() {
     });
 
     test('Obtener productos por página', () async {
-      final productos = await Producto.obtenerProductosPorPagina(1);
+      final productos =
+          await ProductoCategoria.obtenerProductosPorCargaFiltrados(
+              numeroCarga: 1, categorias: []);
 
       expect(productos, isA<List<Producto>>());
     });

@@ -335,7 +335,7 @@ packages:
     source: hosted
     version: "5.2.1"
   flutter_lints:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: flutter_lints
       sha256: "5398f14efa795ffb7a33e9b6a08798b26a180edac4ad7db3f231e40f82ce11e1"
@@ -391,7 +391,7 @@ packages:
     source: hosted
     version: "4.0.0"
   flutter_test:
-    dependency: "direct main"
+    dependency: "direct dev"
     description: flutter
     source: sdk
     version: "0.0.0"
@@ -1117,14 +1117,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.7.4"
-  sqlite3_flutter_libs:
-    dependency: "direct main"
-    description:
-      name: sqlite3_flutter_libs
-      sha256: "7adb4cc96dc08648a5eb1d80a7619070796ca6db03901ff2b6dcb15ee30468f3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.31"
   stack_trace:
     dependency: transitive
     description:
@@ -1174,7 +1166,7 @@ packages:
     source: hosted
     version: "1.2.2"
   test:
-    dependency: "direct main"
+    dependency: "direct dev"
     description:
       name: test
       sha256: "301b213cd241ca982e9ba50266bd3f5bd1ea33f1455554c5abb85d1be0e2d87e"
