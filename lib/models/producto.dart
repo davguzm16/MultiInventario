@@ -274,4 +274,45 @@ class Producto {
     }
     return productos;
   }
+static Future<List<Producto>> obtenerTodosLosProductos() async {
+  List<Producto> producto = [];
+  try {
+    final db = await DatabaseController().database;
+    final result = await db.rawQuery(
+      '''
+      SELECT * FROM Productos
+      '''
+    );
+
+    // Imprimir resultado de la consulta
+    debugPrint("Resultado de la consulta: $result");
+
+    // Iterar correctamente sobre la lista
+    for (var item in result) {
+      if ((item['estaDisponible'] as int) == 1) {
+        producto.add(
+          Producto(
+            idProducto: item['idProducto']! as int,
+            idUnidad: item['idUnidad']! as int,
+            codigoProducto: item['codigoProducto'] as String?,
+            nombreProducto: item['nombreProducto'] as String,
+            precioProducto: (item['precioProducto'] as num).toDouble(),
+            stockActual: (item['stockActual'] as num).toDouble(),
+            stockMinimo: (item['stockMinimo'] as num).toDouble(),
+            stockMaximo: (item['stockMaximo'] as num?)?.toDouble(),
+            estaDisponible: (item['estaDisponible'] as int) == 1,
+            rutaImagen: item['rutaImagen'] as String?,
+          )
+        );
+      }
+    }
+  } catch (e) {
+    debugPrint("Error al obtener el producto: ${e.toString()}");
+  }
+
+  // Imprimir la lista de productos obtenida
+  debugPrint("Lista de productos obtenida: $producto");
+  return producto;
+}
+
 }

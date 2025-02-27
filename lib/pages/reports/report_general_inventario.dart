@@ -204,9 +204,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
     double valorTotal = 0;
 
     try {
-      List<Producto> productos = await Producto.obtenerProductosPorFechas(
-          fecha.subtract(const Duration(days: 365)), // Un año atrás
-          fecha);
+      List<Producto> productos = await Producto.obtenerTodosLosProductos();
 
       for (var producto in productos) {
         if(producto.estaDisponible == true){
