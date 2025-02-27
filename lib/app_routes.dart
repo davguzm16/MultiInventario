@@ -218,6 +218,11 @@ class AppRoutes {
                       builder: (context, state) =>
                           const ReportProductosVendidos(),
                     ),
+                    GoRoute(
+                      path: 'report-fecha-vencimiento',
+                      builder: (context, state) =>
+                          const ReportFechaVencimiento(),
+                    ),
                   ]),
             ],
           ),

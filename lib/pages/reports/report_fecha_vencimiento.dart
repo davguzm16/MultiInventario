@@ -5,30 +5,26 @@ import 'package:pdf/pdf.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/lote.dart';
 
-class ReportGeneralInventario extends StatefulWidget {
-  const ReportGeneralInventario({super.key});
+class ReportFechaVencimiento extends StatefulWidget {
+  const ReportFechaVencimiento({super.key});
 
   @override
-  State<ReportGeneralInventario> createState() =>
-      _ReportGeneralInventarioState();
+  State<ReportFechaVencimiento> createState() => _ReportFechaVencimientoState();
 }
 
-class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
-  late TextEditingController fechaController;
-  DateTime selectedFecha = DateTime.now();
+class _ReportFechaVencimientoState extends State<ReportFechaVencimiento> {
+  late TextEditingController diasController;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    fechaController = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
-    );
+    diasController = TextEditingController(text: '30'); // Por defecto 30 días
   }
 
   @override
   void dispose() {
-    fechaController.dispose();
+    diasController.dispose();
     super.dispose();
   }
 
@@ -36,7 +32,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Reportes de Inventario"),
+        title: const Text("Reporte de Vencimientos"),
       ),
       body: Container(
         alignment: Alignment.center,
@@ -49,7 +45,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Reporte general de inventario",
+                  "Reporte de productos por vencer",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 20,
@@ -59,7 +55,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
             ),
             const SizedBox(height: 16),
             const Text(
-              "Seleccionar fecha",
+              "Días restantes para vencimiento",
               style: TextStyle(
                   color: Color(0xFF493D9E),
                   fontSize: 14,
@@ -70,30 +66,15 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
               width: 150,
               height: 50,
               child: TextField(
-                controller: fechaController,
+                controller: diasController,
                 decoration: InputDecoration(
-                    labelText: 'Fecha',
+                    labelText: 'Días',
                     suffixIcon: Icon(Icons.calendar_today),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5),
                       borderSide: BorderSide(color: Color(0xFF493D9e)),
                     )),
-                readOnly: true,
-                onTap: () async {
-                  final DateTime? picked = await showDatePicker(
-                    context: context,
-                    initialDate: selectedFecha,
-                    firstDate: DateTime(2000),
-                    lastDate: DateTime.now(),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      selectedFecha = picked;
-                      fechaController.text =
-                          picked.toIso8601String().split('T')[0];
-                    });
-                  }
-                },
+                keyboardType: TextInputType.number,
               ),
             ),
             const SizedBox(height: 16),
@@ -119,20 +100,86 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
   }
 
   Future<void> _generateReport() async {
+    if (diasController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingrese la cantidad de días')),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
     try {
-      await generarReporteInventario(context, selectedFecha);
+      await generarReporteVencimiento(context, int.parse(diasController.text));
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<void> generarReporteInventario(
-      BuildContext context, DateTime fecha) async {
+  Future<Map<String, dynamic>> obtenerDatosVencimiento(
+      int diasRestantes) async {
+    List<List<String>> data = [];
+    int totalProductos = 0;
+    double valorTotal = 0;
+    DateTime fechaLimite = DateTime.now().add(Duration(days: diasRestantes));
+
+    try {
+      // Obtener todos los productos usando el método existente
+      List<Producto> productos = await Producto.obtenerProductosPorNombre("");
+
+      for (var producto in productos) {
+        // Solo procesar productos disponibles y con stock
+        if (producto.estaDisponible == true && producto.stockActual! > 0) {
+          List<Lote> lotes =
+              await Lote.obtenerLotesDeProducto(producto.idProducto!);
+
+          for (var lote in lotes) {
+            if (lote.cantidadActual > 0 &&
+                lote.fechaCaducidad != null &&
+                lote.fechaCaducidad!.isBefore(fechaLimite)) {
+              int diasParaVencer =
+                  lote.fechaCaducidad!.difference(DateTime.now()).inDays;
+              String estado = diasParaVencer < 0 ? 'Vencido' : 'Por vencer';
+              double valorLote = lote.cantidadActual * producto.precioProducto;
+
+              data.add([
+                "${data.length + 1}",
+                producto.codigoProducto ?? producto.idProducto.toString(),
+                producto.nombreProducto,
+                lote.cantidadActual.toString(),
+                lote.idLote.toString(),
+                lote.fechaCaducidad!.toString().split(' ')[0],
+                diasParaVencer.abs().toString(),
+                estado,
+                valorLote.toStringAsFixed(2)
+              ]);
+
+              totalProductos += lote.cantidadActual;
+              valorTotal += valorLote;
+            }
+          }
+        }
+      }
+
+      // Ordenar por días para vencer (ascendente)
+      data.sort((a, b) => int.parse(a[6]).compareTo(int.parse(b[6])));
+    } catch (e) {
+      debugPrint("Error al obtener datos de vencimiento: $e");
+    }
+
+    return {
+      "data": data,
+      "totalProductos": totalProductos,
+      "valorTotal": valorTotal
+    };
+  }
+
+  Future<void> generarReporteVencimiento(
+      BuildContext context, int diasRestantes) async {
     final ReportController report = ReportController();
     final pdf = pw.Document();
-    final datosTablaGeneral = await obtenerDatosInventario(fecha);
+    final datosTablaGeneral = await obtenerDatosVencimiento(diasRestantes);
     final datosTabla = datosTablaGeneral["data"] as List<List<String>>;
+    final totalProductos = datosTablaGeneral["totalProductos"] as int;
     final valorTotal = datosTablaGeneral["valorTotal"] as double;
 
     try {
@@ -142,23 +189,27 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
           margin: const pw.EdgeInsets.all(20),
           build: (pw.Context context) {
             return [
-              pw.Text("Reporte General de Inventario",
+              pw.Text("Reporte de Productos por Vencer",
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
-              pw.Text("Fecha de corte: ${fecha.toString().split(' ')[0]}"),
               pw.Text(
-                  "Valor total del inventario: S/ ${valorTotal.toStringAsFixed(2)}"),
+                  "Productos que vencerán en los próximos $diasRestantes días"),
+              pw.Text("Total de productos: $totalProductos"),
+              pw.Text(
+                  "Valor total del inventario por vencer: S/ ${valorTotal.toStringAsFixed(2)}"),
               pw.SizedBox(height: 10),
               pw.Table.fromTextArray(
                 headers: [
                   "#",
                   "Código",
                   "Producto",
-                  "Stock Total",
-                  "Lotes Activos",
-                  "Precio Promedio (S/)",
-                  "Valor Total (S/)"
+                  "Cantidad",
+                  "Lote",
+                  "Fecha Vencimiento",
+                  "Días",
+                  "Estado",
+                  "Valor (S/)"
                 ],
                 data: datosTabla,
                 border: pw.TableBorder.all(),
@@ -174,10 +225,12 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
                   0: pw.FixedColumnWidth(35), // #
                   1: pw.FixedColumnWidth(60), // Código
                   2: pw.FixedColumnWidth(120), // Producto
-                  3: pw.FixedColumnWidth(60), // Stock Total
-                  4: pw.FixedColumnWidth(60), // Lotes Activos
-                  5: pw.FixedColumnWidth(80), // Precio Promedio
-                  6: pw.FixedColumnWidth(70), // Valor Total
+                  3: pw.FixedColumnWidth(60), // Cantidad
+                  4: pw.FixedColumnWidth(50), // Lote
+                  5: pw.FixedColumnWidth(80), // Fecha Vencimiento
+                  6: pw.FixedColumnWidth(40), // Días
+                  7: pw.FixedColumnWidth(60), // Estado
+                  8: pw.FixedColumnWidth(70), // Valor
                 },
               ),
             ];
@@ -185,7 +238,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
         ),
       );
 
-      final path = await report.generarPDF(pdf, "reporte_inventario.pdf");
+      final path = await report.generarPDF(pdf, "reporte_vencimientos.pdf");
       if (context.mounted) {
         await report.mostrarPDF(context, path);
       }
@@ -197,43 +250,5 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
         );
       }
     }
-  }
-
-  Future<Map<String, dynamic>> obtenerDatosInventario(DateTime fecha) async {
-    List<List<String>> data = [];
-    double valorTotal = 0;
-
-    try {
-      List<Producto> productos = await Producto.obtenerProductosPorFechas(
-          fecha.subtract(const Duration(days: 365)), // Un año atrás
-          fecha);
-
-      for (var producto in productos) {
-        if (producto.stockActual != null && producto.stockActual! > 0) {
-          List<Lote> lotes =
-              await Lote.obtenerLotesDeProducto(producto.idProducto!);
-
-          int lotesActivos =
-              lotes.where((lote) => lote.cantidadActual > 0).length;
-          double valorProducto =
-              producto.stockActual! * producto.precioProducto;
-          valorTotal += valorProducto;
-
-          data.add([
-            "${data.length + 1}",
-            producto.codigoProducto ?? producto.idProducto.toString(),
-            producto.nombreProducto,
-            producto.stockActual!.toStringAsFixed(2),
-            lotesActivos.toString(),
-            producto.precioProducto.toStringAsFixed(2),
-            valorProducto.toStringAsFixed(2),
-          ]);
-        }
-      }
-    } catch (e) {
-      debugPrint("Error al obtener datos del inventario: $e");
-    }
-
-    return {"data": data, "valorTotal": valorTotal};
   }
 }

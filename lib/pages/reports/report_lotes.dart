@@ -1,14 +1,12 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
-import 'package:multiinventario/models/lote.dart';
-import 'package:multiinventario/models/detalle_venta.dart';
-import 'package:multiinventario/models/producto.dart';
+import 'package:multiinventario/models/lote.dart'; // Importa tu modelo de lotes
+import 'package:multiinventario/models/detalle_venta.dart'; // Importa tu modelo de detalles de venta
+import 'package:multiinventario/models/producto.dart'; // Importa tu modelo de productos
 
 class ReportLotesPage extends StatefulWidget {
   const ReportLotesPage({super.key});

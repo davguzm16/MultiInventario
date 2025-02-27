@@ -1,11 +1,8 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
+import 'package:multiinventario/controllers/db_controller.dart'; // Cambiar este import
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
-import 'package:multiinventario/models/detalle_venta.dart';
-import 'package:multiinventario/models/producto.dart';
 
 class ReportProductosVendidos extends StatefulWidget {
   const ReportProductosVendidos({super.key});
@@ -44,7 +41,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Reportes de Productos Vendidos"),
+        title: const Text("Reporte de Productos Vendidos"),
       ),
       body: Container(
         alignment: Alignment.center,
@@ -57,7 +54,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  "Reporte de productos vendidos",
+                  "Reporte de Productos Vendidos",
                   style: TextStyle(
                       color: Colors.black,
                       fontSize: 20,
@@ -84,11 +81,12 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                     controller: fechaInicio,
                     decoration: InputDecoration(
                         labelText: 'Fecha Inicio',
-                        suffixIcon: Icon(Icons.calendar_today),
+                        suffixIcon: const Icon(Icons.calendar_today),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5),
-                          borderSide: BorderSide(color: Color(0xFF493D9e)),
-                        )),
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF493D9e),
+                            ))),
                     readOnly: true,
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
@@ -114,11 +112,12 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                     controller: fechaFinal,
                     decoration: InputDecoration(
                         labelText: 'Fecha Final',
-                        suffixIcon: Icon(Icons.calendar_today),
+                        suffixIcon: const Icon(Icons.calendar_today),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5),
-                          borderSide: BorderSide(color: Color(0xFF493D9e)),
-                        )),
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF493D9e),
+                            ))),
                     readOnly: true,
                     onTap: () async {
                       final DateTime? picked = await showDatePicker(
@@ -151,10 +150,12 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                 onPressed: _isLoading ? null : () => _generateReport(),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Generar",
-                        style: TextStyle(fontSize: 18, color: Colors.white)),
+                    : const Text(
+                        "Generar",
+                        style: TextStyle(fontSize: 18, color: Colors.white),
+                      ),
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -164,94 +165,21 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
   Future<void> _generateReport() async {
     setState(() => _isLoading = true);
     try {
-      await generarReporteProductosVendidos(
-          context, selectedFechaInicio, selectedFechaFinal);
+      await generarReporteProductos(context);
     } finally {
       setState(() => _isLoading = false);
     }
   }
 
-  Future<Map<String, dynamic>> obtenerDatosProductosVendidos(
-      DateTime fechaInicio, DateTime fechaFinal) async {
-    List<List<String>> data = [];
-    double totalVentas = 0;
-    int totalProductos = 0;
-
-    try {
-      List<DetalleVenta> detalles =
-          await DetalleVenta.obtenerDetallesPorFechas(fechaInicio, fechaFinal);
-
-      // Agrupar por producto
-      Map<int, Map<String, dynamic>> productosAgrupados = {};
-
-      for (var detalle in detalles) {
-        Producto? producto =
-            await Producto.obtenerProductoPorID(detalle.idProducto);
-        if (producto != null) {
-          if (!productosAgrupados.containsKey(producto.idProducto)) {
-            productosAgrupados[producto.idProducto!] = {
-              'producto': producto,
-              'cantidadTotal': 0,
-              'totalVentas': 0.0,
-              'gananciaTotal': 0.0,
-            };
-          }
-
-          productosAgrupados[producto.idProducto!]?['cantidadTotal'] +=
-              detalle.cantidadProducto;
-          productosAgrupados[producto.idProducto!]?['totalVentas'] +=
-              detalle.subtotalProducto;
-          productosAgrupados[producto.idProducto!]?['gananciaTotal'] +=
-              detalle.gananciaProducto;
-          totalProductos += detalle.cantidadProducto;
-          totalVentas += detalle.subtotalProducto;
-        }
-      }
-
-      // Convertir a lista y ordenar por cantidad vendida
-      var productosOrdenados = productosAgrupados.values.toList()
-        ..sort((a, b) =>
-            (b['cantidadTotal'] as int).compareTo(a['cantidadTotal'] as int));
-
-      // Generar datos para la tabla
-      for (var i = 0; i < productosOrdenados.length; i++) {
-        var item = productosOrdenados[i];
-        var producto = item['producto'] as Producto;
-        var cantidadTotal = item['cantidadTotal'] as int;
-        var totalVentasProducto = item['totalVentas'] as double;
-        var gananciaTotal = item['gananciaTotal'] as double;
-
-        data.add([
-          "${i + 1}",
-          producto.codigoProducto ?? producto.idProducto.toString(),
-          producto.nombreProducto,
-          cantidadTotal.toString(),
-          producto.precioProducto.toStringAsFixed(2),
-          totalVentasProducto.toStringAsFixed(2),
-          gananciaTotal.toStringAsFixed(2),
-          ((totalVentasProducto / totalVentas) * 100).toStringAsFixed(2)
-        ]);
-      }
-    } catch (e) {
-      debugPrint("Error al obtener datos de productos vendidos: $e");
-    }
-
-    return {
-      "data": data,
-      "totalVentas": totalVentas,
-      "totalProductos": totalProductos
-    };
-  }
-
-  Future<void> generarReporteProductosVendidos(
-      BuildContext context, DateTime fechaInicio, DateTime fechaFinal) async {
+  Future<void> generarReporteProductos(BuildContext context) async {
     final ReportController report = ReportController();
     final pdf = pw.Document();
-    final datosTablaGeneral =
-        await obtenerDatosProductosVendidos(fechaInicio, fechaFinal);
-    final datosTabla = datosTablaGeneral["data"] as List<List<String>>;
-    final totalVentas = datosTablaGeneral["totalVentas"] as double;
-    final totalProductos = datosTablaGeneral["totalProductos"] as int;
+    final datosTabla = await obtenerDatosTablaProductos(
+        selectedFechaInicio, selectedFechaFinal);
+    final datos = datosTabla["data"] as List<List<String>>;
+    final totalVentas = datosTabla["totalVentas"] as double;
+    final totalGanancias = datosTabla["totalGanancias"] as double;
+    final totalProductos = datosTabla["totalProductos"] as int;
 
     try {
       pdf.addPage(
@@ -265,24 +193,26 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text(
-                  "Periodo: ${fechaInicio.toString().split(' ')[0]} - ${fechaFinal.toString().split(' ')[0]}"),
+                  "Período: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
               pw.Text("Total de ventas: S/ ${totalVentas.toStringAsFixed(2)}"),
+              pw.Text(
+                  "Ganancias totales: S/ ${totalGanancias.toStringAsFixed(2)}"),
               pw.Text("Total de productos vendidos: $totalProductos"),
               pw.SizedBox(height: 10),
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 headers: [
                   "#",
                   "Código",
                   "Producto",
-                  "Cantidad Vendida",
+                  "Cantidad Total",
                   "Precio Unitario (S/)",
+                  "Descuento Total (S/)",
                   "Total Ventas (S/)",
-                  "Ganancia (S/)",
-                  "% del Total"
+                  "Ganancias (S/)"
                 ],
-                data: datosTabla,
+                data: datos,
                 border: pw.TableBorder.all(),
-                cellStyle: pw.TextStyle(fontSize: 10),
+                cellStyle: const pw.TextStyle(fontSize: 10),
                 headerStyle: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -291,14 +221,14 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                     color: PdfColors.black,
                     borderRadius: pw.BorderRadius.circular(2)),
                 columnWidths: {
-                  0: pw.FixedColumnWidth(35), // #
-                  1: pw.FixedColumnWidth(60), // Código
-                  2: pw.FixedColumnWidth(120), // Producto
-                  3: pw.FixedColumnWidth(70), // Cantidad
-                  4: pw.FixedColumnWidth(70), // Precio
-                  5: pw.FixedColumnWidth(70), // Total Ventas
-                  6: pw.FixedColumnWidth(70), // Ganancia
-                  7: pw.FixedColumnWidth(60), // Porcentaje
+                  0: const pw.FixedColumnWidth(35), // #
+                  1: const pw.FixedColumnWidth(60), // Código
+                  2: const pw.FixedColumnWidth(120), // Producto
+                  3: const pw.FixedColumnWidth(60), // Cantidad
+                  4: const pw.FixedColumnWidth(70), // Precio
+                  5: const pw.FixedColumnWidth(70), // Descuento
+                  6: const pw.FixedColumnWidth(70), // Total
+                  7: const pw.FixedColumnWidth(70), // Ganancias
                 },
               ),
             ];
@@ -312,11 +242,64 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
       }
     } catch (e) {
       debugPrint("Error al generar PDF: $e");
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al generar el reporte: $e')),
-        );
-      }
     }
+  }
+
+  Future<Map<String, dynamic>> obtenerDatosTablaProductos(
+      DateTime fechaInicio, DateTime fechaFinal) async {
+    final db = await DatabaseController().database;
+    final results = await db.rawQuery('''
+      SELECT 
+        p.codigoProducto as codigo,
+        p.nombreProducto as producto,
+        SUM(dv.cantidadProducto) as cantidad_total,
+        p.precioProducto as precio_unidad,
+        SUM(dv.descuentoProducto) as descuento_total,
+        SUM(dv.subtotalProducto) as total_ventas,
+        SUM(dv.gananciaProducto) as ganancias
+      FROM DetallesVentas dv
+      JOIN Ventas v ON dv.idVenta = v.idVenta
+      JOIN Productos p ON dv.idProducto = p.idProducto
+      WHERE date(v.fechaVenta) BETWEEN ? AND ?
+      GROUP BY p.idProducto, p.codigoProducto, p.nombreProducto, p.precioProducto
+      ORDER BY cantidad_total DESC
+    ''', [
+      fechaInicio.toIso8601String().split('T')[0],
+      fechaFinal.toIso8601String().split('T')[0]
+    ]);
+
+    double totalVentas = 0;
+    double totalGanancias = 0;
+    int totalProductos = 0;
+    final List<List<String>> data = [];
+
+    for (var i = 0; i < results.length; i++) {
+      final row = results[i];
+      final cantidadTotal = row['cantidad_total'] as int;
+      final totalVenta = row['total_ventas'] as double;
+      final ganancia = row['ganancias'] as double;
+
+      totalProductos += cantidadTotal;
+      totalVentas += totalVenta;
+      totalGanancias += ganancia;
+
+      data.add([
+        '${i + 1}',
+        row['codigo']?.toString() ?? '---',
+        row['producto']?.toString() ?? '---',
+        cantidadTotal.toString(),
+        'S/. ${(row['precio_unidad'] as double).toStringAsFixed(2)}',
+        'S/. ${(row['descuento_total'] as double? ?? 0).toStringAsFixed(2)}',
+        'S/. ${totalVenta.toStringAsFixed(2)}',
+        'S/. ${ganancia.toStringAsFixed(2)}',
+      ]);
+    }
+
+    return {
+      "data": data,
+      "totalVentas": totalVentas,
+      "totalGanancias": totalGanancias,
+      "totalProductos": totalProductos,
+    };
   }
 }
