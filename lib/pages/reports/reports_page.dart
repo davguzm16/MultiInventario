@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use, duplicate_ignore
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:multiinventario/pages/reports/report_lotes.dart';
@@ -12,7 +14,6 @@ class ReportsPage extends StatefulWidget {
   State<ReportsPage> createState() => _ReportsPageState();
 }
 
-//para agregar una pantalla de carga
 class _ReportsPageState extends State<ReportsPage> {
   bool _isLoading = false;
   final ReportController report = ReportController();
@@ -25,66 +26,73 @@ class _ReportsPageState extends State<ReportsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "Mis ventas",
+          "Mis reportes",
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         elevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.1, // Aumentado para centrar mejor
-                vertical: screenHeight * 0.02,
-              ),
-              child: GridView.count(
-                crossAxisCount: 1, // Cambiado a 1 columna
-                mainAxisSpacing: 10, // Espaciado fijo entre botones
-                childAspectRatio:
-                    4.0, // Ajustado para botones más anchos que altos
-                children: [
-                  _buildReportButton(
+          : Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: screenWidth * 0.08, // Más centrado en la pantalla
+                  vertical: screenHeight * 0.02,
+                ),
+                child: GridView.count(
+                  crossAxisCount: 1,
+                  mainAxisSpacing: 14,
+                  childAspectRatio: 4.2, // Ajustado para mejor altura
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    _buildReportButton(
                       title: "Reporte Detallado de Ventas",
                       icon: Icons.receipt_long,
                       onPressed: () async {
                         await context.push('/reports/report-details-page');
-                      }),
-                  _buildReportButton(
+                      },
+                    ),
+                    _buildReportButton(
                       title: "Reporte de Ventas",
                       icon: Icons.point_of_sale,
                       onPressed: () async {
                         await context.push('/reports/report-sales-page');
-                      }),
-                  _buildReportButton(
-                    title: "Reporte de Productos Vendidos",
-                    icon: Icons.shopping_cart,
-                    onPressed: () async {
-                      await context.push('/reports/report-productos-vendidos');
-                    },
-                  ),
-                  _buildReportButton(
+                      },
+                    ),
+                    _buildReportButton(
+                      title: "Reporte de Productos Vendidos",
+                      icon: Icons.shopping_cart,
+                      onPressed: () async {
+                        await context
+                            .push('/reports/report-productos-vendidos');
+                      },
+                    ),
+                    _buildReportButton(
                       title: "Reporte de Inventario",
                       icon: Icons.inventory,
                       onPressed: () async {
                         await context
                             .push('/reports/report-general-inventario');
-                      }),
-                  _buildReportButton(
-                    title: "Reporte de Lotes",
-                    icon: Icons.ballot,
-                    onPressed: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ReportLotesPage(),
+                      },
+                    ),
+                    _buildReportButton(
+                      title: "Reporte de Lotes",
+                      icon: Icons.ballot,
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReportLotesPage(),
+                        ),
                       ),
                     ),
-                  ),
-                  _buildReportButton(
-                    title: "Reporte de Deudores",
-                    icon: Icons.account_balance,
-                    onPressed: () => _generateDebtorsReport(),
-                  ),
-                ],
+                    _buildReportButton(
+                      title: "Reporte de Deudores",
+                      icon: Icons.account_balance,
+                      onPressed: () => _generateDebtorsReport(),
+                    ),
+                  ],
+                ),
               ),
             ),
     );
@@ -95,40 +103,42 @@ class _ReportsPageState extends State<ReportsPage> {
     required IconData icon,
     required VoidCallback onPressed,
   }) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Row(
-            // Cambiado a Row para layout horizontal
-            children: [
-              Icon(
-                icon,
-                size: 32,
-                color: const Color.fromRGBO(73, 61, 158, 1),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Text(
+    return Align(
+      alignment: Alignment.center,
+      child: Card(
+        elevation: 6,
+        shadowColor: Colors.black.withOpacity(0.25),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF493D9E), width: 2),
+        ),
+        color: Colors.grey[100],
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          splashColor: const Color(0xFF493D9E).withOpacity(0.2),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Icon(
+                  icon,
+                  size: 32,
+                  color: const Color(0xFF493D9E),
+                ),
+                Text(
                   title,
                   style: const TextStyle(
-                    fontSize: 16,
+                    fontSize: 15,
                     fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
+                  softWrap: true,
                 ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.grey,
-                size: 16,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

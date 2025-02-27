@@ -207,6 +207,7 @@ class _InventoryPageState extends State<InventoryPage>
                   cantidadCargas = 0;
                   hayMasCargas = true;
                 });
+
                 _cargarProductos(reiniciarListaProductos: true);
               },
             ),
@@ -260,32 +261,45 @@ class _InventoryPageState extends State<InventoryPage>
                           crossAxisCount: 2,
                           crossAxisSpacing: 15,
                           mainAxisSpacing: 15,
-                          childAspectRatio: 0.8,
+                          childAspectRatio: 0.75,
                         ),
                         itemCount: productos.length,
                         itemBuilder: (context, index) {
                           final producto = productos[index];
+                          final bool esStockBajo =
+                              producto.stockActual! < producto.stockMinimo;
 
                           return GestureDetector(
                             onTap: () {
                               context.push(
                                   '/inventory/product/${producto.idProducto}');
-                              _cargarProductos(reiniciarListaProductos: true);
+
                               isSearching = false;
+                              _cargarProductos(reiniciarListaProductos: true);
                             },
                             child: Container(
-                              padding: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.purple),
-                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 6,
+                                    offset: const Offset(2, 4),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: const Color(0xFF493D9E),
+                                  width: 2,
+                                ),
                               ),
                               child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
                                   SizedBox(
-                                    width: 80,
-                                    height: 80,
+                                    width: 90,
+                                    height: 90,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
                                       child: producto.rutaImagen == null
@@ -295,7 +309,7 @@ class _InventoryPageState extends State<InventoryPage>
                                             )
                                           : Image.file(
                                               File(producto.rutaImagen!),
-                                              fit: BoxFit.contain,
+                                              fit: BoxFit.cover,
                                             ),
                                     ),
                                   ),
@@ -305,6 +319,7 @@ class _InventoryPageState extends State<InventoryPage>
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
+                                      color: Color(0xFF493D9E),
                                     ),
                                     textAlign: TextAlign.center,
                                     overflow: TextOverflow.ellipsis,
@@ -312,28 +327,44 @@ class _InventoryPageState extends State<InventoryPage>
                                   ),
                                   const SizedBox(height: 5),
                                   Text(
-                                    "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
+                                    "S/. ${producto.precioProducto.toStringAsFixed(2)}",
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(fontSize: 12),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
                                   ),
                                   const SizedBox(height: 5),
                                   FutureBuilder<Unidad?>(
                                     future: Unidad.obtenerUnidadPorId(
                                         producto.idUnidad!),
                                     builder: (context, snapshot) {
-                                      return Text(
-                                        "Stock: ${producto.stockActual} ${snapshot.data?.tipoUnidad ?? "---"}",
-                                        style: TextStyle(
-                                          color: producto.stockActual! <
-                                                  producto.stockMinimo
-                                              ? Colors.red
-                                              : Colors.black,
-                                          fontSize: 12,
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 4, horizontal: 8),
+                                        decoration: BoxDecoration(
+                                          color: esStockBajo
+                                              ? Colors.red.withOpacity(0.15)
+                                              : const Color(0xFF2BBF55)
+                                                  .withOpacity(0.15),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
                                         ),
-                                        textAlign: TextAlign.center,
+                                        child: Text(
+                                          "Stock: ${producto.stockActual} ${snapshot.data?.tipoUnidad ?? "---"}",
+                                          style: TextStyle(
+                                            color: esStockBajo
+                                                ? Colors.red
+                                                : const Color(0xFF2BBF55),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       );
                                     },
-                                  )
+                                  ),
                                 ],
                               ),
                             ),

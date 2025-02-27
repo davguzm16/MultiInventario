@@ -662,18 +662,13 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    'Código del producto',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        productCodeController.text,
-                        style: const TextStyle(fontSize: 24),
+                      const Text(
+                        'Código del producto',
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(width: 10),
                       IconButton(
                         onPressed: () async {
                           final String? result =
@@ -688,6 +683,11 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                             height: 40),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    productCodeController.text,
+                    style: const TextStyle(fontSize: 24),
                   ),
                   const SizedBox(height: 10),
                   CustomTextField(

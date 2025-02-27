@@ -204,11 +204,24 @@ class _ClientsPageState extends State<ClientsPage>
                     itemBuilder: (context, index) {
                       final cliente = clientes[index];
 
-                      return Card(
-                        shape: RoundedRectangleBorder(
+                      return Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          side: const BorderSide(
-                              color: Color(0xFF493D9E), width: 2),
+                          border: Border.all(
+                              color: const Color(0xFF493D9E), width: 2),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 4),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 2,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         margin: const EdgeInsets.only(bottom: 12),
                         child: Padding(
@@ -283,6 +296,7 @@ class _ClientsPageState extends State<ClientsPage>
                                         color: cliente.esDeudor
                                             ? Colors.red
                                             : Colors.black,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                   ],
@@ -295,6 +309,9 @@ class _ClientsPageState extends State<ClientsPage>
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: const Color(0xFF2BBF55),
                                       foregroundColor: Colors.white,
+                                      elevation: 6,
+                                      shadowColor:
+                                          Colors.black.withOpacity(0.3),
                                     ),
                                     onPressed: () {
                                       context.push(
