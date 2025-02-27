@@ -230,8 +230,10 @@ class _InventoryPageState extends State<InventoryPage>
 
                 if (filtros != null) {
                   setState(() {
-                    categoriasSeleccionadas =
-                        filtros['categoriasSeleccionadas'] as List<Categoria>;
+                    categoriasSeleccionadas = filtros['categoriasSeleccionadas']
+                            .isNotEmpty
+                        ? filtros['categoriasSeleccionadas'] as List<Categoria>
+                        : [];
                     stockBajo = filtros['stockBajo'] as bool?;
                   });
                 }

@@ -155,9 +155,13 @@ class AppRoutes {
                     path: 'filter-sales',
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
-                      final esAlContado = state.extra as bool?;
+                      final filtros = state.extra as Map<String, dynamic>?;
 
-                      return FilterSalesPage(esAlContado: esAlContado);
+                      return FilterSalesPage(
+                        esAlContado: filtros?['esAlContado'],
+                        fechaInicio: filtros?['fechaInicio'],
+                        fechaFinal: filtros?['fechaFinal'],
+                      );
                     },
                   ),
                   GoRoute(

@@ -20,21 +20,21 @@ class _FilterProductState extends State<FilterProductPage> {
   List<Categoria> categoriasObtenidas = [];
   List<Categoria> categoriasSeleccionadas = [];
   bool? stockBajo;
-  bool habilitarFiltro = false;
+  bool habilitarStock = false;
+  bool habilitarCategorias = false;
 
   @override
   void initState() {
     super.initState();
     categoriasSeleccionadas = List.from(widget.categoriasSeleccionadas);
     stockBajo = widget.stockBajo;
-    habilitarFiltro = stockBajo != null;
-    debugPrint("Habilitar filtro: $habilitarFiltro, stockBajo: $stockBajo");
+    habilitarStock = stockBajo != null;
+    habilitarCategorias = categoriasSeleccionadas.isNotEmpty;
     obtenerCategorias();
   }
 
   Future<void> obtenerCategorias() async {
     final categorias = await Categoria.obtenerCategorias();
-
     setState(() {
       categoriasObtenidas = categorias;
     });
@@ -42,8 +42,9 @@ class _FilterProductState extends State<FilterProductPage> {
 
   void aplicarFiltros() {
     context.pop({
-      'categoriasSeleccionadas': categoriasSeleccionadas,
-      'stockBajo': stockBajo,
+      'categoriasSeleccionadas':
+          habilitarCategorias ? categoriasSeleccionadas : [],
+      'stockBajo': habilitarStock ? stockBajo : null,
     });
   }
 
@@ -56,160 +57,194 @@ class _FilterProductState extends State<FilterProductPage> {
           style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Categorías del producto",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF493D9E), // Morado
-              ),
-            ),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: categoriasObtenidas.map((categoria) {
-                final estaSeleccionada = categoriasSeleccionadas
-                    .any((c) => c.idCategoria == categoria.idCategoria);
-
-                return FilterChip(
-                  label: Text(categoria.nombreCategoria),
-                  selected: estaSeleccionada,
-                  selectedColor: const Color(0xFF493D9E), // Morado
-                  backgroundColor: Colors.grey[200],
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: estaSeleccionada
-                        ? Colors.white
-                        : const Color(0xFF493D9E),
-                  ),
-                  onSelected: (bool selected) {
-                    setState(() {
-                      if (selected) {
-                        categoriasSeleccionadas.add(categoria);
-                      } else {
-                        categoriasSeleccionadas.removeWhere(
-                            (c) => c.idCategoria == categoria.idCategoria);
-                      }
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 20),
-
-            // Filtro de stock bajo
-            Card(
-              elevation: 3,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SwitchListTile(
-                      title: const Text(
-                        "Filtrar por Stock Bajo",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
-                      subtitle: const Text(
-                        "Activa esta opción para elegir si mostrar productos con stock bajo o normal.",
-                        style: TextStyle(color: Colors.black54),
-                      ),
-                      value: habilitarFiltro,
-                      activeColor: const Color(0xFF2BBF55), // Verde
-                      onChanged: (bool value) {
-                        setState(() {
-                          habilitarFiltro = value;
-                          stockBajo = value
-                              ? true
-                              : null; // Si se desactiva, stockBajo es null
-                        });
-                      },
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Filtro de Categorías
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    if (habilitarFiltro)
-                      Column(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            "¿Qué productos quieres ver?",
-                            style: TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
+                          SwitchListTile(
+                            title: const Text(
+                              "Filtrar por Categorías",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: const Text(
+                              "Activa esta opción para seleccionar categorías específicas.",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                            value: habilitarCategorias,
+                            activeColor: const Color(0xFF2BBF55),
+                            onChanged: (bool value) {
+                              setState(() {
+                                habilitarCategorias = value;
+                                if (!value) {
+                                  categoriasSeleccionadas.clear();
+                                }
+                              });
+                            },
                           ),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    stockBajo = true;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: stockBajo == true
-                                      ? const Color(0xFF2BBF55)
-                                      : Colors.grey[300],
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 10),
-                                ),
-                                child: Text(
-                                  "Stock Bajo",
-                                  style: TextStyle(
-                                    color: stockBajo == true
-                                        ? Colors.white
-                                        : Colors.black,
+                          if (habilitarCategorias)
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: categoriasObtenidas.map((categoria) {
+                                final estaSeleccionada =
+                                    categoriasSeleccionadas.any((c) =>
+                                        c.idCategoria == categoria.idCategoria);
+
+                                return FilterChip(
+                                  label: Text(categoria.nombreCategoria),
+                                  selected: estaSeleccionada,
+                                  selectedColor: const Color(0xFF493D9E),
+                                  backgroundColor: Colors.grey[200],
+                                  labelStyle: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              ElevatedButton(
-                                onPressed: () {
-                                  setState(() {
-                                    stockBajo = false;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: stockBajo == false
-                                      ? Colors.red
-                                      : Colors.grey[300],
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 20, vertical: 10),
-                                ),
-                                child: Text(
-                                  "Stock Normal",
-                                  style: TextStyle(
-                                    color: stockBajo == false
+                                    color: estaSeleccionada
                                         ? Colors.white
-                                        : Colors.black,
-                                    fontWeight: FontWeight.bold,
+                                        : const Color(0xFF493D9E),
                                   ),
-                                ),
-                              ),
-                            ],
-                          ),
+                                  onSelected: (bool selected) {
+                                    setState(() {
+                                      if (selected) {
+                                        categoriasSeleccionadas.add(categoria);
+                                      } else {
+                                        categoriasSeleccionadas.removeWhere(
+                                            (c) =>
+                                                c.idCategoria ==
+                                                categoria.idCategoria);
+                                      }
+                                    });
+                                  },
+                                );
+                              }).toList(),
+                            ),
                         ],
                       ),
-                  ],
-                ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Filtro de stock bajo
+                  Card(
+                    elevation: 3,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SwitchListTile(
+                            title: const Text(
+                              "Filtrar por Stock Bajo",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: const Text(
+                              "Activa esta opción para elegir si mostrar productos con stock bajo o normal.",
+                              style: TextStyle(color: Colors.black54),
+                            ),
+                            value: habilitarStock,
+                            activeColor: const Color(0xFF2BBF55),
+                            onChanged: (bool value) {
+                              setState(() {
+                                habilitarStock = value;
+                                stockBajo = value ? true : null;
+                              });
+                            },
+                          ),
+                          if (habilitarStock)
+                            Column(
+                              children: [
+                                const Text(
+                                  "¿Qué productos quieres ver?",
+                                  style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          stockBajo = true;
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: stockBajo == true
+                                            ? Colors.red
+                                            : Colors.grey[300],
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 10),
+                                      ),
+                                      child: Text(
+                                        "Stock Bajo",
+                                        style: TextStyle(
+                                          color: stockBajo == true
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          stockBajo = false;
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: stockBajo == false
+                                            ? const Color(0xFF2BBF55)
+                                            : Colors.grey[300],
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 20, vertical: 10),
+                                      ),
+                                      child: Text(
+                                        "Stock Normal",
+                                        style: TextStyle(
+                                          color: stockBajo == false
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+          ),
 
-            const Spacer(),
-
-            // Botón de aplicar filtro
-            SizedBox(
+          // Botón de aplicar filtros
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -217,7 +252,7 @@ class _FilterProductState extends State<FilterProductPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  backgroundColor: const Color(0xFF493D9E), // Morado
+                  backgroundColor: const Color(0xFF493D9E),
                 ),
                 icon: const Icon(Icons.filter_alt, color: Colors.white),
                 label: const Text(
@@ -227,8 +262,8 @@ class _FilterProductState extends State<FilterProductPage> {
                 onPressed: aplicarFiltros,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

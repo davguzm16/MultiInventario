@@ -86,6 +86,33 @@ class _ProductPageState extends State<ProductPage> {
             icon: const Icon(Icons.add, color: Colors.black),
             onPressed: () => _showLoteDialog(),
           ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            color: Colors.black,
+            onPressed: () {
+              ConfirmDialog(
+                context: context,
+                title: "Eliminar producto",
+                message: "Está seguro de eliminar el producto?",
+                btnOkOnPress: () async {
+                  if (await Producto.eliminarProducto(producto!.idProducto!)) {
+                    SuccessDialog(
+                      context: context,
+                      successMessage:
+                          "El producto ${producto!.nombreProducto} fue eliminado con exito!",
+                      btnOkOnPress: () => context.pop(),
+                    );
+                  } else {
+                    ErrorDialog(
+                      context: context,
+                      errorMessage:
+                          "Hubo un error al eliminar el producto ${producto!.nombreProducto}",
+                    );
+                  }
+                },
+              );
+            },
+          ),
         ],
       ),
       body: Padding(

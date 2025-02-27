@@ -146,6 +146,8 @@ class Venta {
   static Future<List<Venta>> obtenerVentasPorCargaFiltradas({
     required int numeroCarga,
     bool? esAlContado,
+    DateTime? fechaInicio,
+    DateTime? fechaFinal,
   }) async {
     const int cantidadPorCarga = 8;
     List<Venta> ventas = [];
@@ -154,19 +156,30 @@ class Venta {
       final db = await DatabaseController().database;
       int offset = numeroCarga * cantidadPorCarga;
 
-      String esAlContadoQuery = "";
+      String whereClause = "";
 
       if (esAlContado != null) {
-        esAlContadoQuery = "WHERE esAlContado = ${esAlContado ? 1 : 0}";
+        whereClause += "WHERE esAlContado = ${esAlContado ? 1 : 0} ";
+      }
+
+      if (fechaInicio != null && fechaFinal != null) {
+        whereClause +=
+            "${whereClause.isEmpty ? "WHERE" : "AND"} fechaVenta BETWEEN '${fechaInicio.toIso8601String()}' AND '${fechaFinal.toIso8601String()}' ";
+      } else if (fechaInicio != null) {
+        whereClause +=
+            "${whereClause.isEmpty ? "WHERE" : "AND"} fechaVenta >= '${fechaInicio.toIso8601String()}' ";
+      } else if (fechaFinal != null) {
+        whereClause +=
+            "${whereClause.isEmpty ? "WHERE" : "AND"} fechaVenta <= '${fechaFinal.toIso8601String()}' ";
       }
 
       final result = await db.rawQuery('''
       SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
              montoTotal, montoCancelado, esAlContado
       FROM Ventas
-      $esAlContadoQuery
-      LIMIT ? OFFSET ?
-    ''', [cantidadPorCarga, offset]);
+      $whereClause
+      LIMIT $cantidadPorCarga OFFSET $offset
+    ''');
 
       for (var item in result) {
         ventas.add(Venta(

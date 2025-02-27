@@ -27,6 +27,8 @@ class _SalesPageState extends State<SalesPage>
   // Variables de filtrado
   String codigoVentaBuscado = "";
   bool? esAlContado;
+  DateTime? fechaInicio;
+  DateTime? fechaFinal;
 
   // Manejo de carga de datos dinamica
   int cantidadCargas = 0;
@@ -77,6 +79,8 @@ class _SalesPageState extends State<SalesPage>
     List<Venta> nuevasVentas = await Venta.obtenerVentasPorCargaFiltradas(
       numeroCarga: cantidadCargas,
       esAlContado: esAlContado,
+      fechaInicio: fechaInicio,
+      fechaFinal: fechaFinal,
     );
 
     await Future.delayed(const Duration(milliseconds: 500));
@@ -199,16 +203,24 @@ class _SalesPageState extends State<SalesPage>
             IconButton(
               icon: const Icon(Icons.filter_list),
               onPressed: () async {
-                final filtro = await context.push<bool?>(
+                final filtro = await context.push<Map<String, dynamic>?>(
                   '/sales/filter-sales',
-                  extra: esAlContado,
+                  extra: {
+                    "esAlContado": esAlContado,
+                    "fechaInicio": fechaInicio,
+                    "fechaFinal": fechaFinal,
+                  },
                 );
 
-                setState(() {
-                  esAlContado = filtro;
-                });
+                if (filtro != null) {
+                  setState(() {
+                    esAlContado = filtro["esAlContado"];
+                    fechaInicio = filtro["fechaInicio"];
+                    fechaFinal = filtro["fechaFinal"];
+                  });
 
-                _cargarVentas(reiniciarListaVentas: true);
+                  _cargarVentas(reiniciarListaVentas: true);
+                }
               },
             ),
         ],
