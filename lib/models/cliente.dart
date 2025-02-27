@@ -28,7 +28,7 @@ class Cliente {
           cliente.nombreCliente,
           cliente.dniCliente,
           cliente.correoCliente,
-          cliente.esDeudor
+          cliente.esDeudor ? 1 : 0,
         ],
       );
 
@@ -98,20 +98,17 @@ class Cliente {
     return clientes;
   }
 
+  // C_pet_Test
   static Future<List<Cliente>> obtenerClientesPorCarga({
     required int numeroCarga,
     bool? esDeudor,
   }) async {
     const int cantidadPorCarga = 8;
     List<Cliente> clientes = [];
-    String esDeudorQuery = "";
+    String whereClause = "";
 
     if (esDeudor != null) {
-      if (esDeudor) {
-        esDeudorQuery = "AND esDeudor = 1";
-      } else {
-        esDeudorQuery = "AND esDeudor = 0";
-      }
+      whereClause = "WHERE esDeudor = ${esDeudor ? 1 : 0}";
     }
 
     try {
@@ -119,11 +116,11 @@ class Cliente {
       int offset = numeroCarga * cantidadPorCarga;
       final result = await db.rawQuery(
         '''
-        SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
-        FROM Clientes
-        $esDeudorQuery
-        LIMIT ? OFFSET ?
-        ''',
+      SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
+      FROM Clientes
+      $whereClause
+      LIMIT ? OFFSET ?
+      ''',
         [cantidadPorCarga, offset],
       );
 
@@ -137,7 +134,7 @@ class Cliente {
         ));
       }
     } catch (e) {
-      debugPrint("Error al obtener clientes filtrados: \${e.toString()}");
+      debugPrint("Error al obtener clientes filtrados: ${e.toString()}");
     }
     return clientes;
   }

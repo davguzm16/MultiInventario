@@ -10,14 +10,14 @@ import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'database_controller_test_helper.dart';
 
+// C_per_test_all
+
 Future<void> main() async {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar sqflite FFI.
+  // Inicializar sqflite FFI y crear la base de datos en memoria.
   sqfliteFfiInit();
   final databaseFactory = databaseFactoryFfi;
-
-  // Crear e inyectar la base de datos de prueba antes de arrancar la aplicación.
   final db = await databaseFactory.openDatabase(
     inMemoryDatabasePath,
     options: OpenDatabaseOptions(
@@ -34,13 +34,7 @@ Future<void> main() async {
             esAlContado INTEGER
           )
         ''');
-        // Si tu lógica de venta depende de otras tablas (por ejemplo, DetallesVentas), créalas también.
-        await db.execute('''
-          CREATE TABLE DetallesVentas (
-            idDetalle INTEGER PRIMARY KEY AUTOINCREMENT
-          )
-        ''');
-        // Si es necesario, crea también la tabla Productos.
+        // Crear otras tablas que sean necesarias (por ejemplo, Productos y DetallesVentas)
         await db.execute('''
           CREATE TABLE Productos (
             idProducto INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,17 +49,23 @@ Future<void> main() async {
             estaDisponible INTEGER
           )
         ''');
+        await db.execute('''
+          CREATE TABLE DetallesVentas (
+            idDetalle INTEGER PRIMARY KEY AUTOINCREMENT
+          )
+        ''');
       },
     ),
   );
+
+  // Inyecta la base de datos de test.
   setTestDatabase(db);
 
   // Ahora arranca la aplicación.
   app.main();
-  await Future.delayed(Duration(seconds: 1)); // Opcional: esperar a que se inicialice la app.
+  await Future.delayed(Duration(seconds: 1)); // Espera breve si es necesario
 
   testWidgets('Actualiza stock tras registrar una venta', (WidgetTester tester) async {
-    // Para asegurarnos de que la app está lista.
     await tester.pumpAndSettle();
 
     // Crear un producto con stock inicial de 100.
@@ -80,7 +80,7 @@ Future<void> main() async {
     bool productoCreado = await Producto.crearProducto(producto, []);
     expect(productoCreado, isTrue);
 
-    // Recuperar el ID asignado al producto (si es que no se asignó en el objeto).
+    // Obtener el ID asignado al producto.
     List<Map<String, dynamic>> productRows = await db.rawQuery(
       'SELECT idProducto FROM Productos WHERE nombreProducto = ?',
       [producto.nombreProducto],
@@ -98,10 +98,10 @@ Future<void> main() async {
     int? idCliente = await Cliente.crearCliente(cliente);
     expect(idCliente, isNotNull);
 
-    // Crear un detalle de venta que indique la venta de 10 unidades.
+    // Crear un detalle de venta que refleje la venta de 10 unidades.
     DetalleVenta detalle = DetalleVenta(
       idProducto: productId,
-      idLote: 1, // Suponiendo un valor para idLote
+      idLote: 1, // Suponiendo un valor válido para idLote
       cantidadProducto: 10,
       precioUnidadProducto: 50.0,
       subtotalProducto: 500.0,
@@ -119,12 +119,11 @@ Future<void> main() async {
     bool ventaCreada = await Venta.crearVenta(venta, [detalle]);
     expect(ventaCreada, isTrue);
 
-    // Consultar el stock actualizado del producto.
+    // Verificar el stock actualizado del producto (100 - 10 = 90).
     List<Map<String, dynamic>> resultado = await db.rawQuery(
       'SELECT stockActual FROM Productos WHERE idProducto = ?',
       [productId],
     );
-    // Suponiendo que la lógica actualiza el stock descontando 10 unidades.
     double stockActualizado = resultado.first['stockActual'] as double;
     expect(stockActualizado, equals(90.0));
   });

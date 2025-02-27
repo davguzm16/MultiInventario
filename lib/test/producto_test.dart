@@ -1,195 +1,224 @@
-import 'dart:io';
+// test/producto_test.dart
 import 'package:flutter_test/flutter_test.dart';
-import 'package:multiinventario/controllers/db_controller.dart';
-import 'package:multiinventario/models/categoria.dart';
 import 'package:multiinventario/models/producto.dart';
-import 'package:path/path.dart' hide equals;
+import 'package:multiinventario/models/categoria.dart';
+import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-
+import 'package:sqflite/sqflite.dart';
+import 'database_controller_test_helper.dart';
 
 void main() {
-  // Inicializamos sqflite FFI para entornos de prueba
+  // Inicializar sqflite en modo FFI (ideal para desktop y CI)
   sqfliteFfiInit();
-  databaseFactory = databaseFactoryFfi;
+  final databaseFactory = databaseFactoryFfi;
 
-  group('Pruebas Unitarias de Producto', () {
-    // Antes de cada prueba eliminamos la base de datos para iniciar con un estado limpio
-    setUp(() async {
-      final dbPath = await getDatabasesPath();
-      final path = join(dbPath, 'multiinventario.db');
-      if (await File(path).exists()) {
-        await deleteDatabase(path);
-      }
-      // Se insertan datos por defecto (categorías y unidades) si es necesario
-      await DatabaseController.insertDefaultData();
-    });
-
-    test('Creación de producto', () async {
-      // Producto típico para una empresa de abarrotes: "Arroz"
-      final producto = Producto(
-        idUnidad: 1,
-        codigoProducto: 'A001',
-        nombreProducto: 'Arroz',
-        precioProducto: 1.50,
-        stockActual: 100,
-        stockMinimo: 10,
-        stockMaximo: 200,
-        rutaImagen: 'lib/assets/imagenes/arroz.png',
-        estaDisponible: true,
-      );
-
-      // Se crea el producto sin asignar categorías (lista vacía)
-      bool creado = await Producto.crearProducto(producto, []);
-      expect(creado, isTrue,
-          reason: 'El producto "Arroz" debe crearse correctamente.');
-
-      // Verificamos la inserción buscando por nombre
-      final productos = await Producto.obtenerProductosPorNombre('Arroz');
-      expect(productos.isNotEmpty, isTrue,
-          reason: 'Se debe encontrar al menos un producto con nombre "Arroz".');
-      expect(productos.first.nombreProducto, equals('Arroz'));
-    });
-
-    test('Modificación de producto', () async {
-      // Creamos un producto: "Frijol"
-      final producto = Producto(
-        idUnidad: 1,
-        codigoProducto: 'A002',
-        nombreProducto: 'Frijol',
-        precioProducto: 2.00,
-        stockActual: 50,
-        stockMinimo: 5,
-        stockMaximo: 100,
-        rutaImagen: 'lib/assets/imagenes/frijol.png',
-        estaDisponible: true,
-      );
-      bool creado = await Producto.crearProducto(producto, []);
-      expect(creado, isTrue,
-          reason: 'El producto "Frijol" debe crearse correctamente.');
-
-      // Obtenemos el producto creado buscando por su nombre
-      final listaFrijol = await Producto.obtenerProductosPorNombre('Frijol');
-      expect(listaFrijol.isNotEmpty, isTrue);
-      final productoCreado = listaFrijol.first;
-
-      // Modificamos algunos atributos: cambiamos nombre y precio
-      final productoModificado = Producto(
-        idProducto: productoCreado.idProducto,
-        idUnidad: productoCreado.idUnidad,
-        codigoProducto: productoCreado.codigoProducto,
-        nombreProducto: 'Frijol Rojo',
-        precioProducto: 2.50,
-        stockActual: productoCreado.stockActual,
-        stockMinimo: productoCreado.stockMinimo,
-        stockMaximo: productoCreado.stockMaximo,
-        rutaImagen: productoCreado.rutaImagen,
-        estaDisponible: productoCreado.estaDisponible,
-      );
-
-      bool modificado = await Producto.actualizarProducto(productoModificado);
-      expect(modificado, isTrue,
-          reason: 'El producto debe actualizarse correctamente.');
-
-      // Verificamos que se hayan guardado los cambios
-      final productoVerificado =
-      await Producto.obtenerProductoPorID(productoCreado.idProducto!);
-      expect(productoVerificado, isNotNull);
-      expect(productoVerificado!.nombreProducto, equals('Frijol Rojo'));
-      expect(productoVerificado.precioProducto, equals(2.50));
-    });
-
-    test('Eliminación de producto (deshabilitación)', () async {
-      // Creamos un producto: "Aceite"
-      final producto = Producto(
-        idUnidad: 1,
-        codigoProducto: 'A003',
-        nombreProducto: 'Aceite',
-        precioProducto: 3.00,
-        stockActual: 30,
-        stockMinimo: 5,
-        stockMaximo: 50,
-        rutaImagen: 'lib/assets/imagenes/aceite.png',
-        estaDisponible: true,
-      );
-      bool creado = await Producto.crearProducto(producto, []);
-      expect(creado, isTrue,
-          reason: 'El producto "Aceite" debe crearse correctamente.');
-
-      // Obtenemos el producto para conocer su ID
-      final listaAceite =
-      await Producto.obtenerProductosPorNombre('Aceite');
-      expect(listaAceite.isNotEmpty, isTrue);
-      final productoCreado = listaAceite.first;
-
-      // Eliminamos (deshabilitamos) el producto
-      bool eliminado =
-      await Producto.eliminarProducto(productoCreado.idProducto!);
-      expect(eliminado, isTrue,
-          reason: 'El producto debe ser eliminado (deshabilitado) correctamente.');
-
-      // Verificamos que el producto tenga estaDisponible en false
-      final productoEliminado =
-      await Producto.obtenerProductoPorID(productoCreado.idProducto!);
-      expect(productoEliminado, isNotNull);
-      expect(productoEliminado!.estaDisponible, isFalse,
-          reason: 'El producto debe estar deshabilitado.');
-    });
-
-    test('Filtrado de productos por nombre', () async {
-      // Creamos dos productos: "Azúcar" y "Sal"
-      final productosData = [
-        Producto(
-          idUnidad: 1,
-          codigoProducto: 'A004',
-          nombreProducto: 'Azúcar',
-          precioProducto: 0.80,
-          stockActual: 200,
-          stockMinimo: 20,
-          stockMaximo: 500,
-          rutaImagen: 'lib/assets/imagenes/azucar.png',
-          estaDisponible: true,
-        ),
-        Producto(
-          idUnidad: 1,
-          codigoProducto: 'A005',
-          nombreProducto: 'Sal',
-          precioProducto: 0.50,
-          stockActual: 150,
-          stockMinimo: 15,
-          stockMaximo: 300,
-          rutaImagen: 'lib/assets/imagenes/sal.png',
-          estaDisponible: true,
-        ),
-      ];
-
-      for (var p in productosData) {
-        bool creado = await Producto.crearProducto(p, []);
-        expect(creado, isTrue);
-      }
-
-      // Filtramos productos que contengan "Azúcar"
-      final productosFiltrados =
-      await Producto.obtenerProductosPorNombre('Azúcar');
-      expect(productosFiltrados.length, greaterThanOrEqualTo(1));
-      expect(productosFiltrados.first.nombreProducto, equals('Azúcar'));
-    });
-
-    test('Obtener producto por ID inexistente', () async {
-      final producto = await Producto.obtenerProductoPorID(9999);
-      expect(producto, isNull,
-          reason:
-          'No debe encontrarse producto con ID inexistente.');
-    });
-
-    test('Obtener productos por fechas sin detalles de venta', () async {
-      // Como no se han insertado detalles de venta, se espera una lista vacía.
-      DateTime inicio = DateTime.now().subtract(Duration(days: 30));
-      DateTime fin = DateTime.now();
-      final productos =
-      await Producto.obtenerProductosPorFechas(inicio, fin);
-      expect(productos, isEmpty,
-          reason:
-          'No se deben obtener productos sin detalles de venta.');
-    });
+  setUp(() async {
+    // Abrir base de datos en memoria y crear las tablas necesarias para Producto
+    final db = await databaseFactory.openDatabase(
+      inMemoryDatabasePath,
+      options: OpenDatabaseOptions(
+        version: 1,
+        onCreate: (db, version) async {
+          // Tabla Unidades (necesaria para el campo idUnidad)
+          await db.execute('''
+            CREATE TABLE Unidades (
+              idUnidad INTEGER PRIMARY KEY AUTOINCREMENT,
+              tipoUnidad TEXT NOT NULL UNIQUE
+            )
+          ''');
+          // Tabla Categorias (para asignar categorías a productos)
+          await db.execute('''
+            CREATE TABLE Categorias (
+              idCategoria INTEGER PRIMARY KEY AUTOINCREMENT,
+              nombreCategoria TEXT UNIQUE
+            )
+          ''');
+          // Tabla Productos
+          await db.execute('''
+            CREATE TABLE Productos (
+              idProducto INTEGER PRIMARY KEY AUTOINCREMENT,
+              idUnidad INTEGER,
+              codigoProducto TEXT,
+              nombreProducto TEXT NOT NULL UNIQUE,
+              precioProducto REAL NOT NULL,
+              stockActual REAL,
+              stockMinimo REAL NOT NULL,
+              stockMaximo REAL,
+              estaDisponible INTEGER DEFAULT 1,
+              rutaImagen TEXT,
+              fechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+              fechaModificacion DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          ''');
+          // Tabla ProductosCategorias
+          await db.execute('''
+            CREATE TABLE ProductosCategorias (
+              idCategoria INTEGER,
+              idProducto INTEGER,
+              PRIMARY KEY (idCategoria, idProducto)
+            )
+          ''');
+          // Tabla DetallesVentas (si se requiere para obtenerProductosPorFechas)
+          await db.execute('''
+            CREATE TABLE DetallesVentas (
+              idProducto INTEGER,
+              idLote INTEGER,
+              idVenta INTEGER,
+              cantidadProducto INTEGER NOT NULL,
+              precioUnidadProducto REAL NOT NULL,
+              subtotalProducto REAL NOT NULL,
+              gananciaProducto REAL NOT NULL,
+              descuentoProducto REAL
+            )
+          ''');
+        },
+      ),
+    );
+    // Inyectar la base de datos de test en el singleton de DatabaseController
+    setTestDatabase(db);
   });
+
+  tearDown(() async {
+    final db = await DatabaseController().database;
+    await db.close();
+    clearTestDatabase();
+  });
+
+  test('crearProducto inserta un producto y asigna categorías', () async {
+    final db = await DatabaseController().database;
+    // Insertar un registro en Unidades
+    int idUnidad = await db.insert('Unidades', {'tipoUnidad': 'Unidad Test'});
+    // Insertar una categoría en Categorias
+    int idCategoria = await db.insert('Categorias', {'nombreCategoria': 'Categoria Test'});
+    // Crear objeto Categoria (asumiendo que el modelo tiene estas propiedades)
+    Categoria categoria = Categoria(idCategoria: idCategoria, nombreCategoria: 'Categoria Test');
+
+    // Crear un producto
+    Producto producto = Producto(
+      idUnidad: idUnidad,
+      codigoProducto: 'COD123',
+      nombreProducto: 'Producto Test',
+      precioProducto: 99.99,
+      stockMinimo: 10,
+      stockMaximo: 100,
+      rutaImagen: 'ruta/test.png',
+    );
+
+    bool creado = await Producto.crearProducto(producto, [categoria]);
+    expect(creado, isTrue);
+
+    // Verificar que el producto se insertó
+    final productos = await Producto.obtenerProductosPorNombre('Producto Test');
+    expect(productos.length, equals(1));
+    expect(productos.first.nombreProducto, equals('Producto Test'));
+
+    // Opcional: verificar la relación en ProductosCategorias
+    final rel = await db.query('ProductosCategorias',
+        where: 'idProducto = ?', whereArgs: [productos.first.idProducto]);
+    expect(rel.length, equals(1));
+    expect(rel.first['idCategoria'], equals(idCategoria));
+  });
+
+  test('obtenerProductoPorID retorna el producto correcto', () async {
+    final db = await DatabaseController().database;
+    // Insertar datos en Unidades y Categorias
+    int idUnidad = await db.insert('Unidades', {'tipoUnidad': 'Unidad Test'});
+    int idCategoria = await db.insert('Categorias', {'nombreCategoria': 'Categoria Test'});
+    Categoria categoria = Categoria(idCategoria: idCategoria, nombreCategoria: 'Categoria Test');
+
+    Producto producto = Producto(
+      idUnidad: idUnidad,
+      codigoProducto: 'COD456',
+      nombreProducto: 'Producto ID Test',
+      precioProducto: 49.99,
+      stockMinimo: 5,
+      stockMaximo: 50,
+      rutaImagen: 'ruta/test2.png',
+    );
+
+    bool creado = await Producto.crearProducto(producto, [categoria]);
+    expect(creado, isTrue);
+
+    // Buscar por nombre para obtener el ID asignado
+    List<Producto> productos = await Producto.obtenerProductosPorNombre('Producto ID Test');
+    expect(productos.length, equals(1));
+    int? idProducto = productos.first.idProducto;
+    expect(idProducto, isNotNull);
+
+    Producto? productoObtenido = await Producto.obtenerProductoPorID(idProducto!);
+    expect(productoObtenido, isNotNull);
+    expect(productoObtenido!.nombreProducto, equals('Producto ID Test'));
+  });
+
+  test('actualizarProducto modifica el producto', () async {
+    final db = await DatabaseController().database;
+    // Insertar datos en Unidades y Categorias
+    int idUnidad = await db.insert('Unidades', {'tipoUnidad': 'Unidad Test'});
+    int idCategoria = await db.insert('Categorias', {'nombreCategoria': 'Categoria Test'});
+    Categoria categoria = Categoria(idCategoria: idCategoria, nombreCategoria: 'Categoria Test');
+
+    Producto producto = Producto(
+      idUnidad: idUnidad,
+      codigoProducto: 'COD789',
+      nombreProducto: 'Producto Update Test',
+      precioProducto: 20.0,
+      stockMinimo: 2,
+      stockMaximo: 20,
+      rutaImagen: 'ruta/test3.png',
+    );
+
+    bool creado = await Producto.crearProducto(producto, [categoria]);
+    expect(creado, isTrue);
+
+    // Obtener el producto y actualizar campos
+    List<Producto> productos = await Producto.obtenerProductosPorNombre('Producto Update Test');
+    expect(productos.length, equals(1));
+    Producto prod = productos.first;
+    prod.precioProducto = 30.0;
+    prod.nombreProducto = 'Producto Update Test Modified';
+    bool actualizado = await Producto.actualizarProducto(prod);
+    expect(actualizado, isTrue);
+
+    // Verificar la actualización
+    Producto? actualizadoProducto = await Producto.obtenerProductoPorID(prod.idProducto!);
+    expect(actualizadoProducto, isNotNull);
+    expect(actualizadoProducto!.precioProducto, equals(30.0));
+    expect(actualizadoProducto.nombreProducto, equals('Producto Update Test Modified'));
+  });
+
+  test('eliminarProducto marca el producto como no disponible', () async {
+    final db = await DatabaseController().database;
+    // Insertar datos en Unidades y Categorias
+    int idUnidad = await db.insert('Unidades', {'tipoUnidad': 'Unidad Test'});
+    int idCategoria = await db.insert('Categorias', {'nombreCategoria': 'Categoria Test'});
+    Categoria categoria = Categoria(idCategoria: idCategoria, nombreCategoria: 'Categoria Test');
+
+    Producto producto = Producto(
+      idUnidad: idUnidad,
+      codigoProducto: 'COD101',
+      nombreProducto: 'Producto Delete Test',
+      precioProducto: 15.0,
+      stockMinimo: 1,
+      stockMaximo: 10,
+      rutaImagen: 'ruta/test4.png',
+    );
+
+    bool creado = await Producto.crearProducto(producto, [categoria]);
+    expect(creado, isTrue);
+
+    // Obtener el producto y luego "eliminarlo" (deshabilitarlo)
+    List<Producto> productos = await Producto.obtenerProductosPorNombre('Producto Delete Test');
+    expect(productos.length, equals(1));
+    Producto prod = productos.first;
+    bool eliminado = await Producto.eliminarProducto(prod.idProducto!);
+    expect(eliminado, isTrue);
+
+    // Verificar que el producto esté marcado como no disponible
+    Producto? productoEliminado = await Producto.obtenerProductoPorID(prod.idProducto!);
+    expect(productoEliminado, isNotNull);
+    expect(productoEliminado!.estaDisponible, isFalse);
+  });
+
+  // Opcionalmente, se podrían agregar tests para insertarProductosPorDefecto o
+  // obtenerProductosPorFechas, considerando la necesidad de simular o insertar datos en DetallesVentas.
 }

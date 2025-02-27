@@ -22,7 +22,7 @@ class Venta {
     this.montoCancelado,
     this.esAlContado,
   });
-
+  // C_per_Test
   static Future<bool> crearVenta(
       Venta venta, List<DetalleVenta> detallesVentas) async {
     try {
@@ -51,7 +51,7 @@ class Venta {
         venta.codigoBoleta,
         venta.montoTotal,
         venta.montoCancelado,
-        venta.esAlContado,
+        venta.esAlContado == true ? 1 : 0,
       ]);
 
       if (result > 0) {

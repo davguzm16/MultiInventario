@@ -132,7 +132,7 @@ class _InventoryPageState extends State<InventoryPage>
     _animationController.dispose();
     super.dispose();
   }
-
+  // C_per_test
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -141,41 +141,44 @@ class _InventoryPageState extends State<InventoryPage>
           duration: const Duration(milliseconds: 150),
           width: isSearching ? MediaQuery.of(context).size.width - 32 : 150,
           child: isSearching
-              ? TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: "Buscar producto...",
-                    prefixIcon: const Icon(Icons.search),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: () {
-                        _searchController.clear();
-                        setState(() {
-                          isSearching = false;
-                          nombreProductoBuscado = "";
-                        });
-                        _animationController.reverse();
-                        _cargarProductos(reiniciarListaProductos: true);
-                      },
-                    ),
-                    contentPadding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.white.withOpacity(0.2),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      nombreProductoBuscado = value;
-                    });
-                    _buscarProductosPorNombre(value);
-                  },
-                )
-              : const Text(
+              ? // Dentro de InventoryPage, en el widget que se muestra cuando isSearching es true:
+                // Dentro de InventoryPage, donde se muestra el TextField de búsqueda
+          TextField(
+            key: const Key('searchField'),
+            controller: _searchController,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: "Buscar producto...",
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  _searchController.clear();
+                  setState(() {
+                    isSearching = false;
+                    nombreProductoBuscado = "";
+                  });
+                  _animationController.reverse();
+                  _cargarProductos(reiniciarListaProductos: true);
+                },
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.2),
+            ),
+            onChanged: (value) {
+              setState(() {
+                nombreProductoBuscado = value;
+              });
+              _buscarProductosPorNombre(value);
+            },
+          )
+
+            : const Text(
                   "Mis productos",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
@@ -302,14 +305,17 @@ class _InventoryPageState extends State<InventoryPage>
                                   Flexible(
                                     child: Text(
                                       producto.nombreProducto,
+                                      key: Key('productName_${producto.idProducto}'),
                                       style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
                                       textAlign: TextAlign.center,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
                                     ),
-                                  ),
+                                  )
+,
                                   Text(
                                     "Precio: S/. ${producto.precioProducto.toStringAsFixed(2)}",
                                     textAlign: TextAlign.center,

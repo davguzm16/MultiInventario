@@ -189,4 +189,15 @@ class DatabaseController {
     Unidad.crearUnidadesPorDefecto();
     Producto.insertarProductosPorDefecto();
   }
+
+  // MÉTODOS EXCLUSIVOS PARA TESTING:
+  @visibleForTesting
+  static set testDatabase(Database? db) {
+    _instance._database = db;
+  }
+
+  @visibleForTesting
+  static void clearTestDatabase() {
+    _instance._database = null;
+  }
 }

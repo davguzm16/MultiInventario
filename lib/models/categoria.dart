@@ -61,7 +61,7 @@ class Categoria {
 
     return result > 0;
   }
-
+  // C_per_test
   static Future<void> crearCategoriasPorDefecto() async {
     if (await DatabaseController.tableHasData("Categorias")) return;
 
@@ -75,12 +75,13 @@ class Categoria {
 
     try {
       for (Categoria categoria in categorias) {
-        crearCategoria(categoria);
+        await crearCategoria(categoria);
       }
     } catch (e) {
       debugPrint(e.toString());
     }
   }
+
 
   static Future<List<Categoria>> obtenerCategorias() async {
     List<Categoria> categorias = [];
