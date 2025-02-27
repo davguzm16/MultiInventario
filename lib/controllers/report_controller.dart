@@ -28,7 +28,6 @@ class ReportController {
       final file = File(path);
       if (await file.exists()) {
         Navigator.push(
-          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(
             builder: (context) => _PDFViewerScreen(pdfPath: path),
