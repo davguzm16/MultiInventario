@@ -180,7 +180,8 @@ class Lote {
           lote.idLote,
         ],
       );
-
+      debugPrint('${lote.fechaCaducidad?.toIso8601String()}');
+      debugPrint('${lote.fechaCompra?.toIso8601String()}');
       if (result > 0) {
         Lote.actualizarStocks(lote);
         return true;
@@ -276,9 +277,9 @@ class Lote {
       final db = await DatabaseController().database;
 
       String fechaInicioStr =
-          "${fechaInicio.year}-${fechaInicio.month.toString().padLeft(2, '0')}-${fechaInicio.day.toString().padLeft(2, '0')} 00:00:00";
+          fechaInicio.toIso8601String();
       String fechaFinalStr =
-          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')} 23:59:59";
+          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
       final result = await db.rawQuery('''
       SELECT idLote, idProducto, cantidadActual, cantidadComprada,
@@ -315,14 +316,17 @@ class Lote {
       DateTime fechaFinal,
       int diasAntesVencimiento) async {
     List<Lote> lote = [];
-
+    
     try {
+      DateTime fechaLimiteCaducidad = fechaFinal.add(Duration(days: diasAntesVencimiento));
       final db = await DatabaseController().database;
-
+      
       String fechaInicioStr =
-          "${fechaInicio.year}-${fechaInicio.month.toString().padLeft(2, '0')}-${fechaInicio.day.toString().padLeft(2, '0')} 00:00:00";
+          fechaInicio.toIso8601String();
       String fechaFinalStr =
-          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')} 23:59:59";
+          "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
+      String fechaLimiteCaducidadStr =
+        "${fechaLimiteCaducidad.year}-${fechaLimiteCaducidad.month.toString().padLeft(2, '0')}-${fechaLimiteCaducidad.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
       final result = await db.rawQuery('''
       SELECT idLote, idProducto, cantidadActual, cantidadComprada,
@@ -330,10 +334,13 @@ class Lote {
               fechaCaducidad, fechaCompra
       FROM lotes 
       WHERE fechaCompra BETWEEN ? AND ?
-      AND fechaCaducidad <= DATE(?, '+$diasAntesVencimiento days')
+      AND fechaCaducidad <= ?
       ORDER BY fechaCompra ASC
-      ''', [fechaInicioStr, fechaFinalStr, fechaFinalStr]);
-
+      ''', [fechaInicioStr, fechaFinalStr, fechaLimiteCaducidadStr]);
+      debugPrint("${fechaInicioStr}");
+      debugPrint("${fechaFinalStr}");
+      debugPrint("${fechaLimiteCaducidadStr}");
+      debugPrint("${result}");
       if (result.isNotEmpty) {
         for (var item in result) {
           lote.add(Lote(
@@ -349,6 +356,7 @@ class Lote {
           ));
         }
       }
+      debugPrint(' lote : ${lote}');
     } catch (e) {
       debugPrint("Error al obtener los lotes en las fechas: ${e.toString()}");
     }
