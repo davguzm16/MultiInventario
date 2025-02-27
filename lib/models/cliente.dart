@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:sqflite/sqflite.dart';
 
 class Cliente {
   int? idCliente;
@@ -74,26 +75,32 @@ class Cliente {
     List<Cliente> clientes = [];
     try {
       final db = await DatabaseController().database;
+
       final result = await db.rawQuery(
         '''
-        SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
-        FROM Clientes 
-        WHERE nombreCliente LIKE ?
-        ''',
+      SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
+      FROM Clientes 
+      WHERE nombreCliente LIKE ?
+      ''',
         ['%$nombre%'],
       );
 
       for (var map in result) {
+        int idCliente = map['idCliente'] as int;
+
+        // Verificar y actualizar el estado de deudor solo para este cliente
+        bool esDeudor = await verificarEstadoDeudor(idCliente);
+
         clientes.add(Cliente(
-          idCliente: map['idCliente'] as int?,
+          idCliente: idCliente,
           nombreCliente: map['nombreCliente'] as String,
           dniCliente: map['dniCliente'] as String,
           correoCliente: map['correoCliente'] as String?,
-          esDeudor: (map['esDeudor'] as int) == 1,
+          esDeudor: esDeudor,
         ));
       }
     } catch (e) {
-      debugPrint("Error al buscar clientes: \${e.toString()}");
+      debugPrint("Error al buscar clientes: ${e.toString()}");
     }
     return clientes;
   }
@@ -107,39 +114,73 @@ class Cliente {
     String esDeudorQuery = "";
 
     if (esDeudor != null) {
-      if (esDeudor) {
-        esDeudorQuery = "WHERE esDeudor = 1";
-      } else {
-        esDeudorQuery = "WHERE esDeudor = 0";
-      }
+      esDeudorQuery = "WHERE esDeudor = ${esDeudor ? 1 : 0}";
     }
 
     try {
       final db = await DatabaseController().database;
       int offset = numeroCarga * cantidadPorCarga;
+
       final result = await db.rawQuery(
         '''
-        SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
-        FROM Clientes
-        $esDeudorQuery
-        LIMIT ? OFFSET ?
-        ''',
+      SELECT idCliente, nombreCliente, dniCliente, correoCliente, esDeudor 
+      FROM Clientes
+      $esDeudorQuery
+      LIMIT ? OFFSET ?
+      ''',
         [cantidadPorCarga, offset],
       );
 
       for (var map in result) {
+        int idCliente = map['idCliente'] as int;
+
+        // Verificar y actualizar el estado de deudor solo para este cliente
+        bool esDeudorActualizado = await verificarEstadoDeudor(idCliente);
+
         clientes.add(Cliente(
-          idCliente: map['idCliente'] as int?,
+          idCliente: idCliente,
           nombreCliente: map['nombreCliente'] as String,
           dniCliente: map['dniCliente'] as String,
           correoCliente: map['correoCliente'] as String?,
-          esDeudor: (map['esDeudor'] as int) == 1,
+          esDeudor: esDeudorActualizado,
         ));
       }
     } catch (e) {
-      debugPrint("Error al obtener clientes filtrados: \${e.toString()}");
+      debugPrint("Error al obtener clientes filtrados: ${e.toString()}");
     }
     return clientes;
+  }
+
+  static Future<bool> verificarEstadoDeudor(int idCliente) async {
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery(
+        '''
+      SELECT COUNT(*) as ventasPendientes
+      FROM Ventas
+      WHERE idCliente = ? AND (montoTotal - montoCancelado) > 0
+      ''',
+        [idCliente],
+      );
+
+      int ventasPendientes = Sqflite.firstIntValue(result) ?? 0;
+      bool esDeudor = ventasPendientes > 0;
+
+      // Actualizar el estado en la base de datos si es necesario
+      await db.rawUpdate(
+        '''
+      UPDATE Clientes
+      SET esDeudor = ?
+      WHERE idCliente = ?
+      ''',
+        [esDeudor ? 1 : 0, idCliente],
+      );
+
+      return esDeudor;
+    } catch (e) {
+      debugPrint("Error al actualizar estado de deudor: ${e.toString()}");
+      return false;
+    }
   }
 
   Future<double?> obtenerTotalDeVentas() async {

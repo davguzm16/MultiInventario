@@ -1,14 +1,15 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
-import 'package:multiinventario/widgets/error_dialog.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
+import 'package:multiinventario/widgets/all_custom_widgets.dart';
 
 class DetailsSalePage extends StatefulWidget {
   final int idVenta;
@@ -61,6 +62,150 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     }
   }
 
+  void showCancelarDialog() {
+    TextEditingController montoACancelarController = TextEditingController();
+
+    double montoTotal = venta!.montoTotal;
+    double montoCancelado = venta!.montoCancelado ?? 0.0;
+    double montoPendiente = montoTotal - montoCancelado;
+    double montoFaltante = montoPendiente; // Inicialmente igual a pendiente
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+                side: const BorderSide(color: Color(0xFF493D9E), width: 2),
+              ),
+              title: const Text(
+                'Cancelar deuda',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF493D9E), // Morado
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildMontoText('Monto total', montoTotal),
+                  _buildMontoText('Monto cancelado', montoCancelado),
+                  _buildMontoText('Monto pendiente', montoPendiente),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    label: 'Monto a cancelar',
+                    controller: montoACancelarController,
+                    keyboardType: TextInputType.number,
+                    isPrice: true,
+                    onChanged: (value) {
+                      double montoIngresado = double.tryParse(value) ?? 0.0;
+                      setState(() {
+                        montoFaltante = (montoPendiente - montoIngresado)
+                            .clamp(0.0, montoPendiente);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _buildMontoText('Monto faltante', montoFaltante, true),
+                ],
+              ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2BBF55), // Verde
+                      foregroundColor: Colors.white, // Texto blanco
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 12),
+                      textStyle: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () async {
+                      double montoACancelar =
+                          double.tryParse(montoACancelarController.text) ?? 0.0;
+
+                      if (montoACancelar <= 0 ||
+                          montoACancelar > montoPendiente) {
+                        ErrorDialog(
+                          context: context,
+                          errorMessage: 'Monto inválido',
+                        );
+                        return;
+                      }
+
+                      bool actualizado = await Venta.actualizarMontoCancelado(
+                          venta!.idVenta!, montoACancelar);
+
+                      if (actualizado) {
+                        bool esDeudor = await Cliente.verificarEstadoDeudor(
+                            venta!.idCliente);
+
+                        SuccessDialog(
+                          context: context,
+                          successMessage: 'Monto actualizado correctamente!',
+                          btnOkOnPress: () async {
+                            await _obtenerDatosVenta();
+                            setState(() {});
+                            context.pop();
+
+                            if (!esDeudor) {
+                              context.go("/clients");
+                            }
+                          },
+                        );
+                      } else {
+                        ErrorDialog(
+                          context: context,
+                          errorMessage: 'Error al actualizar el monto',
+                        );
+                      }
+                    },
+                    child: const Text('Aceptar'),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildMontoText(String label, double amount,
+      [bool isDynamic = false]) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '$label:',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+              color: isDynamic ? Color(0xFFE63946) : Color(0xFF493D9E),
+            ),
+          ),
+          Text(
+            'S/${amount.toStringAsFixed(2)}',
+            style: TextStyle(
+              fontSize: 16,
+              color: isDynamic ? Color(0xFFE63946) : Colors.black,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
@@ -72,184 +217,215 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
-          Padding(
-            padding: EdgeInsets.only(right: 20),
-            child: IconButton(
+          if (venta != null) ...[
+            IconButton(
+              icon: Icon(
+                Icons.attach_money,
+                color: !(venta!.esAlContado!) &&
+                        (venta!.montoCancelado! < venta!.montoTotal)
+                    ? Colors.black
+                    : Colors.grey,
+              ),
+              onPressed: !(venta!.esAlContado!) &&
+                      (venta!.montoCancelado! < venta!.montoTotal)
+                  ? () => showCancelarDialog()
+                  : null,
+            ),
+            IconButton(
               icon: Icon(
                 Icons.print,
-                size: 35,
+                color: venta!.montoTotal > 5 ? Colors.black : Colors.grey,
               ),
-              onPressed: () {
-                generateBoletaVenta();
-              },
+              onPressed:
+                  venta!.montoTotal > 5 ? () => generateBoletaVenta() : null,
             ),
-          ),
+          ],
         ],
       ),
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        child: venta == null
+            ? Center(child: CircularProgressIndicator())
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
                     children: [
-                      const Text(
-                        "Código de la venta",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black54,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          venta?.codigoBoleta ?? "-" * 13,
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 15),
-            Card(
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-              color: Colors.grey[200],
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SizedBox(
-                    width: double.infinity,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Cliente: ${cliente?.nombreCliente ?? '-----'}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF493D9E),
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          'DNI: ${cliente?.dniCliente ?? "---"}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF493D9E),
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          'Fecha: ${venta?.fechaVenta?.toIso8601String().split('T')[0] ?? "---"}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF493D9E),
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          'Hora: ${venta?.fechaVenta?.toIso8601String().split('T')[1].split('.')[0] ?? "---"}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF493D9E),
-                            fontSize: 18,
-                          ),
-                        ),
-                        Text(
-                          'Tipo de pago: ${venta?.esAlContado == true ? "Al contado" : "Crédito"}',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF493D9E),
-                            fontSize: 18,
-                          ),
-                        ),
-                      ],
-                    )),
-              ),
-            ),
-            SizedBox(height: 30),
-
-            // Tabla con los encabezados y los registros
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.vertical,
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Color(0xFF493D9E), width: 1.5),
-                  ),
-                  child: Table(
-                    border: TableBorder(
-                      horizontalInside:
-                          BorderSide(width: 1.5, color: Color(0xFF493D9E)),
-                      verticalInside:
-                          BorderSide(width: 1.5, color: Color(0xFF493D9E)),
-                    ),
-                    columnWidths: {
-                      0: FlexColumnWidth(0.5),
-                      1: FlexColumnWidth(1.5),
-                      2: FlexColumnWidth(0.6),
-                      3: FlexColumnWidth(0.6),
-                    },
-                    children: [
-                      // Encabezado de la tabla
-                      TableRow(
-                        children: [
-                          _buildTableCellHeader('Ud'),
-                          _buildTableCellHeader('Descripción'),
-                          _buildTableCellHeader('Precio'),
-                          _buildTableCellHeader('Subtotal'),
-                        ],
-                      ),
-                      // Filas de los registros
-                      ...detallesVenta.map((detalle) {
-                        return TableRow(
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildTableCell("${detalle.cantidadProducto} kg"),
-                            FutureBuilder<Producto?>(
-                              future: Producto.obtenerProductoPorID(
-                                  detalle.idProducto),
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return _buildTableCell("Cargando...");
-                                } else if (snapshot.hasError) {
-                                  return _buildTableCell("Error");
-                                } else if (snapshot.hasData &&
-                                    snapshot.data != null) {
-                                  return _buildTableCell(
-                                      snapshot.data!.nombreProducto);
-                                } else {
-                                  return _buildTableCell("No encontrado");
-                                }
-                              },
+                            const Text(
+                              "Código de la venta",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black54,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
-                            _buildTableCell(detalle.precioUnidadProducto
-                                .toStringAsFixed(2)),
-                            _buildTableCell(
-                                detalle.subtotalProducto.toStringAsFixed(2)),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                venta?.codigoBoleta ?? "-" * 13,
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
                           ],
-                        );
-                      }),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                  SizedBox(height: 15),
+                  Card(
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                    color: Colors.grey[200],
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Cliente: ${cliente?.nombreCliente ?? '-----'}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'DNI: ${(cliente?.dniCliente?.isNotEmpty ?? false) ? cliente!.dniCliente as String : '-------'}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'Fecha: ${venta?.fechaVenta?.toIso8601String().split('T')[0] ?? "---"}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'Hora: ${venta?.fechaVenta?.toIso8601String().split('T')[1].split('.')[0] ?? "---"}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'Monto total: ${venta!.montoTotal.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'Monto cancelado: ${venta!.montoCancelado!.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                              Text(
+                                'Tipo de pago: ${venta?.esAlContado == true ? "Al contado" : "Crédito"}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF493D9E),
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          )),
+                    ),
+                  ),
+                  SizedBox(height: 30),
+
+                  // Tabla con los encabezados y los registros
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border:
+                              Border.all(color: Color(0xFF493D9E), width: 1.5),
+                        ),
+                        child: Table(
+                          border: TableBorder(
+                            horizontalInside: BorderSide(
+                                width: 1.5, color: Color(0xFF493D9E)),
+                            verticalInside: BorderSide(
+                                width: 1.5, color: Color(0xFF493D9E)),
+                          ),
+                          columnWidths: {
+                            0: FlexColumnWidth(0.5),
+                            1: FlexColumnWidth(1.5),
+                            2: FlexColumnWidth(0.6),
+                            3: FlexColumnWidth(0.6),
+                          },
+                          children: [
+                            // Encabezado de la tabla
+                            TableRow(
+                              children: [
+                                _buildTableCellHeader('Ud'),
+                                _buildTableCellHeader('Descripción'),
+                                _buildTableCellHeader('Precio'),
+                                _buildTableCellHeader('Subtotal'),
+                              ],
+                            ),
+                            // Filas de los registros
+                            ...detallesVenta.map((detalle) {
+                              return TableRow(
+                                children: [
+                                  _buildTableCell(
+                                      "${detalle.cantidadProducto} kg"),
+                                  FutureBuilder<Producto?>(
+                                    future: Producto.obtenerProductoPorID(
+                                        detalle.idProducto),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return _buildTableCell("Cargando...");
+                                      } else if (snapshot.hasError) {
+                                        return _buildTableCell("Error");
+                                      } else if (snapshot.hasData &&
+                                          snapshot.data != null) {
+                                        return _buildTableCell(
+                                            snapshot.data!.nombreProducto);
+                                      } else {
+                                        return _buildTableCell("No encontrado");
+                                      }
+                                    },
+                                  ),
+                                  _buildTableCell(detalle.precioUnidadProducto
+                                      .toStringAsFixed(2)),
+                                  _buildTableCell(detalle.subtotalProducto
+                                      .toStringAsFixed(2)),
+                                ],
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
       ),
     );
   }

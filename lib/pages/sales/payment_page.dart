@@ -154,7 +154,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                   return ListTile(
                                     title: Text(cliente.nombreCliente),
                                     subtitle: Text(
-                                        "DNI: ${cliente.dniCliente ?? "---"}"),
+                                        "DNI: ${(cliente.dniCliente?.isNotEmpty ?? false) ? cliente.dniCliente as String : '-------'}"),
                                     onTap: () {
                                       FocusScope.of(context).unfocus();
                                       setState(() {
@@ -268,7 +268,7 @@ class _PaymentPageState extends State<PaymentPage> {
                       ? 'Vuelto: Monto Insuficiente'
                       : 'Vuelto: S/${(cantidadRecibida - _calcularTotalVenta()).toStringAsFixed(2)}'
               : (cantidadRecibida >= 0.0)
-                  ? 'Por cancelar: S/${_calcularTotalVenta().toStringAsFixed(2)}'
+                  ? 'Por cancelar: S/${(_calcularTotalVenta() - cantidadRecibida).toStringAsFixed(2)}'
                   : 'Por cancelar: S/${diferencia.toStringAsFixed(2)}',
           style: const TextStyle(
               fontSize: 16,

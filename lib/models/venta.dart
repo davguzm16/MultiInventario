@@ -255,4 +255,32 @@ class Venta {
     }
     return ventas;
   }
+
+  static Future<bool> actualizarMontoCancelado(
+      int idVenta, double montoACancelar) async {
+    try {
+      final db = await DatabaseController().database;
+      Venta? venta = await obtenerVentaPorID(idVenta);
+      if (venta == null) return false;
+
+      double nuevoMontoCancelado = (venta.montoCancelado ?? 0) + montoACancelar;
+
+      int resultado = await db.rawUpdate(
+        '''
+      UPDATE Ventas
+      SET montoCancelado = ?
+      WHERE idVenta = ?
+      ''',
+        [nuevoMontoCancelado, idVenta],
+      );
+
+      if (resultado > 0) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Error al actualizar el monto cancelado: ${e.toString()}");
+    }
+
+    return false;
+  }
 }

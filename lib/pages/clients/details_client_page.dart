@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -183,13 +183,17 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                       itemCount: ventasCliente.length,
                       itemBuilder: (context, index) {
                         final venta = ventasCliente[index];
+
                         return Card(
+                          color: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side:
-                                BorderSide(color: Color(0xFF493D9E), width: 2),
+                            side: const BorderSide(
+                                color: Color(0xFF493D9E), width: 2),
                           ),
-                          margin: EdgeInsets.only(bottom: 12),
+                          elevation: 3,
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 10),
                           child: Padding(
                             padding: const EdgeInsets.all(12.0),
                             child: Row(
@@ -202,47 +206,67 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                     children: [
                                       Text(
                                         venta.codigoBoleta ?? "---",
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          fontSize: 20,
+                                          fontSize: 18,
                                           color: Color(0xFF493D9E),
                                         ),
                                       ),
-                                      SizedBox(height: 5),
+                                      const SizedBox(height: 5),
                                       Text(
                                         "Fecha: ${venta.fechaVenta?.toIso8601String().split('T')[0] ?? '---'}",
-                                        style: TextStyle(color: Colors.black),
+                                        style: TextStyle(
+                                            color: Colors.grey.shade800,
+                                            fontSize: 14),
                                       ),
                                       Text(
                                         "Monto: S/ ${venta.montoTotal.toStringAsFixed(2)}",
-                                        style: TextStyle(color: Colors.black),
+                                        style: const TextStyle(
+                                            color: Colors.black, fontSize: 14),
                                       ),
                                       Text(
                                         "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
                                         style: TextStyle(
                                           color: venta.esAlContado!
-                                              ? Colors.red
-                                              : Colors.black,
+                                              ? Colors.black
+                                              : Colors.red,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Color(0xFF2BBF55),
-                                        foregroundColor: Colors.white,
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2BBF55),
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.2),
+                                        blurRadius: 6,
+                                        offset: const Offset(0, 3),
                                       ),
-                                      onPressed: () {
-                                        context.push(
-                                            '/sales/details-sale/${venta.idVenta}');
-                                      },
-                                      child: Text("Detalles"),
+                                    ],
+                                  ),
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      foregroundColor: Colors.white,
+                                      shadowColor: Colors.transparent,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 20, vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
-                                  ],
+                                    onPressed: () {
+                                      context.push(
+                                          '/sales/details-sale/${venta.idVenta}');
+                                    },
+                                    child: const Text("Detalles",
+                                        style: TextStyle(fontSize: 14)),
+                                  ),
                                 ),
                               ],
                             ),

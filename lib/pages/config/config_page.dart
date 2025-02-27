@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:multiinventario/services/drive_service.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/credenciales.dart';
@@ -79,6 +80,14 @@ class ConfigPageState extends State<ConfigPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Configuraciones"),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.notifications_active_outlined),
+            onPressed: () {
+              context.push("/config/notifications-page");
+            },
+          )
+        ],
       ),
       body: Center(
         child: Column(
