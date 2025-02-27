@@ -157,7 +157,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                             context.pop();
 
                             if (!esDeudor) {
-                              context.go("/clients");
+                              context.pop();
                             }
                           },
                         );

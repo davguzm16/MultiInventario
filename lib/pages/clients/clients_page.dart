@@ -313,13 +313,13 @@ class _ClientsPageState extends State<ClientsPage>
                                       shadowColor:
                                           Colors.black.withOpacity(0.3),
                                     ),
-                                    onPressed: () {
-                                      context.push(
+                                    onPressed: () async {
+                                      await context.push(
                                           '/clients/details-client/${cliente.idCliente}');
 
+                                      isSearching = false;
                                       _cargarClientes(
                                           reiniciarListaClientes: true);
-                                      isSearching = false;
                                     },
                                     child: const Text("Detalles"),
                                   ),

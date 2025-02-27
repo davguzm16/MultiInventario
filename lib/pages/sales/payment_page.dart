@@ -369,8 +369,7 @@ class _PaymentPageState extends State<PaymentPage> {
                         await Producto.verificarStockBajo(detalle.idProducto);
                       }
 
-                      context.go(
-                          '/sales?refresh=${DateTime.now().millisecondsSinceEpoch}');
+                      context.pop();
                     },
                   );
                 },

@@ -260,9 +260,11 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
-                                    onPressed: () {
-                                      context.push(
+                                    onPressed: () async {
+                                      await context.push(
                                           '/sales/details-sale/${venta.idVenta}');
+
+                                      context.pop();
                                     },
                                     child: const Text("Detalles",
                                         style: TextStyle(fontSize: 14)),

@@ -78,7 +78,7 @@ class _ProductPageState extends State<ProductPage> {
             onPressed: () async {
               bool? updated = await _showEditProductDialog(context, producto!);
               if (updated == true) {
-                setState(() {}); // Refresca la UI después de editar
+                await obtenerProducto();
               }
             },
           ),

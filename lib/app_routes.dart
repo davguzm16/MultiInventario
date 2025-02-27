@@ -130,15 +130,19 @@ class AppRoutes {
 
                           final detallesVenta = extraList
                               .map((map) => DetalleVenta(
-                                    idProducto: map['idProducto'],
-                                    idLote: map['idLote'],
-                                    idVenta: map['idVenta'],
-                                    cantidadProducto: map['cantidadProducto'],
+                                    idProducto: map['idProducto'] as int,
+                                    idLote: map['idLote'] as int,
+                                    idVenta: map['idVenta'] as int?,
+                                    cantidadProducto:
+                                        map['cantidadProducto'] as int,
                                     precioUnidadProducto:
-                                        map['precioUnidadProducto'],
-                                    subtotalProducto: map['subtotalProducto'],
-                                    gananciaProducto: map['gananciaProducto'],
-                                    descuentoProducto: map['descuentoProducto'],
+                                        map['precioUnidadProducto'] as double,
+                                    subtotalProducto:
+                                        map['subtotalProducto'] as double,
+                                    gananciaProducto:
+                                        map['gananciaProducto'] as double,
+                                    descuentoProducto:
+                                        map['descuentoProducto'] as double,
                                   ))
                               .toList();
 

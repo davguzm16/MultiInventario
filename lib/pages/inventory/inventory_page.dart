@@ -270,8 +270,8 @@ class _InventoryPageState extends State<InventoryPage>
                               producto.stockActual! < producto.stockMinimo;
 
                           return GestureDetector(
-                            onTap: () {
-                              context.push(
+                            onTap: () async {
+                              await context.push(
                                   '/inventory/product/${producto.idProducto}');
 
                               isSearching = false;

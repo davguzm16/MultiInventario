@@ -695,7 +695,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                 ),
                 const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (productosVenta.isEmpty) {
                       ErrorDialog(
                         context: context,
@@ -705,7 +705,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                       );
                     }
 
-                    context.go(
+                    await context.push(
                       '/sales/create-sale/payment-page',
                       extra: detallesVenta
                           .map((detalle) => {
@@ -721,6 +721,8 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               })
                           .toList(),
                     );
+
+                    context.pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
