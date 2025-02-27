@@ -209,6 +209,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
           fecha);
 
       for (var producto in productos) {
+        if(producto.estaDisponible == true){
         if (producto.stockActual != null && producto.stockActual! > 0) {
           List<Lote> lotes =
               await Lote.obtenerLotesDeProducto(producto.idProducto!);
@@ -228,7 +229,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
             producto.precioProducto.toStringAsFixed(2),
             valorProducto.toStringAsFixed(2),
           ]);
-        }
+        }}
       }
     } catch (e) {
       debugPrint("Error al obtener datos del inventario: $e");
