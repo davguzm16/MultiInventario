@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/models/categoria.dart';
@@ -22,8 +21,8 @@ class Producto {
   String? rutaImagen;
   DateTime? fechaCreacion;
   DateTime? fechaModificacion;
-  
-String get descripcion => nombreProducto;
+
+  String get descripcion => nombreProducto;
   // Constructor
   Producto({
     this.idProducto,
@@ -218,50 +217,6 @@ String get descripcion => nombreProducto;
       debugPrint(
           "Error al eliminar el producto (deshabilitar): ${e.toString()}");
       return false;
-    }
-  }
-
-  static Future<void> insertarProductosPorDefecto() async {
-    if (await DatabaseController.tableHasData("Productos")) return;
-
-    try {
-      List<Categoria> categorias = await Categoria.obtenerCategorias();
-      Random random = Random();
-
-      List<Producto> productos = List.generate(100, (index) {
-        int idUnidad = random.nextInt(3) + 1; // Valores entre 1 y 3
-        double precio =
-            (random.nextDouble() * 90) + 10; // Precio entre 10 y 100
-        int stockMinimo = random.nextInt(20) + 5; // Mínimo entre 5 y 25
-        int stockMaximo = (random.nextInt(100) +
-            50); // Máximo entre stockActual+50 y stockActual+150
-
-        return Producto(
-          idUnidad: idUnidad,
-          codigoProducto: "7501000000${(index + 1).toString().padLeft(4, '0')}",
-          nombreProducto: "Producto ${index + 1}",
-          precioProducto:
-              double.parse(precio.toStringAsFixed(2)), // Redondeo a 2 decimales
-          stockMinimo: double.parse(stockMinimo.toStringAsFixed(2)),
-          stockMaximo: double.parse(stockMaximo.toStringAsFixed(2)),
-          rutaImagen: null,
-        );
-      });
-
-      // Asignar categorías aleatorias a cada producto
-      for (var producto in productos) {
-        int cantidadCategorias = random.nextInt(3) + 1; // De 1 a 3 categorías
-        List<Categoria> categoriasAsignadas = List.generate(
-          cantidadCategorias,
-          (_) => categorias[random.nextInt(categorias.length)],
-        );
-
-        await crearProducto(producto, categoriasAsignadas);
-      }
-
-      debugPrint("Se insertaron correctamente ${productos.length} productos.");
-    } catch (e) {
-      debugPrint("Error al insertar productos: $e");
     }
   }
 
