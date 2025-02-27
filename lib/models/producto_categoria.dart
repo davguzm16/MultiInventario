@@ -92,14 +92,14 @@ class ProductoCategoria {
 
       if (idsCategorias.isNotEmpty) {
         categoriaQuery =
-        "AND pc.idCategoria IN (${List.filled(idsCategorias.length, '?').join(', ')})";
+            "AND pc.idCategoria IN (${List.filled(idsCategorias.length, '?').join(', ')})";
       }
 
       if (stockBajo != null) {
         if (stockBajo) {
           stockBajoQuery = "AND p.stockActual < p.stockMinimo";
         } else {
-          stockBajoQuery = "AND NOT p.stockActual < p.stockMinimo";
+          stockBajoQuery = "AND p.stockActual >= p.stockMinimo";
         }
       }
 
@@ -133,12 +133,14 @@ class ProductoCategoria {
   }
 
   /// 🔹 **Función corregida dentro de la clase**
-  static Future<void> actualizarCategoriasProducto(int idProducto, List<int> categorias) async {
+  static Future<void> actualizarCategoriasProducto(
+      int idProducto, List<int> categorias) async {
     final db = await DatabaseController().database;
 
     try {
       // Eliminar las categorías anteriores del producto
-      await db.delete('ProductosCategorias', where: 'idProducto = ?', whereArgs: [idProducto]);
+      await db.delete('ProductosCategorias',
+          where: 'idProducto = ?', whereArgs: [idProducto]);
 
       // Insertar las nuevas categorías seleccionadas
       for (var idCategoria in categorias) {
@@ -148,7 +150,8 @@ class ProductoCategoria {
         });
       }
     } catch (e) {
-      debugPrint("Error al actualizar las categorías del producto: ${e.toString()}");
+      debugPrint(
+          "Error al actualizar las categorías del producto: ${e.toString()}");
     }
   }
 }

@@ -156,6 +156,7 @@ class _PaymentPageState extends State<PaymentPage> {
                                     subtitle: Text(
                                         "DNI: ${cliente.dniCliente ?? "---"}"),
                                     onTap: () {
+                                      FocusScope.of(context).unfocus();
                                       setState(() {
                                         _searchController.text =
                                             cliente.nombreCliente;
@@ -367,7 +368,9 @@ class _PaymentPageState extends State<PaymentPage> {
                       for (var detalle in widget.detallesVenta) {
                         await Producto.verificarStockBajo(detalle.idProducto);
                       }
-                      context.go('/sales');
+
+                      context.go(
+                          '/sales?refresh=${DateTime.now().millisecondsSinceEpoch}');
                     },
                   );
                 },

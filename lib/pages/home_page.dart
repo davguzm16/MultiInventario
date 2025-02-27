@@ -26,10 +26,6 @@ class _HomePageState extends State<HomePage> {
     cargarPreferences();
   }
 
-  void _goBranch(int index) {
-    widget.navigationShell.goBranch(index);
-  }
-
   Future<void> cargarPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool activada = prefs.getBool('exportacionAutomatica') ?? false;
@@ -39,6 +35,10 @@ class _HomePageState extends State<HomePage> {
     });
 
     debugPrint("Sincronización activada: $sincronizacionActivada");
+  }
+
+  void _goBranch(int index) {
+    widget.navigationShell.goBranch(index);
   }
 
   Future<void> dialogoExportacionAutomatica(BuildContext context) async {

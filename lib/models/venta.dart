@@ -157,11 +157,7 @@ class Venta {
       String esAlContadoQuery = "";
 
       if (esAlContado != null) {
-        if (esAlContado) {
-          esAlContadoQuery = "WHERE esAlContado = 1";
-        } else {
-          esAlContadoQuery = "WHERE NOT esAlContado = 1";
-        }
+        esAlContadoQuery = "WHERE esAlContado = ${esAlContado ? 1 : 0}";
       }
 
       final result = await db.rawQuery('''

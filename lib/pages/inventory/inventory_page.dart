@@ -87,21 +87,24 @@ class _InventoryPageState extends State<InventoryPage>
 
     await Future.delayed(const Duration(milliseconds: 500));
 
-    setState(() {
-      if (reiniciarListaProductos) {
-        productos = nuevosProductos;
-      } else {
-        productos.addAll(nuevosProductos);
-      }
-      cantidadCargas++;
+    if (mounted) {
+      setState(() {
+        if (reiniciarListaProductos) {
+          productos = nuevosProductos;
+        } else {
+          productos.addAll(nuevosProductos);
+        }
 
-      if (nuevosProductos.length < 8) {
-        hayMasCargas = false;
-      }
+        if (nuevosProductos.isNotEmpty) {
+          cantidadCargas++;
+        } else {
+          hayMasCargas = false;
+        }
 
-      // Finalizamos la carga
-      isLoading = false;
-    });
+        // Finalizamos la carga
+        isLoading = false;
+      });
+    }
 
     debugPrint("Productos después de cargar: ${productos.length}");
   }
@@ -228,7 +231,7 @@ class _InventoryPageState extends State<InventoryPage>
                   setState(() {
                     categoriasSeleccionadas =
                         filtros['categoriasSeleccionadas'] as List<Categoria>;
-                    stockBajo = filtros['isStockBajo'] as bool?;
+                    stockBajo = filtros['stockBajo'] as bool?;
                   });
                 }
 

@@ -40,10 +40,6 @@ class _ClientsPageState extends State<ClientsPage>
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      GoRouter.of(context).refresh();
-    });
   }
 
   void _detectarScrollFinal() {
@@ -55,10 +51,10 @@ class _ClientsPageState extends State<ClientsPage>
     }
   }
 
-  Future<void> _cargarClientes({bool reiniciarLista = false}) async {
-    if (!hayMasCargas && !reiniciarLista) return;
+  Future<void> _cargarClientes({bool reiniciarListaClientes = false}) async {
+    if (!hayMasCargas && !reiniciarListaClientes) return;
 
-    if (reiniciarLista) {
+    if (reiniciarListaClientes) {
       setState(() {
         clientes.clear();
         cantidadCargas = 0;
@@ -77,20 +73,25 @@ class _ClientsPageState extends State<ClientsPage>
 
     await Future.delayed(const Duration(milliseconds: 500));
 
-    setState(() {
-      if (reiniciarLista) {
-        clientes = nuevosClientes;
-      } else {
-        clientes.addAll(nuevosClientes);
-      }
-      cantidadCargas++;
+    if (mounted) {
+      setState(() {
+        if (reiniciarListaClientes) {
+          clientes = nuevosClientes;
+        } else {
+          clientes.addAll(nuevosClientes);
+        }
 
-      if (nuevosClientes.length < 8) {
-        hayMasCargas = false;
-      }
+        if (nuevosClientes.isNotEmpty) {
+          cantidadCargas++;
+        } else {
+          hayMasCargas = false;
+        }
 
-      isLoading = false;
-    });
+        isLoading = false;
+      });
+    }
+
+    debugPrint("Clientes después de cargar: ${nuevosClientes.length}");
   }
 
   void _buscarClientesPorNombre(String nombre) {
@@ -98,7 +99,7 @@ class _ClientsPageState extends State<ClientsPage>
 
     _searchTimer = Timer(const Duration(milliseconds: 300), () async {
       if (nombre.isEmpty) {
-        _cargarClientes(reiniciarLista: true);
+        _cargarClientes(reiniciarListaClientes: true);
         return;
       }
 
@@ -134,7 +135,7 @@ class _ClientsPageState extends State<ClientsPage>
                           nombreBuscado = "";
                         });
                         _animationController.reverse();
-                        _cargarClientes(reiniciarLista: true);
+                        _cargarClientes(reiniciarListaClientes: true);
                       },
                     ),
                     contentPadding:
@@ -168,6 +169,22 @@ class _ClientsPageState extends State<ClientsPage>
               },
             ),
           ),
+          if (!isSearching)
+            IconButton(
+              icon: const Icon(Icons.filter_list),
+              onPressed: () async {
+                final filtro = await context.push<bool?>(
+                  '/clients/filter-clients',
+                  extra: esDeudor,
+                );
+
+                setState(() {
+                  esDeudor = filtro;
+                });
+
+                _cargarClientes(reiniciarListaClientes: true);
+              },
+            ),
         ],
       ),
       body: Stack(
@@ -265,7 +282,7 @@ class _ClientsPageState extends State<ClientsPage>
                                       style: TextStyle(
                                         color: cliente.esDeudor
                                             ? Colors.red
-                                            : Colors.green,
+                                            : Colors.black,
                                       ),
                                     ),
                                   ],
@@ -283,7 +300,8 @@ class _ClientsPageState extends State<ClientsPage>
                                       context.push(
                                           '/clients/details-client/${cliente.idCliente}');
 
-                                      _cargarClientes(reiniciarLista: true);
+                                      _cargarClientes(
+                                          reiniciarListaClientes: true);
                                       isSearching = false;
                                     },
                                     child: const Text("Detalles"),

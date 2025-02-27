@@ -58,9 +58,14 @@ class AppRoutes {
               builder: (context, state) => RecoverPinPage())
         ],
       ),
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          return children[navigationShell.currentIndex];
+        },
         builder: (context, state, navigationShell) {
-          return HomePage(navigationShell: navigationShell);
+          return HomePage(
+              key: ValueKey(navigationShell.currentIndex),
+              navigationShell: navigationShell);
         },
         branches: [
           StatefulShellBranch(
@@ -90,7 +95,7 @@ class AppRoutes {
 
                       return FilterProductPage(
                         categoriasSeleccionadas: categoriasSeleccionadas,
-                        isStockBajo: stockBajo,
+                        stockBajo: stockBajo,
                       );
                     },
                   ),
@@ -142,6 +147,15 @@ class AppRoutes {
                     ],
                   ),
                   GoRoute(
+                    path: 'filter-sales',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final esAlContado = state.extra as bool?;
+
+                      return FilterSalesPage(esAlContado: esAlContado);
+                    },
+                  ),
+                  GoRoute(
                     path: 'details-sale/:idVenta',
                     builder: (context, state) {
                       final idVenta =
@@ -159,6 +173,15 @@ class AppRoutes {
                 path: '/clients',
                 builder: (context, state) => const ClientsPage(),
                 routes: [
+                  GoRoute(
+                    path: 'filter-clients',
+                    parentNavigatorKey: _rootNavigatorKey,
+                    builder: (context, state) {
+                      final esDeudor = state.extra as bool?;
+
+                      return FilterClientsPage(esDeudor: esDeudor);
+                    },
+                  ),
                   GoRoute(
                     path: 'details-client/:idCliente',
                     builder: (context, state) {

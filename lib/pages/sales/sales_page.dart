@@ -81,21 +81,24 @@ class _SalesPageState extends State<SalesPage>
 
     await Future.delayed(const Duration(milliseconds: 500));
 
-    setState(() {
-      if (reiniciarListaVentas) {
-        ventas = nuevasVentas;
-      } else {
-        ventas.addAll(nuevasVentas);
-      }
-      cantidadCargas++;
+    if (mounted) {
+      setState(() {
+        if (reiniciarListaVentas) {
+          ventas = nuevasVentas;
+        } else {
+          ventas.addAll(nuevasVentas);
+        }
 
-      if (nuevasVentas.length < 8) {
-        hayMasCargas = false;
-      }
+        if (nuevasVentas.isNotEmpty) {
+          cantidadCargas++;
+        } else {
+          hayMasCargas = false;
+        }
 
-      // Finalizamos la carga
-      isLoading = false;
-    });
+        // Finalizamos la carga
+        isLoading = false;
+      });
+    }
 
     debugPrint("Ventas después de cargar: ${nuevasVentas.length}");
   }
@@ -196,18 +199,14 @@ class _SalesPageState extends State<SalesPage>
             IconButton(
               icon: const Icon(Icons.filter_list),
               onPressed: () async {
-                final filtros = await context.push<Map<String, dynamic>>(
+                final filtro = await context.push<bool?>(
                   '/sales/filter-sales',
-                  extra: {
-                    'esAlContado': esAlContado,
-                  },
+                  extra: esAlContado,
                 );
 
-                if (filtros != null) {
-                  setState(() {
-                    esAlContado = (filtros['esAlContado'] as bool?)!;
-                  });
-                }
+                setState(() {
+                  esAlContado = filtro;
+                });
 
                 _cargarVentas(reiniciarListaVentas: true);
               },
@@ -226,6 +225,7 @@ class _SalesPageState extends State<SalesPage>
                     ),
                   )
                 : ListView.builder(
+                    controller: _scrollController,
                     itemCount: ventas.length,
                     itemBuilder: (context, index) {
                       final venta = ventas[index];

@@ -108,9 +108,9 @@ class Cliente {
 
     if (esDeudor != null) {
       if (esDeudor) {
-        esDeudorQuery = "AND esDeudor = 1";
+        esDeudorQuery = "WHERE esDeudor = 1";
       } else {
-        esDeudorQuery = "AND esDeudor = 0";
+        esDeudorQuery = "WHERE esDeudor = 0";
       }
     }
 

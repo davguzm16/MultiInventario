@@ -58,12 +58,20 @@ class _CreateProductPageState extends State<CreateProductPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Categorías', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Categorías',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF493D9E), // Morado
+          ),
+        ),
+        const SizedBox(height: 10),
         FutureBuilder<List<Categoria>>(
           future: categoriasDisponibles,
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -71,30 +79,32 @@ class _CreateProductPageState extends State<CreateProductPage> {
             }
 
             List<Categoria> categorias = snapshot.data!;
-            debugPrint("Categorías recibidas: ${categorias.length}");
-
-            // Convertir la lista de categorías en un Map<int, String>
-            Map<int, String> categoriasMap = {
-              for (var categoria in categorias)
-                categoria.idCategoria!: categoria.nombreCategoria
-            };
 
             return Wrap(
-              spacing: 8.0,
-              children: categoriasMap.entries.map((entry) {
-                return ChoiceChip(
-                  label: Text(entry.value),
-                  selected: categoriasSeleccionadas
-                      .any((c) => c.idCategoria == entry.key),
-                  onSelected: (selected) {
+              spacing: 8,
+              runSpacing: 8,
+              children: categorias.map((categoria) {
+                final estaSeleccionada = categoriasSeleccionadas
+                    .any((c) => c.idCategoria == categoria.idCategoria);
+
+                return FilterChip(
+                  label: Text(categoria.nombreCategoria),
+                  selected: estaSeleccionada,
+                  selectedColor: const Color(0xFF493D9E), // Morado
+                  backgroundColor: Colors.grey[200],
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: estaSeleccionada
+                        ? Colors.white
+                        : const Color(0xFF493D9E),
+                  ),
+                  onSelected: (bool selected) {
                     setState(() {
                       if (selected) {
-                        categoriasSeleccionadas.add(Categoria(
-                            idCategoria: entry.key,
-                            nombreCategoria: entry.value));
+                        categoriasSeleccionadas.add(categoria);
                       } else {
-                        categoriasSeleccionadas
-                            .removeWhere((c) => c.idCategoria == entry.key);
+                        categoriasSeleccionadas.removeWhere(
+                            (c) => c.idCategoria == categoria.idCategoria);
                       }
                     });
                   },
@@ -103,7 +113,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
             );
           },
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 30),
         Wrap(
           spacing: 8.0,
           runSpacing: 4.0,
@@ -111,12 +121,14 @@ class _CreateProductPageState extends State<CreateProductPage> {
           children: [
             TextButton(
               onPressed: _showAddCategoryDialog,
-              style: TextButton.styleFrom(foregroundColor: Colors.purple),
+              style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF493D9E)),
               child: const Text('Agregar categoría'),
             ),
             TextButton(
               onPressed: _showEditCategoryDialog,
-              style: TextButton.styleFrom(foregroundColor: Colors.purple),
+              style: TextButton.styleFrom(
+                  foregroundColor: const Color(0xFF493D9E)),
               child: const Text('Editar categoría'),
             ),
             TextButton(
@@ -236,8 +248,9 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   )
                 ],
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 30),
               _buildCategorySelection(),
+              const SizedBox(height: 30),
               CustomTextField(
                 label: 'Nombre del producto',
                 controller: productNameController,

@@ -33,6 +33,7 @@ dependencies:
   googleapis_auth: ^1.6.0
   shared_preferences: ^2.5.2
   flutter_local_notifications: ^18.0.1
+  provider: ^6.1.2
   
 dev_dependencies:
   flutter_test:
