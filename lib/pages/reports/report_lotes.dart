@@ -210,6 +210,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           await DetalleVenta.obtenerCantidadVendidaPorLote(lotes[i].idLote!);
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
+      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
       totalValorCompra += lotes[i].precioCompra;
 
       if (lotes[i].cantidadActual > 0) {
@@ -237,7 +238,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
         cantidadVendida.toString(),
         lotes[i].precioCompra.toString(),
         lotes[i].precioCompraUnidad.toString(),
-      ]);
+      ]);}
     }
 
     // Agregar mensajes de depuración
@@ -383,7 +384,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
       totalValorCompra += lotes[i].precioCompra;
-
+      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
       if (lotes[i].cantidadActual > 0) {
         lotesActuales++;
       } else {
@@ -410,7 +411,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
         lotes[i].precioCompra.toString(),
         lotes[i].precioCompraUnidad.toString(),
         '${producto?.precioProducto ?? '--'}'
-      ]);
+      ]);}
     }
 
     // Agregar mensajes de depuración

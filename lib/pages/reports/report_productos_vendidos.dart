@@ -247,11 +247,13 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
 
   Future<Map<String, dynamic>> obtenerDatosTablaProductos(
       DateTime fechaInicio, DateTime fechaFinal) async {
+    
     final db = await DatabaseController().database;
     final results = await db.rawQuery('''
       SELECT 
         p.codigoProducto as codigo,
         p.nombreProducto as producto,
+        p.estaDisponible as disponible,
         SUM(dv.cantidadProducto) as cantidad_total,
         p.precioProducto as precio_unidad,
         SUM(dv.descuentoProducto) as descuento_total,
@@ -261,7 +263,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
       JOIN Ventas v ON dv.idVenta = v.idVenta
       JOIN Productos p ON dv.idProducto = p.idProducto
       WHERE date(v.fechaVenta) BETWEEN ? AND ?
-      GROUP BY p.idProducto, p.codigoProducto, p.nombreProducto, p.precioProducto
+      GROUP BY p.idProducto, p.codigoProducto, p.nombreProducto, p.precioProducto, p.estaDisponible
       ORDER BY cantidad_total DESC
     ''', [
       fechaInicio.toIso8601String().split('T')[0],
@@ -275,6 +277,8 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
 
     for (var i = 0; i < results.length; i++) {
       final row = results[i];
+      final disponible = (row['disponible'] as int) == 1;
+      if(disponible == true){
       final cantidadTotal = row['cantidad_total'] as int;
       final totalVenta = row['total_ventas'] as double;
       final ganancia = row['ganancias'] as double;
@@ -292,7 +296,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
         'S/. ${(row['descuento_total'] as double? ?? 0).toStringAsFixed(2)}',
         'S/. ${totalVenta.toStringAsFixed(2)}',
         'S/. ${ganancia.toStringAsFixed(2)}',
-      ]);
+      ]);}
     }
 
     return {
