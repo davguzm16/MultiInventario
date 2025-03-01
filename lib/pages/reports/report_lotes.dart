@@ -118,7 +118,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
             pw.Text("Lotes Acabados: $lotesAcabados"),
             pw.Text("Lotes Próximos a Vencer: $lotesProximosAVencer"),
             pw.Text(
-                "Valor de Compra Total: \$${totalValorCompra.toStringAsFixed(2)}"),
+                "Valor de Compra Total: S/ ${totalValorCompra.toStringAsFixed(2)}"),
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
               headers: [
@@ -296,7 +296,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
             pw.Text("Lotes Acabados: $lotesAcabados"),
             pw.Text("Lotes Próximos a Vencer: $lotesProximosAVencer"),
             pw.Text(
-                "Valor de Compra Total: \$${totalValorCompra.toStringAsFixed(2)}"),
+                "Valor de Compra Total: S/ ${totalValorCompra.toStringAsFixed(2)}"),
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
               headers: [

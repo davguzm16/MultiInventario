@@ -311,7 +311,7 @@ Future<void> generarVentasGeneral(BuildContext context,
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Tipo",
                 "Cliente",
                 "Subtotal (S/)",
@@ -486,7 +486,7 @@ Future<void> generarVentasTipo(
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Cliente",
                 "Subtotal (S/)",
                 "Descuento (S/)",

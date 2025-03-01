@@ -299,14 +299,14 @@ Future<void> generarDetallesVentas(BuildContext context,
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Tipo",
                 "Cliente",
-                "Codigo del producto",
-                "Descripcion del producto",
+                "Código del producto",
+                "Descripción del producto",
                 "Cantidad",
                 "Precio de compra por unidad (S/)",
-                "Precio de ventar por unidad (S/)",
+                "Precio de venta por unidad (S/)",
                 "Descuento (S/)",
                 "Subtotal (S/)",
                 "Ganancia estimada (S/)",
@@ -345,17 +345,17 @@ Future<void> generarDetallesVentas(BuildContext context,
                 0: pw.FixedColumnWidth(35), // Índice
                 1: pw.FixedColumnWidth(60), // Fecha y hora
                 2: pw.FixedColumnWidth(50), // Código de venta
-                3: pw.FixedColumnWidth(50), // Tipos
+                3: pw.FixedColumnWidth(50), // Tipo
                 4: pw.FixedColumnWidth(80), // Cliente
-                5: pw.FixedColumnWidth(60), // Codigo del producto
-                6: pw.FixedColumnWidth(80), // Descripcion
+                5: pw.FixedColumnWidth(60), // Código del producto
+                6: pw.FixedColumnWidth(80), // Descripción
                 7: pw.FixedColumnWidth(35), // Cantidad
                 8: pw.FixedColumnWidth(55), // Precio de compra
                 9: pw.FixedColumnWidth(55), // Precio de venta
                 10: pw.FixedColumnWidth(60), // Descuento
                 11: pw.FixedColumnWidth(60), // Subtotal
-                12: pw.FixedColumnWidth(60), // ganancia
-                13: pw.FixedColumnWidth(60) //estado
+                12: pw.FixedColumnWidth(60), // Ganancia
+                13: pw.FixedColumnWidth(60) // Estado
               },
             ),
           ];
@@ -412,11 +412,11 @@ Future<Map<String, dynamic>> obtenerDatosTabla(
     data.add([
       "${i + 1}", //indice
       "${ventas?.fechaVenta}", //fecha y hora
-      "${ventas?.idVenta}", //codigo de venta
+      "${ventas?.idVenta}", //código de venta
       ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), //tipo
       nombreCliente, //cliente
-      "${detalles[i].idProducto}", //codigo del producto
-      nombreProducto, //nombre del produvto (descripcion del producto)
+      "${detalles[i].idProducto}", //código del producto
+      nombreProducto, //nombre del producto (descripción del producto)
       "${detalles[i].cantidadProducto}", //cantidad
       "$precioCompraUnidad", //precio compra unidad
       "${detalles[i].precioUnidadProducto}", //precio venta por unidad
@@ -463,14 +463,14 @@ Future<void> generarDetallesTipo(
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Tipo",
                 "Cliente",
-                "Codigo del producto",
-                "Descripcion del producto",
+                "Código del producto",
+                "Descripción del producto",
                 "Cantidad",
                 "Precio de compra por unidad (S/)",
-                "Precio de ventar por unidad (S/)",
+                "Precio de venta por unidad (S/)",
                 "Descuento (S/)",
                 "Subtotal (S/)",
                 "Ganancia estimada (S/)",
@@ -509,17 +509,17 @@ Future<void> generarDetallesTipo(
                 0: pw.FixedColumnWidth(35), // Índice
                 1: pw.FixedColumnWidth(60), // Fecha y hora
                 2: pw.FixedColumnWidth(50), // Código de venta
-                3: pw.FixedColumnWidth(50), // Tipos
+                3: pw.FixedColumnWidth(50), // Tipo
                 4: pw.FixedColumnWidth(80), // Cliente
-                5: pw.FixedColumnWidth(60), // Codigo del producto
-                6: pw.FixedColumnWidth(80), // Descripcion
+                5: pw.FixedColumnWidth(60), // Código del producto
+                6: pw.FixedColumnWidth(80), // Descripción
                 7: pw.FixedColumnWidth(35), // Cantidad
                 8: pw.FixedColumnWidth(55), // Precio de compra
                 9: pw.FixedColumnWidth(55), // Precio de venta
                 10: pw.FixedColumnWidth(60), // Descuento
                 11: pw.FixedColumnWidth(60), // Subtotal
-                12: pw.FixedColumnWidth(60), // ganancia
-                13: pw.FixedColumnWidth(60) //estado
+                12: pw.FixedColumnWidth(60), // Ganancia
+                13: pw.FixedColumnWidth(60) // Estado
               },
             ),
           ];
@@ -579,11 +579,11 @@ Future<Map<String, dynamic>> obtenerDatosTipoTabla(
       data.add([
         "${i + 1}", //indice
         "${ventas?.fechaVenta}", //fecha y hora
-        "${ventas?.idVenta}", //codigo de venta
+        "${ventas?.idVenta}", //código de venta
         ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), //tipo
         nombreCliente, //cliente
-        "${detalles[i].idProducto}", //codigo del producto
-        nombreProducto, //nombre del produvto (descripcion del producto)
+        "${detalles[i].idProducto}", //código del producto
+        nombreProducto, //nombre del producto (descripción del producto)
         "${detalles[i].cantidadProducto}", //cantidad
         "$precioCompraUnidad", //precio compra unidad
         "${detalles[i].precioUnidadProducto}", //precio venta por unidad
