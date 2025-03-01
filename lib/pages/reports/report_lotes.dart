@@ -199,10 +199,14 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     int lotesAcabados = 0;
     int lotesProximosAVencer = 0;
 
-    // Aquí debes implementar la lógica para obtener los lotes según el rango de fechas y días antes de vencimiento
-    // Por ejemplo:
-    lotes = await Lote.obtenerLotesPorRangoDeFechasYDias(
-        fechaInicio, fechaFinal, diasAntesVencimiento);
+    // Obtener lotes según el rango de fechas y días antes de vencimiento
+    if (diasAntesVencimiento > 0) {
+      lotes = await Lote.obtenerLotesPorRangoDeFechasYDias(
+          fechaInicio, fechaFinal, diasAntesVencimiento);
+    } else {
+      lotes = await Lote.obtenerLotesporFecha(fechaInicio, fechaFinal);
+    }
+
     int totalLotes = lotes.length;
 
     for (int i = 0; i < lotes.length; i++) {
@@ -210,35 +214,37 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           await DetalleVenta.obtenerCantidadVendidaPorLote(lotes[i].idLote!);
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
-      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
-      totalValorCompra += lotes[i].precioCompra;
+      if (producto?.estaDisponible == true && producto?.estaDisponible != null) {
+        totalValorCompra += lotes[i].precioCompra;
 
-      if (lotes[i].cantidadActual > 0) {
-        lotesActuales++;
-      } else {
-        lotesAcabados++;
+        if (lotes[i].cantidadActual > 0) {
+          lotesActuales++;
+        } else {
+          lotesAcabados++;
+        }
+
+        if (diasAntesVencimiento > 0 &&
+            lotes[i].fechaCaducidad != null &&
+            lotes[i].fechaCaducidad!.isBefore(
+                DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
+          lotesProximosAVencer++;
+        }
+
+        data.add([
+          (i + 1).toString(), // Índice
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].idLote.toString(),
+          lotes[i].idProducto.toString(),
+          producto?.descripcion ?? '',
+          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].cantidadComprada.toString(),
+          lotes[i].cantidadActual.toString(),
+          lotes[i].cantidadPerdida?.toString() ?? '0',
+          cantidadVendida.toString(),
+          lotes[i].precioCompra.toString(),
+          lotes[i].precioCompraUnidad.toStringAsFixed(1),
+        ]);
       }
-
-      if (lotes[i].fechaCaducidad != null &&
-          lotes[i].fechaCaducidad!.isBefore(
-              DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
-        lotesProximosAVencer++;
-      }
-
-      data.add([
-        (i + 1).toString(), // Índice
-        lotes[i].fechaCompra?.toIso8601String() ?? '',
-        lotes[i].idLote.toString(),
-        lotes[i].idProducto.toString(),
-        producto?.descripcion ?? '',
-        lotes[i].fechaCaducidad?.toIso8601String() ?? '',
-        lotes[i].cantidadComprada.toString(),
-        lotes[i].cantidadActual.toString(),
-        lotes[i].cantidadPerdida?.toString() ?? '0',
-        cantidadVendida.toString(),
-        lotes[i].precioCompra.toString(),
-        lotes[i].precioCompraUnidad.toString(),
-      ]);}
     }
 
     // Agregar mensajes de depuración
@@ -372,10 +378,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     int lotesAcabados = 0;
     int lotesProximosAVencer = 0;
 
-    // Aquí debes implementar la lógica para obtener los lotes según el rango de fechas y días antes de vencimiento
-    // Por ejemplo:
-    lotes = await Lote.obtenerLotesporFecha(
-        fechaInicio, fechaFinal);
+    // Obtener lotes según el rango de fechas y días antes de vencimiento
+    lotes = await Lote.obtenerLotesporFecha(fechaInicio, fechaFinal);
     int totalLotes = lotes.length;
 
     for (int i = 0; i < lotes.length; i++) {
@@ -384,34 +388,35 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
       totalValorCompra += lotes[i].precioCompra;
-      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
-      if (lotes[i].cantidadActual > 0) {
-        lotesActuales++;
-      } else {
-        lotesAcabados++;
-      }
+      if (producto?.estaDisponible == true && producto?.estaDisponible != null) {
+        if (lotes[i].cantidadActual > 0) {
+          lotesActuales++;
+        } else {
+          lotesAcabados++;
+        }
 
-      if (lotes[i].fechaCaducidad != null &&
-          lotes[i].fechaCaducidad!.isBefore(
-              DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
-        lotesProximosAVencer++;
-      }
+        if (lotes[i].fechaCaducidad != null &&
+            lotes[i].fechaCaducidad!.isBefore(
+                DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
+          lotesProximosAVencer++;
+        }
 
-      data.add([
-        (i + 1).toString(), 
-        lotes[i].fechaCompra?.toIso8601String() ?? '--',
-        lotes[i].idLote.toString(),
-        lotes[i].idProducto.toString(),
-        producto?.descripcion ?? '--',
-        lotes[i].fechaCaducidad?.toIso8601String() ?? '--',
-        lotes[i].cantidadComprada.toString(),
-        lotes[i].cantidadActual.toString(),
-        lotes[i].cantidadPerdida?.toString() ?? '0',
-        cantidadVendida.toString(),
-        lotes[i].precioCompra.toString(),
-        lotes[i].precioCompraUnidad.toString(),
-        '${producto?.precioProducto ?? '--'}'
-      ]);}
+        data.add([
+          (i + 1).toString(), // Índice
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].idLote.toString(),
+          lotes[i].idProducto.toString(),
+          producto?.descripcion ?? '',
+          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].cantidadComprada.toString(),
+          lotes[i].cantidadActual.toString(),
+          lotes[i].cantidadPerdida?.toString() ?? '0',
+          cantidadVendida.toString(),
+          lotes[i].precioCompra.toString(),
+          lotes[i].precioCompraUnidad.toStringAsFixed(1),
+          '${producto?.precioProducto ?? '--'}'
+        ]);
+      }
     }
 
     // Agregar mensajes de depuración
