@@ -35,6 +35,8 @@ class Producto {
     this.stockMaximo,
     this.rutaImagen,
     this.estaDisponible,
+    this.fechaCreacion,
+    this.fechaModificacion,
   });
 
   // Metodos CRUD
@@ -104,6 +106,12 @@ class Producto {
           stockMaximo: (map['stockMaximo'] as num?)?.toDouble(),
           estaDisponible: (map['estaDisponible'] as int) == 1,
           rutaImagen: map['rutaImagen'] as String?,
+          fechaCreacion: map['fechaCreacion'] != null
+              ? DateTime.parse(map['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: map['fechaModificacion'] != null
+              ? DateTime.parse(map['fechaModificacion'] as String)
+              : null,
         );
       }).toList();
     } catch (e) {
@@ -124,16 +132,23 @@ class Producto {
 
       if (result.isNotEmpty) {
         return Producto(
-            idProducto: result.first['idProducto']! as int,
-            idUnidad: result.first['idUnidad']! as int,
-            codigoProducto: result.first['codigoProducto'] as String?,
-            nombreProducto: result.first['nombreProducto'] as String,
-            precioProducto: (result.first['precioProducto'] as num).toDouble(),
-            stockActual: (result.first['stockActual'] as num).toDouble(),
-            stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
-            stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
-            estaDisponible: (result.first['estaDisponible'] as int) == 1,
-            rutaImagen: (result.first['rutaImagen'] as String?));
+          idProducto: result.first['idProducto']! as int,
+          idUnidad: result.first['idUnidad']! as int,
+          codigoProducto: result.first['codigoProducto'] as String?,
+          nombreProducto: result.first['nombreProducto'] as String,
+          precioProducto: (result.first['precioProducto'] as num).toDouble(),
+          stockActual: (result.first['stockActual'] as num).toDouble(),
+          stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
+          stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
+          estaDisponible: (result.first['estaDisponible'] as int) == 1,
+          rutaImagen: (result.first['rutaImagen'] as String?),
+          fechaCreacion: result.first['fechaCreacion'] != null
+              ? DateTime.parse(result.first['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: result.first['fechaModificacion'] != null
+              ? DateTime.parse(result.first['fechaModificacion'] as String)
+              : null,
+        );
       }
     } catch (e) {
       debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");
@@ -165,6 +180,12 @@ class Producto {
           stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
           estaDisponible: (result.first['estaDisponible'] as int) == 1,
           rutaImagen: result.first['rutaImagen'] as String?,
+          fechaCreacion: result.first['fechaCreacion'] != null
+              ? DateTime.parse(result.first['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: result.first['fechaModificacion'] != null
+              ? DateTime.parse(result.first['fechaModificacion'] as String)
+              : null,
         );
       }
     } catch (e) {
@@ -301,6 +322,12 @@ class Producto {
             stockMaximo: (item['stockMaximo'] as num?)?.toDouble(),
             estaDisponible: (item['estaDisponible'] as int) == 1,
             rutaImagen: item['rutaImagen'] as String?,
+            fechaCreacion: result.first['fechaCreacion'] != null
+                ? DateTime.parse(result.first['fechaCreacion'] as String)
+                : null,
+            fechaModificacion: result.first['fechaModificacion'] != null
+                ? DateTime.parse(result.first['fechaModificacion'] as String)
+                : null,
           ));
         }
       }

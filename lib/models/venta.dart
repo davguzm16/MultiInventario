@@ -216,15 +216,23 @@ class Venta {
     return ventas;
   }
 
-  static Future<List<Venta>> obtenerVentasDeCliente(int idCliente) async {
+  static Future<List<Venta>> obtenerVentasDeCliente(int idCliente,
+      {bool? esAlContado = false}) async {
     List<Venta> ventas = [];
+
     try {
       final db = await DatabaseController().database;
+
+      String esAlContadoQuery = "";
+      if (esAlContado != null) {
+        esAlContadoQuery = "AND esAlContado = ${esAlContado ? 1 : 0}";
+      }
+
       final result = await db.rawQuery('''
         SELECT idVenta, codigoBoleta, fechaVenta, 
              montoTotal, montoCancelado, esAlContado
         FROM Ventas
-        WHERE idCliente = ?
+        WHERE idCliente = ? $esAlContadoQuery
         ORDER BY fechaVenta ASC;
       ''', [idCliente]);
 
