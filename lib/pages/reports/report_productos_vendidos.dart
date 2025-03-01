@@ -3,6 +3,7 @@ import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:multiinventario/controllers/db_controller.dart'; // Cambiar este import
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
+import 'package:intl/intl.dart';
 
 class ReportProductosVendidos extends StatefulWidget {
   const ReportProductosVendidos({super.key});
@@ -23,10 +24,10 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
   void initState() {
     super.initState();
     fechaInicio = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateFormat('dd/MM/yy').format(DateTime.now()),
     );
     fechaFinal = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateFormat('dd/MM/yy').format(DateTime.now()),
     );
   }
 
@@ -99,7 +100,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                         setState(() {
                           selectedFechaInicio = picked;
                           fechaInicio.text =
-                              picked.toIso8601String().split('T')[0];
+                              DateFormat('dd/MM/yy').format(picked);
                         });
                       }
                     },
@@ -130,7 +131,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                         setState(() {
                           selectedFechaFinal = picked;
                           fechaFinal.text =
-                              picked.toIso8601String().split('T')[0];
+                              DateFormat('dd/MM/yy').format(picked);
                         });
                       }
                     },
@@ -180,6 +181,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
     final totalVentas = datosTabla["totalVentas"] as double;
     final totalGanancias = datosTabla["totalGanancias"] as double;
     final totalProductos = datosTabla["totalProductos"] as int;
+    final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
     try {
       pdf.addPage(
@@ -193,7 +195,7 @@ class _ReportProductosVendidosState extends State<ReportProductosVendidos> {
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
               pw.Text(
-                  "Período: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
+                  "Período: ${dateFormat.format(selectedFechaInicio)} - ${dateFormat.format(selectedFechaFinal)}"),
               pw.Text("Total de ventas: S/ ${totalVentas.toStringAsFixed(2)}"),
               pw.Text(
                   "Ganancias totales: S/ ${totalGanancias.toStringAsFixed(2)}"),

@@ -5,6 +5,7 @@ import 'package:multiinventario/pages/reports/report_lotes.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 class ReportsPage extends StatefulWidget {
   const ReportsPage({super.key});
@@ -152,10 +153,9 @@ class _ReportsPageState extends State<ReportsPage> {
       (DateTime startDate, DateTime endDate) async {
         setState(() => _isLoading = true);
         try {
-          // Crear el documento PDF
           final pdf = pw.Document();
+          final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
-          // Obtener datos de la base de datos y generar el PDF
           pdf.addPage(
             pw.MultiPage(
               pageFormat: PdfPageFormat.a4,
@@ -167,9 +167,8 @@ class _ReportsPageState extends State<ReportsPage> {
                           fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 10),
                   pw.Text(
-                      "Período: ${startDate.day}/${startDate.month}/${startDate.year} - ${endDate.day}/${endDate.month}/${endDate.year}"),
+                      "Período: ${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}"),
                   pw.SizedBox(height: 20),
-                  // ignore: deprecated_member_use
                   pw.Table.fromTextArray(
                     headers: [
                       "Ranking",
@@ -187,12 +186,11 @@ class _ReportsPageState extends State<ReportsPage> {
                         "001",
                         "Producto Ejemplo",
                         "10",
-                        "S/. 50.00",
-                        "S/. 5.00",
-                        "S/. 495.00",
-                        "S/. 100.00"
+                        "S/. ${50.00.toStringAsFixed(2)}",
+                        "S/. ${5.00.toStringAsFixed(2)}",
+                        "S/. ${495.00.toStringAsFixed(2)}",
+                        "S/. ${100.00.toStringAsFixed(2)}"
                       ],
-                      // Aquí irán los datos reales de tu base de datos
                     ],
                     border: pw.TableBorder.all(),
                     cellStyle: pw.TextStyle(fontSize: 10),
@@ -219,7 +217,6 @@ class _ReportsPageState extends State<ReportsPage> {
             ),
           );
 
-          // Generar y mostrar el PDF
           final path = await report.generarPDF(pdf, "productos_vendidos.pdf");
           if (mounted) {
             await report.mostrarPDF(context, path);
@@ -275,6 +272,8 @@ class _ReportsPageState extends State<ReportsPage> {
   //ejemplo de reporte
   Future<void> generarVentasContado(BuildContext context) async {
     final pdf = pw.Document();
+    final DateFormat dateFormat = DateFormat('dd/MM/yy');
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
@@ -285,11 +284,10 @@ class _ReportsPageState extends State<ReportsPage> {
                 style:
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
-            pw.Text("Fecha: 01/01/2025 - 31/01/2025"),
-            pw.Text("Total: S/ 1000.00"),
-            pw.Text("Ganancias estimadas: S/ 300.00"),
+            pw.Text("Fecha: ${dateFormat.format(DateTime(2025, 1, 1))} - ${dateFormat.format(DateTime(2025, 1, 31))}"),
+            pw.Text("Total: S/ ${1000.00.toStringAsFixed(2)}"),
+            pw.Text("Ganancias estimadas: S/ ${300.00.toStringAsFixed(2)}"),
             pw.SizedBox(height: 10),
-            // ignore: deprecated_member_use
             pw.Table.fromTextArray(
               headers: [
                 "Fecha y hora",
@@ -303,7 +301,7 @@ class _ReportsPageState extends State<ReportsPage> {
               data: List.generate(
                   12,
                   (index) => [
-                        "01/01/2023 07:35",
+                        dateFormat.format(DateTime(2023, 1, 1)) + " 07:35",
                         "",
                         "~~",
                         "6.00",
@@ -334,12 +332,8 @@ class _ReportsPageState extends State<ReportsPage> {
         },
       ),
     );
-    //metodos de report_controller.dart
 
-    //generar pdf
     final path = await report.generarPDF(pdf, "ventas_contado.pdf");
-    //mostrar pdf
-    // ignore: use_build_context_synchronously
     report.mostrarPDF(context, path);
   }
 
@@ -374,7 +368,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 if (picked != null) {
                   startDate = picked;
                   startDateController.text =
-                      "${picked.day}/${picked.month}/${picked.year}";
+                      DateFormat('dd/MM/yy').format(picked);
                 }
               },
             ),
@@ -396,7 +390,7 @@ class _ReportsPageState extends State<ReportsPage> {
                 if (picked != null) {
                   endDate = picked;
                   endDateController.text =
-                      "${picked.day}/${picked.month}/${picked.year}";
+                      DateFormat('dd/MM/yy').format(picked);
                 }
               },
             ),
