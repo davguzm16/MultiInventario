@@ -874,7 +874,7 @@ class _ProductPageState extends State<ProductPage> {
     bool editarLote = false,
   }) {
     final cantidadCompradaController = TextEditingController(
-      text: editarLote ? lote!.cantidadActual.toString() : '',
+      text: editarLote ? lote!.cantidadComprada.toString() : '',
     );
     final precioController = TextEditingController(
       text: editarLote ? lote!.precioCompra.toString() : '',
