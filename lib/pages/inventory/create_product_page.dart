@@ -167,24 +167,10 @@ class _CreateProductPageState extends State<CreateProductPage> {
                     unidades.firstWhere((unidad) => unidad.idUnidad == value);
               });
             },
-            decoration: InputDecoration(
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Text(
-                    'Unidad de medida',
-                    style: TextStyle(color: Colors.black87),
-                  ),
-                  Text(
-                    ' *',
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              border: const OutlineInputBorder(),
+            decoration: const InputDecoration(
+              labelText: 'Unidad de medida *',
+              labelStyle: TextStyle(color: Colors.black87),
+              border: OutlineInputBorder(),
             ),
             isDense: true,
             isExpanded: true,
@@ -263,6 +249,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 controller: minStockController,
                 keyboardType: TextInputType.number,
                 unidad: unidadSeleccionada,
+                isRequired: true,
               ),
               CustomTextField(
                 label: 'Stock máximo',

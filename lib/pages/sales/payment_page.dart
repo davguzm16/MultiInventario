@@ -286,22 +286,22 @@ class _PaymentPageState extends State<PaymentPage> {
             onPressed: () async {
               FocusScope.of(context).unfocus();
 
+              if (esAlContado &&
+                  (cantidadRecibida - _calcularTotalVenta()) < 0) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage:
+                      "Monto insuficiente. \nSi desea continuar con este monto, considere cambiarlo a una venta a crédito.",
+                );
+                return;
+              }
+
               if (crearCliente) {
                 if (_nombreController.text.isEmpty) {
                   ErrorDialog(
                     context: context,
                     errorMessage:
                         "Por favor, complete todos los campos obligatorios.",
-                  );
-                  return;
-                }
-
-                if (esAlContado &&
-                    (cantidadRecibida - _calcularTotalVenta()) < 0) {
-                  ErrorDialog(
-                    context: context,
-                    errorMessage:
-                        "Monto insuficiente. \nSi desea continuar con este monto, considere cambiarlo a una venta a crédito.",
                   );
                   return;
                 }

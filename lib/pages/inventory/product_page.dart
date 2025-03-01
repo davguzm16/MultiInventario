@@ -215,15 +215,15 @@ class _ProductPageState extends State<ProductPage> {
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
-                          "Precio por unidad: S/. ${productoData.precioProducto.toStringAsFixed(2)}",
+                          "Precio por unidad: S/ ${productoData.precioProducto.toStringAsFixed(2)}",
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
-                          "Fecha de creación: S/. ${productoData.fechaCreacion?.toLocal().toString().split(' ')[0] ?? "---"}",
+                          "Fecha de creación: ${productoData.fechaCreacion?.toLocal().toString().split(' ')[0] ?? "---"}",
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
-                          "Fecha de modificación: S/. ${productoData.fechaModificacion?.toLocal().toString().split(' ')[0] ?? "---"}",
+                          "Fecha de modificación: ${productoData.fechaModificacion?.toLocal().toString().split(' ')[0] ?? "---"}",
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                       ],
@@ -332,7 +332,7 @@ class _ProductPageState extends State<ProductPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    'Cantidad comprada: ${lote.cantidadComprada}'),
+                                    'Cantidad Comprada: ${lote.cantidadComprada}'),
                                 Text('Pérdidas: ${lote.cantidadPerdida}'),
                                 Text(
                                     'Precio de Compra: S/ ${lote.precioCompra.toStringAsPrecision(2)}'),
@@ -567,9 +567,19 @@ class _ProductPageState extends State<ProductPage> {
               }
 
               if (editarLote) {
+                if (int.parse(cantidadCompradaController.text) >
+                    (lote!.cantidadComprada - lote.cantidadActual)) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage:
+                        "La cantidad insertada no debe ser menor a la cantidad de venta y la cantidad pérdida",
+                  );
+                  return;
+                }
+
                 final loteEditado = Lote(
                   idProducto: widget.idProducto,
-                  idLote: lote!.idLote,
+                  idLote: lote.idLote,
                   cantidadActual: int.parse(cantidadCompradaController.text) -
                       cantidadPerdida.value,
                   cantidadComprada: int.parse(cantidadCompradaController.text),
@@ -792,6 +802,7 @@ Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
                     stockMinimo: stockMin,
                     stockMaximo: stockMax,
                     rutaImagen: rutaImagen,
+                    fechaModificacion: DateTime.now(),
                   );
 
                   bool actualizado =
