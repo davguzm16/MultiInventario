@@ -9,6 +9,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:multiinventario/models/lote.dart'; // Importa tu modelo de lotes
 import 'package:multiinventario/models/detalle_venta.dart'; // Importa tu modelo de detalles de venta
 import 'package:multiinventario/models/producto.dart'; // Importa tu modelo de productos
+import 'package:intl/intl.dart';
 
 class ReportLotesPage extends StatefulWidget {
   const ReportLotesPage({super.key});
@@ -32,10 +33,10 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
   void initState() {
     super.initState();
     fechaInicio = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateFormat('dd/MM/yy').format(DateTime.now()),
     );
     fechaFinal = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateFormat('dd/MM/yy').format(DateTime.now()),
     );
     _diasController = TextEditingController();
   }
@@ -80,8 +81,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     );
     if (picked != null) {
       setState(() {
-        controller.text =
-            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+        controller.text = DateFormat('dd/MM/yy').format(picked);
       });
     }
   }
@@ -111,7 +111,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${fechaInicio.toIso8601String().split('T')[0]} - ${fechaFinal.toIso8601String().split('T')[0]}"),
+                "Fecha: ${DateFormat('dd/MM/yy').format(fechaInicio)} - ${DateFormat('dd/MM/yy').format(fechaFinal)}"),
             pw.SizedBox(height: 10),
             pw.Text("Lotes Totales: $totalLotes"),
             pw.Text("Lotes Actuales: $lotesActuales"),
@@ -235,17 +235,17 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
 
         data.add([
           (i + 1).toString(), // Índice
-          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          DateFormat('dd/MM/yy').format(lotes[i].fechaCompra ?? DateTime.now()),
           lotes[i].idLote.toString(),
           lotes[i].idProducto.toString(),
           producto?.descripcion ?? '',
-          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
+          DateFormat('dd/MM/yy').format(lotes[i].fechaCaducidad ?? DateTime.now()),
           lotes[i].cantidadComprada.toString(),
           lotes[i].cantidadActual.toString(),
           lotes[i].cantidadPerdida?.toString() ?? '0',
           cantidadVendida.toString(),
-          lotes[i].precioCompra.toString(),
-          lotes[i].precioCompraUnidad.toStringAsFixed(1),
+          lotes[i].precioCompra.toStringAsFixed(2),
+          lotes[i].precioCompraUnidad.toStringAsFixed(2),
         ]);
       }
     }
@@ -289,7 +289,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${fechaInicio.toIso8601String().split('T')[0]} - ${fechaFinal.toIso8601String().split('T')[0]}"),
+                "Fecha: ${DateFormat('dd/MM/yy').format(fechaInicio)} - ${DateFormat('dd/MM/yy').format(fechaFinal)}"),
             pw.SizedBox(height: 10),
             pw.Text("Lotes Totales: $totalLotes"),
             pw.Text("Lotes Actuales: $lotesActuales"),
@@ -410,18 +410,18 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
 
         data.add([
           (i + 1).toString(), // Índice
-          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          DateFormat('dd/MM/yy').format(lotes[i].fechaCompra ?? DateTime.now()),
           lotes[i].idLote.toString(),
           lotes[i].idProducto.toString(),
           producto?.descripcion ?? '',
-          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
+          DateFormat('dd/MM/yy').format(lotes[i].fechaCaducidad ?? DateTime.now()),
           lotes[i].cantidadComprada.toString(),
           lotes[i].cantidadActual.toString(),
           lotes[i].cantidadPerdida?.toString() ?? '0',
           cantidadVendida.toString(),
-          lotes[i].precioCompra.toString(),
-          lotes[i].precioCompraUnidad.toStringAsFixed(1),
-          '${producto?.precioProducto ?? '--'}'
+          lotes[i].precioCompra.toStringAsFixed(2),
+          lotes[i].precioCompraUnidad.toStringAsFixed(2),
+          '${producto?.precioProducto?.toStringAsFixed(2) ?? '--'}'
         ]);
       }
     }
