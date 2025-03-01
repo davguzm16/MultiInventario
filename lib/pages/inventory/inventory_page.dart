@@ -183,62 +183,90 @@ class _InventoryPageState extends State<InventoryPage>
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
         ),
-        actions: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: isSearching ? 0 : 48,
-            child: IconButton(
-              icon: const Icon(Icons.search),
-              onPressed: () {
-                setState(() {
-                  isSearching = true;
-                });
-                _animationController.forward();
-              },
-            ),
-          ),
-          if (!isSearching)
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () async {
-                await context.push('/inventory/create-product');
-                setState(() {
-                  productos.clear();
-                  cantidadCargas = 0;
-                  hayMasCargas = true;
-                });
-                _cargarProductos(reiniciarListaProductos: true);
-              },
-            ),
-          if (!isSearching)
-            IconButton(
-              icon: const Icon(Icons.filter_list),
-              onPressed: () async {
-                final filtros = await context.push<Map<String, dynamic>>(
-                  '/inventory/filter-products',
-                  extra: {
-                    'categoriasSeleccionadas': categoriasSeleccionadas
-                        .map((c) => {
-                              'idCategoria': c.idCategoria,
-                              'nombreCategoria': c.nombreCategoria
-                            })
-                        .toList(),
-                    'stockBajo': stockBajo,
-                  },
-                );
-
-                if (filtros != null) {
+          actions: [
+            // Botón de búsqueda con animación
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: isSearching ? 0 : 48,
+              child: IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
                   setState(() {
-                    categoriasSeleccionadas =
-                        filtros['categoriasSeleccionadas'] as List<Categoria>;
-                    stockBajo = filtros['isStockBajo'] as bool?;
+                    isSearching = true;
                   });
-                }
-
-                _cargarProductos(reiniciarListaProductos: true);
-              },
+                  _animationController.forward();
+                },
+              ),
             ),
-        ],
+
+            if (!isSearching) ...[
+              // Botón para agregar producto
+              IconButton(
+                icon: const Icon(Icons.add),
+                tooltip: "Agregar producto",
+                onPressed: () async {
+                  await context.push('/inventory/create-product');
+                  setState(() {
+                    productos.clear();
+                    cantidadCargas = 0;
+                    hayMasCargas = true;
+                  });
+                  _cargarProductos(reiniciarListaProductos: true);
+                },
+              ),
+
+              // Botón para pruebas de rendimiento (con ícono de tuerca)
+              IconButton(
+                icon: const Icon(Icons.settings_suggest),
+                tooltip: "Pruebas de rendimiento",
+                onPressed: () async {
+                  await context.push('/inventory/rendimiento-test');
+                  setState(() {
+                    productos.clear();
+                    cantidadCargas = 0;
+                    hayMasCargas = true;
+                  });
+                  _cargarProductos(reiniciarListaProductos: true);
+                },
+              ),
+
+
+              // Botón de filtros
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                tooltip: "Filtrar productos",
+                onPressed: () async {
+                  final filtros = await context.push<Map<String, dynamic>>(
+                    '/inventory/filter-products',
+                    extra: {
+                      'categoriasSeleccionadas': categoriasSeleccionadas
+                          .map((c) => {
+                        'idCategoria': c.idCategoria,
+                        'nombreCategoria': c.nombreCategoria
+                      })
+                          .toList(),
+                      'stockBajo': stockBajo,
+                    },
+                  );
+
+                  if (filtros != null) {
+                    setState(() {
+                      categoriasSeleccionadas = List.from(filtros['categoriasSeleccionadas'])
+                          .map((c) => Categoria(
+                        idCategoria: c['idCategoria'],
+                        nombreCategoria: c['nombreCategoria'],
+                      ))
+                          .toList();
+                      stockBajo = filtros['isStockBajo'] as bool?;
+                    });
+                  }
+
+                  _cargarProductos(reiniciarListaProductos: true);
+                },
+              ),
+            ],
+          ]
+
       ),
       body: Stack(
         children: [

@@ -6,6 +6,8 @@ import 'package:multiinventario/models/producto_categoria.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:sqflite/sqflite.dart';
 
+import 'lote.dart';
+
 class Producto {
   int? idProducto;
   int? idUnidad;
@@ -184,50 +186,6 @@ class Producto {
     }
   }
 
-  static Future<void> insertarProductosPorDefecto() async {
-    if (await DatabaseController.tableHasData("Productos")) return;
-
-    try {
-      List<Categoria> categorias = await Categoria.obtenerCategorias();
-      Random random = Random();
-
-      List<Producto> productos = List.generate(100, (index) {
-        int idUnidad = random.nextInt(3) + 1; // Valores entre 1 y 3
-        double precio =
-            (random.nextDouble() * 90) + 10; // Precio entre 10 y 100
-        int stockMinimo = random.nextInt(20) + 5; // Mínimo entre 5 y 25
-        int stockMaximo = (random.nextInt(100) +
-            50); // Máximo entre stockActual+50 y stockActual+150
-
-        return Producto(
-          idUnidad: idUnidad,
-          codigoProducto: "7501000000${(index + 1).toString().padLeft(4, '0')}",
-          nombreProducto: "Producto ${index + 1}",
-          precioProducto:
-              double.parse(precio.toStringAsFixed(2)), // Redondeo a 2 decimales
-          stockMinimo: double.parse(stockMinimo.toStringAsFixed(2)),
-          stockMaximo: double.parse(stockMaximo.toStringAsFixed(2)),
-          rutaImagen: null,
-        );
-      });
-
-      // Asignar categorías aleatorias a cada producto
-      for (var producto in productos) {
-        int cantidadCategorias = random.nextInt(3) + 1; // De 1 a 3 categorías
-        List<Categoria> categoriasAsignadas = List.generate(
-          cantidadCategorias,
-          (_) => categorias[random.nextInt(categorias.length)],
-        );
-
-        await crearProducto(producto, categoriasAsignadas);
-      }
-
-      debugPrint("Se insertaron correctamente ${productos.length} productos.");
-    } catch (e) {
-      debugPrint("Error al insertar productos: $e");
-    }
-  }
-
   @override
   String toString() {
     return 'Producto = {idProducto: $idProducto, idUnidad: $idUnidad, codigoProducto: $codigoProducto, '
@@ -255,5 +213,42 @@ class Producto {
       debugPrint("Error al obtener los detalles de venta: ${e.toString()}");
     }
     return productos;
+  }
+  static Future<bool> eliminarProductoDefinitivo(int idProducto) async {
+    final db = await DatabaseController().database;
+    Batch batch = db.batch();
+
+    try {
+      // 1. Eliminar los lotes asociados al producto
+      final lotes = await Lote.obtenerLotesDeProducto(idProducto);
+      for (var lote in lotes) {
+        batch.update(
+          'Lotes',
+          {'estaDisponible': 0},
+          where: 'idProducto = ? AND idLote = ?',
+          whereArgs: [lote.idProducto, lote.idLote],
+        );
+      }
+
+      // 2. Eliminar las categorías asociadas al producto
+      batch.delete(
+        'ProductosCategorias',
+        where: 'idProducto = ?',
+        whereArgs: [idProducto],
+      );
+
+      // 3. Eliminar el producto definitivamente
+      batch.delete(
+        'Productos',
+        where: 'idProducto = ?',
+        whereArgs: [idProducto],
+      );
+
+      await batch.commit(noResult: true);
+      return true;
+    } catch (e) {
+      debugPrint("Error al eliminar el producto definitivamente: ${e.toString()}");
+      return false;
+    }
   }
 }

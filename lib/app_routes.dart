@@ -79,13 +79,12 @@ class AppRoutes {
                     parentNavigatorKey: _rootNavigatorKey,
                     builder: (context, state) {
                       final extra = state.extra as Map<String, dynamic>;
-                      final categoriasSeleccionadas =
-                          (extra['categoriasSeleccionadas'] as List)
-                              .map((map) => Categoria(
-                                    idCategoria: map['idCategoria'],
-                                    nombreCategoria: map['nombreCategoria'],
-                                  ))
-                              .toList();
+                      final categoriasSeleccionadas = (extra['categoriasSeleccionadas'] as List)
+                          .map((map) => Categoria(
+                        idCategoria: map['idCategoria'],
+                        nombreCategoria: map['nombreCategoria'],
+                      ))
+                          .toList();
                       final stockBajo = extra['stockBajo'] as bool?;
 
                       return FilterProductPage(
@@ -97,13 +96,17 @@ class AppRoutes {
                   GoRoute(
                     path: 'product/:idProducto',
                     builder: (context, state) {
-                      final idProducto =
-                          int.parse(state.pathParameters['idProducto']!);
+                      final idProducto = int.parse(state.pathParameters['idProducto']!);
                       return ProductPage(idProducto: idProducto);
                     },
                   ),
+                  GoRoute(
+                    path: 'rendimiento-test', // Agregamos esta ruta aquí
+                    builder: (context, state) => const RendimientoTestPage(),
+                  ),
                 ],
               ),
+
             ],
           ),
           StatefulShellBranch(

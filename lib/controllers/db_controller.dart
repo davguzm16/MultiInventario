@@ -183,12 +183,7 @@ class DatabaseController {
     }
   }
 
-  static Future<void> insertDefaultData() async {
-    Credenciales.crearCredencialesPorDefecto();
-    Categoria.crearCategoriasPorDefecto();
-    Unidad.crearUnidadesPorDefecto();
-    Producto.insertarProductosPorDefecto();
-  }
+
 
   // MÉTODOS EXCLUSIVOS PARA TESTING:
   @visibleForTesting

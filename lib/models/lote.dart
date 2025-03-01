@@ -317,6 +317,21 @@ class Lote {
     }
     return lote;
   }
+  static Future<bool> eliminarLotePorId(int idLote, int idProducto) async {
+    try {
+      final db = await DatabaseController().database;
+
+      int result = await db.rawUpdate(
+        'UPDATE Lotes SET estaDisponible = 0 WHERE idLote = ? AND idProducto = ?',
+        [idLote, idProducto],
+      );
+
+      return result > 0;
+    } catch (e) {
+      debugPrint("Error al eliminar el lote $idLote: ${e.toString()}");
+    }
+    return false;
+  }
 
 
 }

@@ -10,7 +10,7 @@ Future<void> main() async {
   await dotenv.load(fileName: "lib/.env");
 
   await DatabaseController().database;
-  await DatabaseController.insertDefaultData();
+
 
 
   runApp(const MyApp());
