@@ -7,6 +7,7 @@ import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/lote.dart';
+import 'package:intl/intl.dart';
 
 class ReportDetailsPage extends StatefulWidget {
   const ReportDetailsPage({super.key});
@@ -21,10 +22,26 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
   DateTime selectedFechaInicio = DateTime.now();
   DateTime selectedFechaFinal = DateTime.now();
   String _selectedReport = "Reporte general detallado de ventas";
-  // ignore: unused_field
   bool _isLoading = false;
 
-  //pantalla de carga
+  @override
+  void initState() {
+    super.initState();
+    fechaInicio = TextEditingController(
+      text: DateTime.now().toIso8601String().split('T')[0],
+    );
+    fechaFinal = TextEditingController(
+      text: DateTime.now().toIso8601String().split('T')[0],
+    );
+  }
+
+  @override
+  void dispose() {
+    fechaInicio.dispose();
+    fechaFinal.dispose();
+    super.dispose();
+  }
+
   void _generateReport(
       DateTime selectedFechaInicio, DateTime selectedFechaFinal) async {
     setState(() {
@@ -48,203 +65,160 @@ class _ReportDetailsPageState extends State<ReportDetailsPage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    fechaInicio = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
-    );
-    fechaFinal = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
-    );
-  }
-
-  @override
-  void dispose() {
-    fechaInicio.dispose();
-    fechaFinal.dispose();
-    super.dispose();
-  }
-
-  // ignore: non_constant_identifier_names
-  bool Selected = true;
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text("Reportes"),
-        ),
-        body: Container(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
+      appBar: AppBar(
+        title: const Text("Reportes"),
+      ),
+      body: Container(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(left: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Reporte detallado de ventas",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Padding(
+              padding: EdgeInsets.only(left: 16),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "Elegir tipo",
+                  style: TextStyle(
+                      color: Color(0xFF493D9E),
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildButton("Reporte general detallado de ventas", _selectedReport,
+                context, (selected) {
+              setState(() {
+                _selectedReport = selected;
+              });
+            }),
+            const SizedBox(height: 16),
+            _buildButton("Reporte detallado de ventas al contado",
+                _selectedReport, context, (selected) {
+              setState(() {
+                _selectedReport = selected;
+              });
+            }),
+            const SizedBox(height: 16),
+            _buildButton("Reporte detallado de ventas al crédito",
+                _selectedReport, context, (selected) {
+              setState(() {
+                _selectedReport = selected;
+              });
+            }),
+            const SizedBox(height: 16),
+            const Text(
+              "Elegir rango",
+              style: TextStyle(color: Color(0xFF493D9E)),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                      left: 16), // Ajusta el espacio según necesites
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Reporte detallado de ventas",
-                      style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold),
-                    ),
+                SizedBox(
+                  width: 150,
+                  height: 50,
+                  child: TextField(
+                    controller: fechaInicio,
+                    decoration: InputDecoration(
+                        labelText: 'Fecha Inicio',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF493D9e),
+                            ))),
+                    readOnly: true,
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedFechaInicio,
+                        firstDate: DateTime(2000),
+                        lastDate: selectedFechaFinal,
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedFechaInicio = picked;
+                          fechaInicio.text =
+                              DateFormat('dd/MM/yy').format(picked);
+                        });
+                      }
+                    },
                   ),
                 ),
                 SizedBox(
-                  height: 8,
-                ),
-                Padding(
-                  padding: EdgeInsets.only(
-                      left: 16), // Ajusta el espacio según necesites
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "Elegir tipo",
-                      style: TextStyle(
-                          color: Color(0xFF493D9E),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold),
-                    ),
+                  width: 150,
+                  height: 50,
+                  child: TextField(
+                    controller: fechaFinal,
+                    decoration: InputDecoration(
+                        labelText: 'Fecha Final',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5),
+                            borderSide: const BorderSide(
+                              color: Color(0xFF493D9e),
+                            ))),
+                    readOnly: true,
+                    onTap: () async {
+                      final DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: selectedFechaFinal,
+                        firstDate: selectedFechaInicio,
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() {
+                          selectedFechaFinal = picked;
+                          fechaFinal.text = DateFormat('dd/MM/yy').format(picked);
+                        });
+                      }
+                    },
                   ),
                 ),
-                SizedBox(height: 16),
-                _buildButton("Reporte general detallado de ventas",
-                    _selectedReport, context, (selected) {
-                  setState(() {
-                    _selectedReport = selected;
-                  });
-                }),
-                SizedBox(height: 16),
-                _buildButton("Reporte detallado de ventas al contado",
-                    _selectedReport, context, (selected) {
-                  setState(() {
-                    _selectedReport = selected;
-                  });
-                }),
-                SizedBox(height: 16),
-                _buildButton("Reporte detallado de ventas al crédito",
-                    _selectedReport, context, (selected) {
-                  setState(() {
-                    _selectedReport = selected;
-                  });
-                }),
-                SizedBox(
-                  height: 16,
-                ),
-                Text(
-                  "Elegir rango",
-                  style: TextStyle(color: Color(0xFF493D9E)),
-                ),
-                SizedBox(
-                  height: 16,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    SizedBox(
-                      width: 150,
-                      height: 50,
-                      child: TextField(
-                        controller: fechaInicio,
-                        decoration: InputDecoration(
-                            labelText: 'Fecha Inicio',
-                            suffixIcon: Icon(Icons.calendar_today),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(5),
-                                borderSide: BorderSide(
-                                  color: Color(0xFF493D9e),
-                                ))),
-                        readOnly: true,
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate:
-                                selectedFechaInicio.isAfter(selectedFechaFinal)
-                                    ? selectedFechaFinal
-                                    : selectedFechaInicio,
-                            firstDate: DateTime(2000),
-                            lastDate:
-                                selectedFechaFinal.isBefore(DateTime(2000))
-                                    ? DateTime(2000)
-                                    : selectedFechaFinal,
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedFechaInicio = picked;
-                              fechaInicio.text =
-                                  picked.toIso8601String().split('T')[0];
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                    SizedBox(
-                      width: 150,
-                      height: 50,
-                      child: TextField(
-                        controller: fechaFinal,
-                        decoration: InputDecoration(
-                            labelText: 'Fecha Final',
-                            suffixIcon: Icon(Icons.calendar_today),
-                            border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(5),
-                                borderSide: BorderSide(
-                                  color: Color(0xFF493D9e),
-                                ))),
-                        readOnly: true,
-                        onTap: () async {
-                          final DateTime? picked = await showDatePicker(
-                            context: context,
-                            initialDate:
-                                selectedFechaFinal.isBefore(selectedFechaInicio)
-                                    ? selectedFechaInicio
-                                    : selectedFechaFinal,
-                            firstDate: DateTime(2000),
-                            lastDate: DateTime.now(),
-                          );
-                          if (picked != null) {
-                            setState(() {
-                              selectedFechaFinal = picked;
-                              fechaFinal.text =
-                                  picked.toIso8601String().split('T')[0];
-                              if (selectedFechaInicio
-                                  .isAfter(selectedFechaFinal)) {
-                                selectedFechaInicio = selectedFechaFinal;
-                                fechaInicio.text = selectedFechaFinal
-                                    .toIso8601String()
-                                    .split('T')[0];
-                              }
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 16),
-                SizedBox(
-                    width: 150,
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xFF493D9e),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {
-                        _generateReport(
-                            selectedFechaInicio, selectedFechaFinal);
-                      },
-                      child: const Text("Generar",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          )),
-                    ))
               ],
-            )));
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: 150,
+              height: 50,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF493D9e),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                onPressed: () {
+                  _generateReport(selectedFechaInicio, selectedFechaFinal);
+                },
+                child: const Text("Generar",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                    )),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -257,8 +231,8 @@ Widget _buildButton(String text, String selectedReport, BuildContext context,
     height: 50,
     child: OutlinedButton(
       style: OutlinedButton.styleFrom(
-        backgroundColor: isSelected ? Color(0xFF493D9E) : Colors.white,
-        foregroundColor: isSelected ? Colors.white : Color(0xFF493D9E),
+        backgroundColor: isSelected ? const Color(0xFF493D9E) : Colors.white,
+        foregroundColor: isSelected ? Colors.white : const Color(0xFF493D9E),
         side: const BorderSide(color: Color(0xFF493D9E)),
       ),
       onPressed: () {
@@ -282,7 +256,7 @@ Future<void> generarDetallesVentas(BuildContext context,
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
-        margin: pw.EdgeInsets.all(20),
+        margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
             pw.Text("Reporte general detallado de ventas",
@@ -290,11 +264,10 @@ Future<void> generarDetallesVentas(BuildContext context,
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-            pw.Text("Total: S/ $total"),
-            pw.Text("Ganancias estimadas: S/ $ganancia"),
+                "Fecha: ${DateFormat('dd/MM/yy').format(selectedFechaInicio)} - ${DateFormat('dd/MM/yy').format(selectedFechaFinal)}"),
+            pw.Text("Total: S/ ${total.toStringAsFixed(2)}"),
+            pw.Text("Ganancias estimadas: S/ ${ganancia.toStringAsFixed(2)}"),
             pw.SizedBox(height: 10),
-            // ignore: deprecated_member_use
             pw.Table.fromTextArray(
               headers: [
                 "#",
@@ -312,9 +285,7 @@ Future<void> generarDetallesVentas(BuildContext context,
                 "Ganancia estimada (S/)",
                 "Estado"
               ],
-              //generar filas
               data: datosTabla,
-
               border: pw.TableBorder.all(),
               cellStyle: pw.TextStyle(fontSize: 10),
               headerStyle: pw.TextStyle(
@@ -340,7 +311,6 @@ Future<void> generarDetallesVentas(BuildContext context,
                 12: pw.Alignment.center,
                 13: pw.Alignment.center
               },
-              //Ajustar tamaño
               columnWidths: {
                 0: pw.FixedColumnWidth(35), // Índice
                 1: pw.FixedColumnWidth(60), // Fecha y hora
@@ -365,12 +335,7 @@ Future<void> generarDetallesVentas(BuildContext context,
   } catch (e) {
     debugPrint("Error $e");
   }
-  //metodos de report_controller.dart
-
-  //generar pdf
   final path = await report.generarPDF(pdf, "reporte_detalles_general.pdf");
-  //mostrar pdf
-  // ignore: use_build_context_synchronously
   report.mostrarPDF(context, path);
 }
 
@@ -410,20 +375,20 @@ Future<Map<String, dynamic>> obtenerDatosTabla(
     total = detalles[i].subtotalProducto;
 
     data.add([
-      "${i + 1}", //indice
-      "${ventas?.fechaVenta}", //fecha y hora
-      "${ventas?.idVenta}", //código de venta
-      ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), //tipo
-      nombreCliente, //cliente
-      "${detalles[i].idProducto}", //código del producto
-      nombreProducto, //nombre del producto (descripción del producto)
-      "${detalles[i].cantidadProducto}", //cantidad
-      "$precioCompraUnidad", //precio compra unidad
-      "${detalles[i].precioUnidadProducto}", //precio venta por unidad
-      "${detalles[i].descuentoProducto}", //descuento
-      "${detalles[i].subtotalProducto}", //subtotal
-      "${detalles[i].gananciaProducto}", //ganancia
-      estado
+      "${i + 1}", // Índice
+      DateFormat('dd/MM/yy HH:mm').format(ventas?.fechaVenta ?? DateTime.now()), // Fecha y hora
+      "${ventas?.idVenta}", // Código de venta
+      ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), // Tipo
+      nombreCliente, // Cliente
+      "${detalles[i].idProducto}", // Código del producto
+      nombreProducto, // Descripción del producto
+      "${detalles[i].cantidadProducto}", // Cantidad
+      "${precioCompraUnidad.toStringAsFixed(2)}", // Precio de compra por unidad
+      "${detalles[i].precioUnidadProducto.toStringAsFixed(2)}", // Precio de venta por unidad
+      detalles[i].descuentoProducto?.toStringAsFixed(2) ?? '0.00', // Descuento
+      detalles[i].subtotalProducto.toStringAsFixed(2), // Subtotal
+      "${detalles[i].gananciaProducto.toStringAsFixed(2)}", // Ganancia
+      estado // Estado
     ]);
   }
   return {"data": data, "ganancia": ganancia, "total": total};
@@ -445,7 +410,7 @@ Future<void> generarDetallesTipo(
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
-        margin: pw.EdgeInsets.all(20),
+        margin: const pw.EdgeInsets.all(20),
         build: (pw.Context context) {
           return [
             pw.Text(
@@ -454,11 +419,10 @@ Future<void> generarDetallesTipo(
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
-            pw.Text("Total: S/ $total"),
-            pw.Text("Ganancias estimadas: S/ $ganancia"),
+                "Fecha: ${DateFormat('dd/MM/yy').format(selectedFechaInicio)} - ${DateFormat('dd/MM/yy').format(selectedFechaFinal)}"),
+            pw.Text("Total: S/ ${total.toStringAsFixed(2)}"),
+            pw.Text("Ganancias estimadas: S/ ${ganancia.toStringAsFixed(2)}"),
             pw.SizedBox(height: 10),
-            // ignore: deprecated_member_use
             pw.Table.fromTextArray(
               headers: [
                 "#",
@@ -476,9 +440,7 @@ Future<void> generarDetallesTipo(
                 "Ganancia estimada (S/)",
                 "Estado"
               ],
-              //generar filas
               data: datosTabla,
-
               border: pw.TableBorder.all(),
               cellStyle: pw.TextStyle(fontSize: 10),
               headerStyle: pw.TextStyle(
@@ -504,7 +466,6 @@ Future<void> generarDetallesTipo(
                 12: pw.Alignment.center,
                 13: pw.Alignment.center
               },
-              //Ajustar tamaño
               columnWidths: {
                 0: pw.FixedColumnWidth(35), // Índice
                 1: pw.FixedColumnWidth(60), // Fecha y hora
@@ -529,13 +490,8 @@ Future<void> generarDetallesTipo(
   } catch (e) {
     debugPrint("Error $e");
   }
-  //metodos de report_controller.dart
-
-  //generar pdf
   final path = await report.generarPDF(
       pdf, "reporte_detalles_${(tipo == true) ? 'contado' : 'credito'}.pdf");
-  //mostrar pdf
-  // ignore: use_build_context_synchronously
   report.mostrarPDF(context, path);
 }
 
@@ -577,20 +533,20 @@ Future<Map<String, dynamic>> obtenerDatosTipoTabla(
       total = detalles[i].subtotalProducto;
 
       data.add([
-        "${i + 1}", //indice
-        "${ventas?.fechaVenta}", //fecha y hora
-        "${ventas?.idVenta}", //código de venta
-        ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), //tipo
-        nombreCliente, //cliente
-        "${detalles[i].idProducto}", //código del producto
-        nombreProducto, //nombre del producto (descripción del producto)
-        "${detalles[i].cantidadProducto}", //cantidad
-        "$precioCompraUnidad", //precio compra unidad
-        "${detalles[i].precioUnidadProducto}", //precio venta por unidad
-        "${detalles[i].descuentoProducto}", //descuento
-        "${detalles[i].subtotalProducto}", //subtotal
-        "${detalles[i].gananciaProducto}", //ganancia
-        estado
+        "${i + 1}", // Índice
+        DateFormat('dd/MM/yy HH:mm').format(ventas?.fechaVenta ?? DateTime.now()), // Fecha y hora
+        "${ventas?.idVenta}", // Código de venta
+        ((ventas?.esAlContado == true) ? "Contado" : "Crédito"), // Tipo
+        nombreCliente, // Cliente
+        "${detalles[i].idProducto}", // Código del producto
+        nombreProducto, // Descripción del producto
+        "${detalles[i].cantidadProducto}", // Cantidad
+        "${precioCompraUnidad.toStringAsFixed(2)}", // Precio de compra por unidad
+        "${detalles[i].precioUnidadProducto.toStringAsFixed(2)}", // Precio de venta por unidad
+        detalles[i].descuentoProducto?.toStringAsFixed(2) ?? '0.00', // Descuento
+        detalles[i].subtotalProducto.toStringAsFixed(2), // Subtotal
+        "${detalles[i].gananciaProducto.toStringAsFixed(2)}", // Ganancia
+        estado // Estado
       ]);
     }
   }
