@@ -23,14 +23,14 @@ class ReportController {
     }
   }
 
-  Future<void> mostrarPDF(BuildContext context, String path) async {
+  Future<void> mostrarPDF(BuildContext context, String path, {bool? tipo}) async {
     try {
       final file = File(path);
       if (await file.exists()) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => _PDFViewerScreen(pdfPath: path),
+            builder: (context) => _PDFViewerScreen(pdfPath: path, tipo: tipo),
           ),
         );
       } else {
@@ -49,7 +49,8 @@ class ReportController {
 
 class _PDFViewerScreen extends StatefulWidget {
   final String pdfPath;
-  const _PDFViewerScreen({required this.pdfPath});
+  final bool? tipo;
+  const _PDFViewerScreen({required this.pdfPath, this.tipo});
 
   @override
   _PDFViewerScreenState createState() => _PDFViewerScreenState();
@@ -98,8 +99,16 @@ class _PDFViewerScreenState extends State<_PDFViewerScreen> {
 
   Future<void> sharePDF() async {
     try {
+    String mensaje;
+    if (widget.tipo == true) {
+      mensaje = "Aquí tienes la boleta al contado";
+    } else if (widget.tipo == false) {
+      mensaje = "Aquí tienes la boleta a crédito";
+    } else {
+      mensaje = "Aquí tienes el reporte en PDF";
+    }
       await Share.shareXFiles([XFile(widget.pdfPath)],
-          text: "Aquí tienes el reporte en PDF");
+          text: mensaje);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
