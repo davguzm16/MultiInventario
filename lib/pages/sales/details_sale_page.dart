@@ -539,7 +539,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                                 ),
                               ),
                               pw.Text(
-                                '002 - ${venta?.codigoBoleta ?? "---"}',
+                                '${venta?.codigoBoleta ?? "---"}',
                                 style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
                                   color: PdfColor.fromHex('#0e5087'),
@@ -685,7 +685,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                   textAlign: pw.TextAlign.left),
               pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]),
+                  children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]
+                  ),
+              pw.Text("Forma de pago: ${(venta?.esAlContado == true)? "Al contado" : "Crédito"}",
+                  textAlign: pw.TextAlign.left),
               pw.SizedBox(height: 10),
               pw.Table.fromTextArray(
                 border: pw.TableBorder.all(),
@@ -706,8 +709,37 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               pw.SizedBox(height: 20),
               pw.Align(
                   alignment: pw.Alignment.centerRight,
-                  child: pw.Text("TOTAL S/ ${venta?.montoTotal}",
+                  child: pw.Text("MONTO TOTAL S/ ${venta?.montoTotal}",
                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+
+              //solo en caso si es a crédito
+                if (venta?.esAlContado != true) ...[
+                  if (venta?.montoTotal == venta?.montoCancelado)
+                    pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text(
+                        "ESTADO CANCELADO",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                    )
+                  else ...[
+                    pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text(
+                        "MONTO CANCELADO S/ ${venta?.montoCancelado ?? 0}",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                    ),
+                    pw.Align(
+                      alignment: pw.Alignment.centerRight,
+                      child: pw.Text(
+                        "MONTO POR PAGAR S/ ${(venta?.montoTotal ?? 0) - (venta?.montoCancelado ?? 0)}",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ],  
+
               pw.SizedBox(height: 20),
             ],
           );
@@ -718,9 +750,9 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     //metodos de report_controller.dart
 
     //generar pdf
-    final path = await report.generarPDF(pdf, "boleta.pdf");
+    final path = await report.generarPDF(pdf, "boleta_${venta!.codigoBoleta}.pdf");
     //mostrar pdf
-    report.mostrarPDF(context, path);
+    report.mostrarPDF(context, path, tipo: venta?.esAlContado);
   }
 
   //extraer los datos para la tabla
