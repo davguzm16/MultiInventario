@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -51,12 +53,12 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     setState(() {
       _isLoading = true;
     });
-    if(_selectedReport == "Reporte general de lotes"){
-          await _generarPDFGeneral(
-        selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
-    } else if(_selectedReport == "Reporte de lotes actuales"){
-          await _generarPDFActual(
-        selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
+    if (_selectedReport == "Reporte general de lotes") {
+      await _generarPDFGeneral(
+          selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
+    } else if (_selectedReport == "Reporte de lotes actuales") {
+      await _generarPDFActual(
+          selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
     }
 
     setState(() {
@@ -214,7 +216,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           await DetalleVenta.obtenerCantidadVendidaPorLote(lotes[i].idLote!);
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
-      if (producto?.estaDisponible == true && producto?.estaDisponible != null) {
+      if (producto?.estaDisponible == true &&
+          producto?.estaDisponible != null) {
         totalValorCompra += lotes[i].precioCompra;
 
         if (lotes[i].cantidadActual > 0) {
@@ -261,7 +264,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     };
   }
 
-  Future<void> _generarPDFActual(DateTime fechaInicio, DateTime fechaFinal, int diasAntesVencimiento) async {
+  Future<void> _generarPDFActual(DateTime fechaInicio, DateTime fechaFinal,
+      int diasAntesVencimiento) async {
     final pdf = pw.Document();
 
     // Obtener datos de los lotes desde los modelos
@@ -369,8 +373,10 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     );
   }
 
-  Future<Map<String, dynamic>> obtenerDatosTablaLotesActual(DateTime fechaInicio,
-      DateTime fechaFinal, int diasAntesVencimiento) async {
+  Future<Map<String, dynamic>> obtenerDatosTablaLotesActual(
+      DateTime fechaInicio,
+      DateTime fechaFinal,
+      int diasAntesVencimiento) async {
     List<Lote> lotes = [];
     List<List<String>> data = [];
     double totalValorCompra = 0.0;
@@ -388,7 +394,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
       totalValorCompra += lotes[i].precioCompra;
-      if (producto?.estaDisponible == true && producto?.estaDisponible != null) {
+      if (producto?.estaDisponible == true &&
+          producto?.estaDisponible != null) {
         if (lotes[i].cantidadActual > 0) {
           lotesActuales++;
         } else {
@@ -432,8 +439,6 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       "lotesProximosAVencer": lotesProximosAVencer,
     };
   }
-
-
 
   @override
   Widget build(BuildContext context) {

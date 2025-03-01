@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:multiinventario/models/credenciales.dart';
+import 'package:multiinventario/models/lote.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
 import 'package:multiinventario/services/drive_service.dart';
+import 'package:multiinventario/widgets/error_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -19,31 +21,48 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool sincronizacionActivada = false;
+  int diasNotificarVencimiento = 0;
 
   @override
   void initState() {
     super.initState();
     cargarPreferences();
+    notificarVencimientosLotes();
   }
 
   Future<void> cargarPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool activada = prefs.getBool('exportacionAutomatica') ?? false;
-
     setState(() {
-      sincronizacionActivada = activada;
+      sincronizacionActivada = prefs.getBool('exportacionAutomatica') ?? false;
+      diasNotificarVencimiento = prefs.getInt('diasNotificarVencimiento') ?? 0;
     });
 
     debugPrint("Sincronización activada: $sincronizacionActivada");
+    debugPrint(
+        "Días para notificación de vencimiento: $diasNotificarVencimiento");
   }
 
   void _goBranch(int index) {
     widget.navigationShell.goBranch(index);
   }
 
+  Future<void> notificarVencimientosLotes() async {
+    if (diasNotificarVencimiento > 0) {
+      bool exito =
+          await Lote.verificarFechasVencimientos(diasNotificarVencimiento);
+      if (!exito) {
+        ErrorDialog(
+            context: context,
+            errorMessage: "Ocurrió un problema al verificar los vencimientos.");
+      }
+    } else {
+      debugPrint(
+          "No se enviarán notificaciones, días configurados: $diasNotificarVencimiento");
+    }
+  }
+
   Future<void> dialogoExportacionAutomatica(BuildContext context) async {
-    cargarPreferences();
-    debugPrint("Estado sincronizacionActivada: $sincronizacionActivada");
+    await cargarPreferences();
 
     if (sincronizacionActivada) {
       showDialog(
@@ -75,15 +94,17 @@ class _HomePageState extends State<HomePage> {
       final rutaBD = await DatabaseController().getDatabasePath();
 
       if (await DriveService.exportarBD(correoUsuario, rutaBD)) {
-        debugPrint("Exportación automatica completada");
+        debugPrint("Exportación automática completada");
       } else {
-        debugPrint("Error en la exportación automatica");
+        debugPrint("Error en la exportación automática");
       }
 
       if (mounted) {
         Navigator.of(context).pop();
       }
     }
+
+    await notificarVencimientosLotes();
 
     SystemNavigator.pop();
   }

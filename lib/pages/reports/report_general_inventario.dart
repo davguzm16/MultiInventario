@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -207,27 +209,28 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
       List<Producto> productos = await Producto.obtenerTodosLosProductos();
 
       for (var producto in productos) {
-        if(producto.estaDisponible == true){
-        if (producto.stockActual != null && producto.stockActual! > 0) {
-          List<Lote> lotes =
-              await Lote.obtenerLotesDeProducto(producto.idProducto!);
+        if (producto.estaDisponible == true) {
+          if (producto.stockActual != null && producto.stockActual! > 0) {
+            List<Lote> lotes =
+                await Lote.obtenerLotesDeProducto(producto.idProducto!);
 
-          int lotesActivos =
-              lotes.where((lote) => lote.cantidadActual > 0).length;
-          double valorProducto =
-              producto.stockActual! * producto.precioProducto;
-          valorTotal += valorProducto;
+            int lotesActivos =
+                lotes.where((lote) => lote.cantidadActual > 0).length;
+            double valorProducto =
+                producto.stockActual! * producto.precioProducto;
+            valorTotal += valorProducto;
 
-          data.add([
-            "${data.length + 1}",
-            producto.codigoProducto ?? producto.idProducto.toString(),
-            producto.nombreProducto,
-            producto.stockActual!.toStringAsFixed(2),
-            lotesActivos.toString(),
-            producto.precioProducto.toStringAsFixed(2),
-            valorProducto.toStringAsFixed(2),
-          ]);
-        }}
+            data.add([
+              "${data.length + 1}",
+              producto.codigoProducto ?? producto.idProducto.toString(),
+              producto.nombreProducto,
+              producto.stockActual!.toStringAsFixed(2),
+              lotesActivos.toString(),
+              producto.precioProducto.toStringAsFixed(2),
+              valorProducto.toStringAsFixed(2),
+            ]);
+          }
+        }
       }
     } catch (e) {
       debugPrint("Error al obtener datos del inventario: $e");

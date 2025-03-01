@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:pdf/widgets.dart' as pw;

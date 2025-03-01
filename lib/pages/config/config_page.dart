@@ -15,7 +15,11 @@ class ConfigPage extends StatefulWidget {
 }
 
 class ConfigPageState extends State<ConfigPage> {
+  final TextEditingController _diasNotificacionController =
+      TextEditingController();
   bool exportacionAutomatica = false;
+  int diasNotificarVencimiento = 0;
+  bool editandoDias = false;
 
   @override
   void initState() {
@@ -27,12 +31,45 @@ class ConfigPageState extends State<ConfigPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       exportacionAutomatica = prefs.getBool('exportacionAutomatica') ?? false;
+      diasNotificarVencimiento = prefs.getInt('diasNotificarVencimiento') ?? 0;
+      _diasNotificacionController.text = diasNotificarVencimiento.toString();
     });
   }
 
-  Future<void> _guardarPreferencias(bool exportar) async {
+  Future<void> _guardarDiasNotificacion() async {
+    String input = _diasNotificacionController.text.trim();
+
+    if (input.isEmpty || !RegExp(r'^\d+$').hasMatch(input)) {
+      ErrorDialog(
+        context: context,
+        errorMessage: "Por favor, ingresa un número válido de días.",
+      );
+      return;
+    }
+
+    int nuevoValor = int.parse(input);
+
+    if (nuevoValor < 0) {
+      ErrorDialog(
+        context: context,
+        errorMessage: "El número de días no puede ser negativo.",
+      );
+      return;
+    }
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('exportacionAutomatica', exportar);
+    await prefs.setInt('diasNotificarVencimiento', nuevoValor);
+
+    setState(() {
+      diasNotificarVencimiento = nuevoValor;
+      editandoDias = false;
+    });
+
+    SuccessDialog(
+      context: context,
+      successMessage:
+          "Días de notificación ($diasNotificarVencimiento) actualizados correctamente.",
+    );
   }
 
   void activarExportacionAutomatica(bool exportar) {
@@ -58,7 +95,8 @@ class ConfigPageState extends State<ConfigPage> {
           }
 
           setState(() => exportacionAutomatica = exportar);
-          await _guardarPreferencias(exportar);
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('exportacionAutomatica', exportar);
           SuccessDialog(
             context: context,
             successMessage: exportar
@@ -82,7 +120,7 @@ class ConfigPageState extends State<ConfigPage> {
         title: const Text("Configuraciones"),
         actions: [
           IconButton(
-            icon: Icon(Icons.notifications_active_outlined),
+            icon: const Icon(Icons.notifications_active_outlined),
             onPressed: () {
               context.push("/config/notifications-page");
             },
@@ -117,6 +155,45 @@ class ConfigPageState extends State<ConfigPage> {
                   onChanged: activarExportacionAutomatica,
                   activeColor: Color(0xFF2BBF55),
                 ),
+              ],
+            ),
+            const SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  "Días antes de notificar \nproductos próximos a vencer:",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(width: 10),
+                SizedBox(
+                  width: 80,
+                  child: TextField(
+                    controller: _diasNotificacionController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      hintText: "0",
+                      border: OutlineInputBorder(),
+                    ),
+                    enabled: editandoDias,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                editandoDias
+                    ? ElevatedButton(
+                        onPressed: _guardarDiasNotificacion,
+                        child: const Text("Guardar"),
+                      )
+                    : ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            editandoDias = true;
+                          });
+                        },
+                        child: const Text("Editar"),
+                      ),
               ],
             ),
             const SizedBox(height: 30),

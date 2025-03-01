@@ -157,7 +157,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                             context.pop();
 
                             if (!esDeudor) {
-                              context.pop();
+                              context.pop(true);
                             }
                           },
                         );
@@ -539,7 +539,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                                 ),
                               ),
                               pw.Text(
-                                '${venta?.codigoBoleta ?? "---"}',
+                                venta?.codigoBoleta ?? "---",
                                 style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
                                   color: PdfColor.fromHex('#0e5087'),
@@ -685,9 +685,9 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                   textAlign: pw.TextAlign.left),
               pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]
-                  ),
-              pw.Text("Forma de pago: ${(venta?.esAlContado == true)? "Al contado" : "Crédito"}",
+                  children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]),
+              pw.Text(
+                  "Forma de pago: ${(venta?.esAlContado == true) ? "Al contado" : "Crédito"}",
                   textAlign: pw.TextAlign.left),
               pw.SizedBox(height: 10),
               pw.Table.fromTextArray(
@@ -713,32 +713,32 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
 
               //solo en caso si es a crédito
-                if (venta?.esAlContado != true) ...[
-                  if (venta?.montoTotal == venta?.montoCancelado)
-                    pw.Align(
-                      alignment: pw.Alignment.centerRight,
-                      child: pw.Text(
-                        "ESTADO CANCELADO",
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
-                    )
-                  else ...[
-                    pw.Align(
-                      alignment: pw.Alignment.centerRight,
-                      child: pw.Text(
-                        "MONTO CANCELADO S/ ${venta?.montoCancelado ?? 0}",
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
+              if (venta?.esAlContado != true) ...[
+                if (venta?.montoTotal == venta?.montoCancelado)
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "ESTADO CANCELADO",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                     ),
-                    pw.Align(
-                      alignment: pw.Alignment.centerRight,
-                      child: pw.Text(
-                        "MONTO POR PAGAR S/ ${(venta?.montoTotal ?? 0) - (venta?.montoCancelado ?? 0)}",
-                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                      ),
+                  )
+                else ...[
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "MONTO CANCELADO S/ ${venta?.montoCancelado ?? 0}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                     ),
-                  ],
-                ],  
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "MONTO POR PAGAR S/ ${(venta?.montoTotal ?? 0) - (venta?.montoCancelado ?? 0)}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ],
 
               pw.SizedBox(height: 20),
             ],
@@ -750,7 +750,8 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     //metodos de report_controller.dart
 
     //generar pdf
-    final path = await report.generarPDF(pdf, "boleta_${venta!.codigoBoleta}.pdf");
+    final path =
+        await report.generarPDF(pdf, "boleta_${venta!.codigoBoleta}.pdf");
     //mostrar pdf
     report.mostrarPDF(context, path, tipo: venta?.esAlContado);
   }

@@ -215,7 +215,7 @@ class _ProductPageState extends State<ProductPage> {
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
-                          "Precio por unidad: S/. ${productoData.precioProducto}",
+                          "Precio por unidad: S/. ${productoData.precioProducto.toStringAsFixed(2)}",
                           style: TextStyle(color: Colors.black, fontSize: 16),
                         ),
                         Text(
@@ -335,7 +335,9 @@ class _ProductPageState extends State<ProductPage> {
                                     'Cantidad comprada: ${lote.cantidadComprada}'),
                                 Text('Pérdidas: ${lote.cantidadPerdida}'),
                                 Text(
-                                    'Precio de Compra: S/. ${lote.precioCompra}'),
+                                    'Precio de Compra: S/ ${lote.precioCompra.toStringAsPrecision(2)}'),
+                                Text(
+                                    'Precio de Compra Unitario: S/ ${lote.precioCompraUnidad.toStringAsFixed(2)}'),
                                 Text(
                                     'Fecha Compra: ${lote.fechaCompra?.toLocal().toString().split(' ')[0] ?? "---"}'),
                                 Text(

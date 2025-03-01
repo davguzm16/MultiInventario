@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/services/notification_service.dart';
 
 class Lote {
   int? idLote;
@@ -276,8 +277,7 @@ class Lote {
     try {
       final db = await DatabaseController().database;
 
-      String fechaInicioStr =
-          fechaInicio.toIso8601String();
+      String fechaInicioStr = fechaInicio.toIso8601String();
       String fechaFinalStr =
           "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
@@ -316,17 +316,17 @@ class Lote {
       DateTime fechaFinal,
       int diasAntesVencimiento) async {
     List<Lote> lote = [];
-    
+
     try {
-      DateTime fechaLimiteCaducidad = fechaFinal.add(Duration(days: diasAntesVencimiento));
+      DateTime fechaLimiteCaducidad =
+          fechaFinal.add(Duration(days: diasAntesVencimiento));
       final db = await DatabaseController().database;
-      
-      String fechaInicioStr =
-          fechaInicio.toIso8601String();
+
+      String fechaInicioStr = fechaInicio.toIso8601String();
       String fechaFinalStr =
           "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
       String fechaLimiteCaducidadStr =
-        "${fechaLimiteCaducidad.year}-${fechaLimiteCaducidad.month.toString().padLeft(2, '0')}-${fechaLimiteCaducidad.day.toString().padLeft(2, '0')}T:23:59:59:999";
+          "${fechaLimiteCaducidad.year}-${fechaLimiteCaducidad.month.toString().padLeft(2, '0')}-${fechaLimiteCaducidad.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
       final result = await db.rawQuery('''
       SELECT idLote, idProducto, cantidadActual, cantidadComprada,
@@ -337,10 +337,10 @@ class Lote {
       AND fechaCaducidad <= ?
       ORDER BY fechaCompra ASC
       ''', [fechaInicioStr, fechaFinalStr, fechaLimiteCaducidadStr]);
-      debugPrint("${fechaInicioStr}");
-      debugPrint("${fechaFinalStr}");
-      debugPrint("${fechaLimiteCaducidadStr}");
-      debugPrint("${result}");
+      debugPrint(fechaInicioStr);
+      debugPrint(fechaFinalStr);
+      debugPrint(fechaLimiteCaducidadStr);
+      debugPrint("$result");
       if (result.isNotEmpty) {
         for (var item in result) {
           lote.add(Lote(
@@ -356,10 +356,47 @@ class Lote {
           ));
         }
       }
-      debugPrint(' lote : ${lote}');
+      debugPrint(' lote : $lote');
     } catch (e) {
       debugPrint("Error al obtener los lotes en las fechas: ${e.toString()}");
     }
     return lote;
+  }
+
+  static Future<bool> verificarFechasVencimientos(
+      int diasAntesVencimiento) async {
+    try {
+      final db = await DatabaseController().database;
+      DateTime fechaActual = DateTime.now();
+      DateTime fechaLimite =
+          fechaActual.add(Duration(days: diasAntesVencimiento));
+
+      final result = await db.rawQuery('''
+        SELECT idLote, idProducto, fechaCaducidad 
+        FROM Lotes 
+        WHERE fechaCaducidad IS NOT NULL AND fechaCaducidad <= ?
+      ''', [fechaLimite.toIso8601String()]);
+
+      for (var item in result) {
+        DateTime fechaCaducidad =
+            DateTime.parse(item['fechaCaducidad'] as String);
+        if (fechaActual.isBefore(fechaCaducidad)) {
+          await NotificationService.mostrarNotificacion(
+            titulo: "🚨 ¡Atención!",
+            contenido:
+                "⏳ El lote ${item['idLote']} del producto ${item['idProducto']} vence el 📅 ${fechaCaducidad.toLocal().toString().split(' ')[0]}.\n⚠️ ¡Toma medidas a tiempo!",
+          );
+
+          debugPrint(
+              "📢 Mostrando la notificación de vencimiento del lote ${item['idLote']} del producto ${item['idProducto']} con fecha ${fechaCaducidad.toLocal()}");
+        }
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint("Error verificando fechas de vencimiento: $e");
+    }
+
+    return false;
   }
 }

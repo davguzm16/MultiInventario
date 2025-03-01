@@ -184,95 +184,114 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                       itemBuilder: (context, index) {
                         final venta = ventasCliente[index];
 
-                        return Card(
-                          color: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                                color: Color(0xFF493D9E), width: 2),
-                          ),
-                          elevation: 3,
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 10),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        venta.codigoBoleta ?? "---",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                          color: Color(0xFF493D9E),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 5),
-                                      Text(
-                                        "Fecha: ${venta.fechaVenta?.toIso8601String().split('T')[0] ?? '---'}",
-                                        style: TextStyle(
-                                            color: Colors.grey.shade800,
-                                            fontSize: 14),
-                                      ),
-                                      Text(
-                                        "Monto: S/ ${venta.montoTotal.toStringAsFixed(2)}",
-                                        style: const TextStyle(
-                                            color: Colors.black, fontSize: 14),
-                                      ),
-                                      Text(
-                                        "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
-                                        style: TextStyle(
-                                          color: venta.esAlContado!
-                                              ? Colors.black
-                                              : Colors.red,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
+                        return FutureBuilder<Cliente?>(
+                          future: Cliente.obtenerClientePorId(venta.idCliente),
+                          builder: (context, snapshot) {
+                            final Cliente? cliente = snapshot.data;
+
+                            return Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                    color: const Color(0xFF493D9E), width: 2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 4),
                                   ),
-                                ),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF2BBF55),
-                                    borderRadius: BorderRadius.circular(8),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.2),
-                                        blurRadius: 6,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 2,
+                                    offset: const Offset(0, 2),
                                   ),
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.transparent,
-                                      foregroundColor: Colors.white,
-                                      shadowColor: Colors.transparent,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 20, vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
+                                ],
+                              ),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Venta ${venta.idVenta}",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 20,
+                                              color: Color(0xFF493D9E),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            "Cliente: ${cliente?.nombreCliente ?? "-----"}",
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
+                                          Text(
+                                            "Fecha: ${venta.fechaVenta!.toIso8601String().split('T')[0]}",
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
+                                          Text(
+                                            "Monto: S/ ${venta.montoTotal.toStringAsFixed(2)}",
+                                            style: const TextStyle(
+                                                color: Colors.black),
+                                          ),
+                                          Text(
+                                            "Tipo de pago: ${venta.esAlContado! ? "Al contado" : (venta.montoCancelado == venta.montoTotal ? "Crédito (Cancelado)" : "Crédito")}",
+                                            style: TextStyle(
+                                              color: venta.esAlContado!
+                                                  ? Colors.black
+                                                  : venta.montoCancelado ==
+                                                          venta.montoTotal
+                                                      ? const Color(0xFF2BBF55)
+                                                      : Colors.red,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    onPressed: () async {
-                                      await context.push(
-                                          '/sales/details-sale/${venta.idVenta}');
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color(0xFF2BBF55),
+                                            foregroundColor: Colors.white,
+                                            elevation: 6,
+                                            shadowColor:
+                                                Colors.black.withOpacity(0.3),
+                                          ),
+                                          onPressed: () async {
+                                            bool? deudaCancelada =
+                                                await context.push<bool?>(
+                                                    '/sales/details-sale/${venta.idVenta}');
 
-                                      context.pop();
-                                    },
-                                    child: const Text("Detalles",
-                                        style: TextStyle(fontSize: 14)),
-                                  ),
+                                            if (deudaCancelada != null &&
+                                                deudaCancelada) {
+                                              context.pop();
+                                            }
+                                          },
+                                          child: const Text("Detalles"),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                            );
+                          },
                         );
                       },
                     ),

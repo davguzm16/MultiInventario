@@ -29,25 +29,16 @@ class Venta {
     try {
       final db = await DatabaseController().database;
 
-      if (venta.montoTotal > 5.00) {
-        final result = await db.rawQuery('''
-        SELECT MAX(CAST(SUBSTR(codigoBoleta, 5) AS INTEGER)) as ultimoNumero
-        FROM Ventas WHERE codigoBoleta IS NOT NULL
-      ''');
-
-        int ultimoNumero = result.first['ultimoNumero'] != null
-            ? (result.first['ultimoNumero'] as int)
-            : 0;
-
-        String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
-        venta.codigoBoleta = '002-$numeroFormateado';
-      }
+      // Solo generar código de boleta si el monto total es mayor a 5.00
+      venta.codigoBoleta = (venta.montoTotal > 5.00)
+          ? await obtenerSiguienteCodigoBoleta()
+          : null;
 
       final result = await db.rawInsert('''
-          INSERT INTO Ventas (
-            idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
-          ) VALUES (?, ?, ?, ?, ?)
-        ''', [
+        INSERT INTO Ventas (
+          idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
+        ) VALUES (?, ?, ?, ?, ?)
+      ''', [
         venta.idCliente,
         venta.codigoBoleta,
         venta.montoTotal,
@@ -66,9 +57,10 @@ class Venta {
         for (var detalle in detallesVentas) {
           final lote =
               await Lote.obtenerLotePorId(detalle.idProducto, detalle.idLote);
-          lote!.cantidadActual -= detalle.cantidadProducto;
-
-          await Lote.actualizarLote(lote);
+          if (lote != null) {
+            lote.cantidadActual -= detalle.cantidadProducto;
+            await Lote.actualizarLote(lote);
+          }
 
           await DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
@@ -84,6 +76,29 @@ class Venta {
     return false;
   }
 
+  static Future<String?> obtenerSiguienteCodigoBoleta() async {
+    try {
+      final db = await DatabaseController().database;
+
+      final result = await db.rawQuery('''
+      SELECT MAX(CAST(SUBSTR(codigoBoleta, 5) AS INTEGER)) as ultimoNumero
+      FROM Ventas WHERE codigoBoleta IS NOT NULL
+    ''');
+
+      if (result.isNotEmpty && result.first['ultimoNumero'] != null) {
+        int ultimoNumero = result.first['ultimoNumero'] as int;
+        String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
+
+        return '002-$numeroFormateado';
+      }
+    } catch (e) {
+      debugPrint(
+          "Error al obtener el siguiente código de boleta: ${e.toString()}");
+    }
+
+    return null;
+  }
+
   static Future<List<Venta>> obtenerVentasPorCodigo(String codigoBoleta) async {
     try {
       final db = await DatabaseController().database;
@@ -92,6 +107,7 @@ class Venta {
       SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
       montoTotal, montoCancelado, esAlContado 
       FROM Ventas WHERE codigoBoleta LIKE ?
+      ORDER BY fechaVenta DESC
       ''',
         ['%$codigoBoleta%'],
       );
@@ -118,10 +134,10 @@ class Venta {
       final db = await DatabaseController().database;
       final result = await db.rawQuery(
         '''
-      SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
-      montoTotal, montoCancelado, esAlContado
-      FROM Ventas WHERE idVenta = ?
-      ''',
+        SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
+        montoTotal, montoCancelado, esAlContado
+        FROM Ventas WHERE idVenta = ?
+        ''',
         [idVenta],
       );
 
@@ -178,6 +194,7 @@ class Venta {
              montoTotal, montoCancelado, esAlContado
       FROM Ventas
       $whereClause
+      ORDER BY fechaVenta DESC
       LIMIT $cantidadPorCarga OFFSET $offset
     ''');
 
@@ -208,6 +225,7 @@ class Venta {
              montoTotal, montoCancelado, esAlContado
         FROM Ventas
         WHERE idCliente = ?
+        ORDER BY fechaVenta DESC;
       ''', [idCliente]);
 
       for (var item in result) {
@@ -246,7 +264,7 @@ class Venta {
               montoTotal, montoCancelado, esAlcontado
       FROM Ventas 
       WHERE fechaVenta BETWEEN ? AND ?
-      ORDER BY fechaVenta ASC
+      ORDER BY fechaVenta DESC
       ''', [fechaInicioStr, fechaFinalStr]);
       debugPrint('hola $result');
       if (result.isNotEmpty) {

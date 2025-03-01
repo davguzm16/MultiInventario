@@ -237,7 +237,8 @@ class Producto {
             contenido:
                 "📦 Solo hay ${producto.stockActual} ${unidadProducto!.tipoUnidad} del producto ${producto.nombreProducto}.\n🔄 Es momento de reabastecer.",
           );
-          debugPrint("Mostrando la notificacion!");
+          debugPrint(
+              "📢 Mostrando la notificacion de stock minimo del producto ${producto.nombreProducto}");
         }
       }
     } catch (e) {
@@ -274,24 +275,22 @@ class Producto {
     }
     return productos;
   }
-static Future<List<Producto>> obtenerTodosLosProductos() async {
-  List<Producto> producto = [];
-  try {
-    final db = await DatabaseController().database;
-    final result = await db.rawQuery(
-      '''
+
+  static Future<List<Producto>> obtenerTodosLosProductos() async {
+    List<Producto> producto = [];
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
       SELECT * FROM Productos
-      '''
-    );
+      ''');
 
-    // Imprimir resultado de la consulta
-    debugPrint("Resultado de la consulta: $result");
+      // Imprimir resultado de la consulta
+      debugPrint("Resultado de la consulta: $result");
 
-    // Iterar correctamente sobre la lista
-    for (var item in result) {
-      if ((item['estaDisponible'] as int) == 1) {
-        producto.add(
-          Producto(
+      // Iterar correctamente sobre la lista
+      for (var item in result) {
+        if ((item['estaDisponible'] as int) == 1) {
+          producto.add(Producto(
             idProducto: item['idProducto']! as int,
             idUnidad: item['idUnidad']! as int,
             codigoProducto: item['codigoProducto'] as String?,
@@ -302,17 +301,15 @@ static Future<List<Producto>> obtenerTodosLosProductos() async {
             stockMaximo: (item['stockMaximo'] as num?)?.toDouble(),
             estaDisponible: (item['estaDisponible'] as int) == 1,
             rutaImagen: item['rutaImagen'] as String?,
-          )
-        );
+          ));
+        }
       }
+    } catch (e) {
+      debugPrint("Error al obtener el producto: ${e.toString()}");
     }
-  } catch (e) {
-    debugPrint("Error al obtener el producto: ${e.toString()}");
+
+    // Imprimir la lista de productos obtenida
+    debugPrint("Lista de productos obtenida: $producto");
+    return producto;
   }
-
-  // Imprimir la lista de productos obtenida
-  debugPrint("Lista de productos obtenida: $producto");
-  return producto;
-}
-
 }
