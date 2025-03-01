@@ -23,38 +23,59 @@ Future<void> main() async {
     options: OpenDatabaseOptions(
       version: 1,
       onCreate: (db, version) async {
+        // Crear tabla Clientes
         await db.execute('''
-          CREATE TABLE Ventas (
-            idVenta INTEGER PRIMARY KEY AUTOINCREMENT,
-            idCliente INTEGER,
-            codigoBoleta TEXT NOT NULL UNIQUE,
-            fechaVenta DATETIME DEFAULT CURRENT_TIMESTAMP,
-            montoTotal REAL NOT NULL,
-            montoCancelado REAL,
-            esAlContado INTEGER
-          )
-        ''');
-        // Si tu lógica de venta depende de otras tablas (por ejemplo, DetallesVentas), créalas también.
+        CREATE TABLE Clientes (
+          idCliente INTEGER PRIMARY KEY AUTOINCREMENT,
+          nombreCliente TEXT NOT NULL,
+          dniCliente TEXT,
+          correoCliente TEXT,
+          esDeudor INTEGER NOT NULL
+        )
+      ''');
+        // Crear tabla Productos
         await db.execute('''
-          CREATE TABLE DetallesVentas (
-            idDetalle INTEGER PRIMARY KEY AUTOINCREMENT
-          )
-        ''');
-        // Si es necesario, crea también la tabla Productos.
+        CREATE TABLE Productos (
+          idProducto INTEGER PRIMARY KEY AUTOINCREMENT,
+          idUnidad INTEGER,
+          codigoProducto TEXT,
+          nombreProducto TEXT NOT NULL UNIQUE,
+          precioProducto REAL NOT NULL,
+          stockActual REAL,
+          stockMinimo REAL NOT NULL,
+          stockMaximo REAL,
+          estaDisponible INTEGER DEFAULT 1,
+          rutaImagen TEXT,
+          fechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+          fechaModificacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      ''');
+        // Crear tabla Ventas
         await db.execute('''
-          CREATE TABLE Productos (
-            idProducto INTEGER PRIMARY KEY AUTOINCREMENT,
-            idUnidad INTEGER,
-            codigoProducto TEXT,
-            nombreProducto TEXT,
-            precioProducto REAL,
-            stockActual REAL,
-            stockMinimo REAL,
-            stockMaximo REAL,
-            rutaImagen TEXT,
-            estaDisponible INTEGER
-          )
-        ''');
+        CREATE TABLE Ventas (
+          idVenta INTEGER PRIMARY KEY AUTOINCREMENT,
+          idCliente INTEGER,
+          codigoBoleta TEXT NOT NULL UNIQUE,
+          fechaVenta DATETIME DEFAULT CURRENT_TIMESTAMP,
+          montoTotal REAL NOT NULL,
+          montoCancelado REAL,
+          esAlContado INTEGER
+        )
+      ''');
+        // Crear tabla DetallesVentas
+        await db.execute('''
+        CREATE TABLE DetallesVentas (
+          idDetalle INTEGER PRIMARY KEY AUTOINCREMENT,
+          idProducto INTEGER,
+          idLote INTEGER,
+          idVenta INTEGER,
+          cantidadProducto INTEGER NOT NULL,
+          precioUnidadProducto REAL NOT NULL,
+          subtotalProducto REAL NOT NULL,
+          gananciaProducto REAL NOT NULL,
+          descuentoProducto REAL
+        )
+      ''');
       },
     ),
   );

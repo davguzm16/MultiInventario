@@ -63,8 +63,13 @@ class Venta {
         }
 
         for (var detalle in detallesVentas) {
-          DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
+          bool ok = await DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
+          if (!ok) {
+            debugPrint("Error al asignar el detalle: $detalle");
+            return false;
+          }
         }
+
 
         debugPrint(
             "Venta ${venta.codigoBoleta ?? 'sin boleta'} creada con éxito!");

@@ -12,6 +12,7 @@ Future<void> main() async {
   await DatabaseController().database;
   await DatabaseController.insertDefaultData();
 
+
   runApp(const MyApp());
 }
 
