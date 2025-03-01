@@ -2,6 +2,7 @@ C/C++ Structured Logi
 g
 eC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\additional_project_files.txtC
 A
+<<<<<<< HEAD
 ?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	Ì™Î–Õ2 Ù«µýÔ2f
 d
 bC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\android_gradle_build.json	Ì™Î–Õ2  ã«µýÔ2k
@@ -26,3 +27,56 @@ b
 `C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\symbol_folder_index.txt	Ì™Î–Õ2W æ«µýÔ2K
 I
 GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txt	Ì™Î–Õ2§ °ƒºÔÒ2
+=======
+<<<<<<< HEAD
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	´—˜Õ2 Ù«µýÔ2f
+d
+bC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\android_gradle_build.json	´—˜Õ2  ã«µýÔ2k
+i
+gC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\android_gradle_build_mini.json	´—˜Õ2ÿ å«µýÔ2X
+V
+TC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build.ninja	´—˜Õ2èÐ µªµýÔ2\
+Z
+XC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build.ninja.txt	¶—˜Õ2a
+_
+]C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build_file_index.txt	¶—˜Õ2G æ«µýÔ2b
+`
+^C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\compile_commands.json	¶—˜Õ2f
+d
+bC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\compile_commands.json.bin	¶—˜Õ2	l
+j
+hC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\metadata_generation_command.txt	¶—˜Õ2
+¥ æ«µýÔ2_
+]
+[C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\prefab_config.json	¶—˜Õ2( æ«µýÔ2d
+b
+`C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\symbol_folder_index.txt	¶—˜Õ2W æ«µýÔ2K
+I
+GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txt	¶—˜Õ2§ °ƒºÔÒ2
+=======
+?com.android.build.gradle.internal.cxx.io.EncodedFileFingerPrint	Ì™Î–Õ2 Ù«µýÔ2f
+d
+bC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\android_gradle_build.json	Ì™Î–Õ2  ã«µýÔ2k
+i
+gC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\android_gradle_build_mini.json	Ì™Î–Õ2ÿ å«µýÔ2X
+V
+TC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build.ninja	Ì™Î–Õ2èÐ µªµýÔ2\
+Z
+XC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build.ninja.txt	Ì™Î–Õ2a
+_
+]C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\build_file_index.txt	Ì™Î–Õ2G æ«µýÔ2b
+`
+^C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\compile_commands.json	Ì™Î–Õ2f
+d
+bC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\compile_commands.json.bin	Ì™Î–Õ2	l
+j
+hC:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\metadata_generation_command.txt	Ì™Î–Õ2
+¥ æ«µýÔ2_
+]
+[C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\prefab_config.json	Ì™Î–Õ2( æ«µýÔ2d
+b
+`C:\Users\MSI\Desktop\MultiInventario\android\app\.cxx\Debug\6j20t5x3\x86\symbol_folder_index.txt	Ì™Î–Õ2W æ«µýÔ2K
+I
+GC:\flutter\packages\flutter_tools\gradle\src\main\groovy\CMakeLists.txt	Ì™Î–Õ2§ °ƒºÔÒ2
+>>>>>>> 2812c9e1c8a9605ddf955b02a3db259ca4257127
+>>>>>>> 99620d1fcb675627c79d83e8d7cc7233291aac8e

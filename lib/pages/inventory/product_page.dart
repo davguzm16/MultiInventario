@@ -332,7 +332,7 @@ class _ProductPageState extends State<ProductPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    'Cantidad comprada: ${lote.cantidadComprada}'),
+                                    'Cantidad Comprada: ${lote.cantidadComprada}'),
                                 Text('Pérdidas: ${lote.cantidadPerdida}'),
                                 Text(
                                     'Precio de Compra: S/ ${lote.precioCompra.toStringAsPrecision(2)}'),
@@ -577,6 +577,16 @@ class _ProductPageState extends State<ProductPage> {
               }
 
               if (editarLote) {
+                if (int.parse(cantidadCompradaController.text) >
+                    (lote!.cantidadComprada - lote.cantidadActual)) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage:
+                        "La cantidad insertada no debe ser menor a la cantidad de venta y la cantidad pérdida",
+                  );
+                  return;
+                }
+
                 final loteEditado = Lote(
                   idProducto: widget.idProducto,
                   idLote: lote.idLote,
