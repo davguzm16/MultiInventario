@@ -164,7 +164,7 @@ class Lote {
       int result = await db.rawUpdate(
         '''
       UPDATE Lotes 
-      SET cantidadActual = cantidadActual (? - cantidadComprada), cantidadComprada = ?, cantidadPerdida = ?, 
+      SET cantidadActual = cantidadActual + (? - cantidadComprada), cantidadComprada = ?, cantidadPerdida = ?, 
       precioCompra = ?, precioCompraUnidad = ?, 
       fechaCaducidad = ?, fechaCompra = ?
       WHERE idProducto = ? AND idLote = ?
