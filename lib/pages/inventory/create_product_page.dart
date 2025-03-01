@@ -142,44 +142,6 @@ class _CreateProductPageState extends State<CreateProductPage> {
     );
   }
 
-  Widget _buildComboBox() {
-    return FutureBuilder<List<Unidad>>(
-      future: unidadesDisponibles,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const CircularProgressIndicator();
-        }
-
-        List<Unidad> unidades = snapshot.data!;
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
-          child: DropdownButtonFormField<int>(
-            value: unidadSeleccionada?.idUnidad,
-            items: unidades.map((unidad) {
-              return DropdownMenuItem<int>(
-                value: unidad.idUnidad,
-                child: Text(unidad.tipoUnidad),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                unidadSeleccionada =
-                    unidades.firstWhere((unidad) => unidad.idUnidad == value);
-              });
-            },
-            decoration: const InputDecoration(
-              labelText: 'Unidad de medida *',
-              labelStyle: TextStyle(color: Colors.black87),
-              border: OutlineInputBorder(),
-            ),
-            isDense: true,
-            isExpanded: true,
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -243,7 +205,41 @@ class _CreateProductPageState extends State<CreateProductPage> {
                 keyboardType: TextInputType.text,
                 isRequired: true,
               ),
-              _buildComboBox(),
+              FutureBuilder<List<Unidad>>(
+                future: unidadesDisponibles,
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const CircularProgressIndicator();
+                  }
+
+                  List<Unidad> unidades = snapshot.data!;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: DropdownButtonFormField<int>(
+                      value: unidadSeleccionada?.idUnidad,
+                      items: unidades.map((unidad) {
+                        return DropdownMenuItem<int>(
+                          value: unidad.idUnidad,
+                          child: Text(unidad.tipoUnidad),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          unidadSeleccionada = unidades
+                              .firstWhere((unidad) => unidad.idUnidad == value);
+                        });
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Unidad de medida *',
+                        labelStyle: TextStyle(color: Colors.black87),
+                        border: OutlineInputBorder(),
+                      ),
+                      isDense: true,
+                      isExpanded: true,
+                    ),
+                  );
+                },
+              ),
               CustomTextField(
                 label: 'Stock mínimo',
                 controller: minStockController,

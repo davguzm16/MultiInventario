@@ -25,6 +25,7 @@ class _ProductPageState extends State<ProductPage> {
   List<Lote> lotesProducto = [];
   Unidad? unidadProducto;
   List<Categoria> categoriasProducto = [];
+  bool editandoCategorias = false;
   int? selectedRowIndex;
 
   @override
@@ -54,7 +55,559 @@ class _ProductPageState extends State<ProductPage> {
       unidadProducto = await Unidad.obtenerUnidadPorId(producto!.idUnidad!);
     }
     lotesProducto = await Lote.obtenerLotesDeProducto(producto!.idProducto!);
+
     setState(() {});
+  }
+
+  void _showAddCategoryDialog() {
+    TextEditingController nuevaCategoriaController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Agregar nueva categoría"),
+          content: TextField(
+            controller: nuevaCategoriaController,
+            decoration: const InputDecoration(
+              labelText: "Nombre de la categoría",
+              border: OutlineInputBorder(),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => context.pop(),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                String nombreCategoria = nuevaCategoriaController.text.trim();
+                if (nombreCategoria.isNotEmpty) {
+                  bool creada = await Categoria.crearCategoria(
+                    Categoria(nombreCategoria: nombreCategoria),
+                  );
+
+                  if (!creada) {
+                    ErrorDialog(
+                      context: context,
+                      errorMessage:
+                          "Hubo un error al crear la categoria $nombreCategoria",
+                    );
+                  } else {
+                    setState(() {});
+                  }
+                }
+                context.pop();
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditCategoryDialog() {
+    TextEditingController editCategoriaController = TextEditingController();
+    Categoria? categoriaSeleccionada;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Editar categoría"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<Categoria>>(
+                future: Categoria.obtenerCategorias(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return const Text("No hay categorías disponibles.");
+                  }
+
+                  return DropdownButtonFormField<Categoria>(
+                    value: categoriaSeleccionada,
+                    onChanged: (newValue) {
+                      setState(() {
+                        categoriaSeleccionada = newValue;
+                        editCategoriaController.text =
+                            newValue?.nombreCategoria ?? "";
+                      });
+                    },
+                    items: snapshot.data!.map((categoria) {
+                      return DropdownMenuItem(
+                        value: categoria,
+                        child: Text(categoria.nombreCategoria),
+                      );
+                    }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: "Selecciona una categoría",
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: editCategoriaController,
+                decoration: const InputDecoration(
+                  labelText: "Nuevo nombre",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (categoriaSeleccionada != null) {
+                  String nuevoNombre = editCategoriaController.text.trim();
+                  if (nuevoNombre.isNotEmpty) {
+                    bool editada = await Categoria.editarCategoria(
+                      categoriaSeleccionada!.idCategoria!,
+                      nuevoNombre,
+                    );
+
+                    if (!editada) {
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Hubo un error al editar la categoria ${categoriaSeleccionada!.nombreCategoria}",
+                      );
+                    } else {
+                      setState(() {});
+                    }
+                  }
+                }
+                context.pop();
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showRemoveCategoryDialog() {
+    Categoria? categoriaSeleccionada;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Eliminar categoría"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<Categoria>>(
+                future: Categoria.obtenerCategorias(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError ||
+                      !snapshot.hasData ||
+                      snapshot.data!.isEmpty) {
+                    return const Text("No hay categorías disponibles.");
+                  }
+
+                  return DropdownButtonFormField<Categoria>(
+                    value: categoriaSeleccionada,
+                    onChanged: (newValue) {
+                      setState(() {
+                        categoriaSeleccionada = newValue;
+                      });
+                    },
+                    items: snapshot.data!.map((categoria) {
+                      return DropdownMenuItem(
+                        value: categoria,
+                        child: Text(categoria.nombreCategoria),
+                      );
+                    }).toList(),
+                    decoration: const InputDecoration(
+                      labelText: "Selecciona una categoría",
+                      border: OutlineInputBorder(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (categoriaSeleccionada != null) {
+                  bool eliminada = await Categoria.eliminarCategoria(
+                    categoriaSeleccionada!.idCategoria!,
+                  );
+
+                  if (!eliminada) {
+                    ErrorDialog(
+                      context: context,
+                      errorMessage:
+                          "Hubo un error al eliminar la categoria ${categoriaSeleccionada!.nombreCategoria}",
+                    );
+                  } else {
+                    setState(() {});
+                  }
+                }
+                context.pop();
+              },
+              child:
+                  const Text("Eliminar", style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditProductDialog() async {
+    TextEditingController productCodeController =
+        TextEditingController(text: producto!.codigoProducto);
+    TextEditingController productNameController =
+        TextEditingController(text: producto!.nombreProducto);
+    TextEditingController minStockController =
+        TextEditingController(text: producto!.stockMinimo.toString());
+    TextEditingController maxStockController =
+        TextEditingController(text: producto!.stockMaximo?.toString() ?? "");
+    TextEditingController priceController =
+        TextEditingController(text: producto!.precioProducto.toString());
+
+    String? rutaImagen = producto!.rutaImagen;
+    Unidad? unidadProducto =
+        await Unidad.obtenerUnidadPorId(producto!.idUnidad!);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Editar Producto"),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  onPressed: () async {
+                    rutaImagen = await context.push("/image-picker") as String?;
+                    setState(() {});
+                  },
+                  icon: SizedBox(
+                    width: 80,
+                    height: 80,
+                    child: rutaImagen == null
+                        ? Image.asset(
+                            'lib/assets/iconos/iconoImagen.png',
+                            fit: BoxFit.cover,
+                          )
+                        : Image.file(
+                            File(rutaImagen!),
+                            fit: BoxFit.cover,
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Código del producto',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      onPressed: () async {
+                        final String? result =
+                            await context.push('/barcode-scanner');
+                        if (result != null && result.isNotEmpty) {
+                          setState(() {
+                            productCodeController.text = result;
+                          });
+                        }
+                      },
+                      icon: Image.asset('lib/assets/iconos/iconoBarras.png',
+                          height: 40),
+                    ),
+                  ],
+                ),
+                Text(
+                  productCodeController.text.isEmpty
+                      ? "-" * 13
+                      : productCodeController.text,
+                  style: const TextStyle(fontSize: 24),
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Nombre del producto',
+                  controller: productNameController,
+                  keyboardType: TextInputType.text,
+                  isRequired: true,
+                ),
+                FutureBuilder<List<Unidad>>(
+                  future: Unidad.obtenerUnidades(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    List<Unidad> unidades = snapshot.data!;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: DropdownButtonFormField<int>(
+                        value: unidadProducto?.idUnidad,
+                        items: unidades.map((unidad) {
+                          return DropdownMenuItem<int>(
+                            value: unidad.idUnidad,
+                            child: Text(unidad.tipoUnidad),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          unidadProducto = unidades
+                              .firstWhere((unidad) => unidad.idUnidad == value);
+                          producto!.idUnidad = unidadProducto?.idUnidad;
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Unidad de medida *',
+                          labelStyle: TextStyle(color: Colors.black87),
+                          border: OutlineInputBorder(),
+                        ),
+                        isDense: true,
+                        isExpanded: true,
+                      ),
+                    );
+                  },
+                ),
+                CustomTextField(
+                  label: 'Stock mínimo',
+                  controller: minStockController,
+                  keyboardType: TextInputType.number,
+                ),
+                CustomTextField(
+                  label: 'Stock máximo',
+                  controller: maxStockController,
+                  keyboardType: TextInputType.number,
+                ),
+                CustomTextField(
+                  label: 'Precio por medida',
+                  controller: priceController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  isPrice: true,
+                  isRequired: true,
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancelar"),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (productNameController.text.isEmpty ||
+                    priceController.text.isEmpty ||
+                    minStockController.text.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text("Por favor, completa los campos obligatorios."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                double? precio = double.tryParse(priceController.text);
+                double? stockMin = double.tryParse(minStockController.text);
+                double? stockMax = double.tryParse(maxStockController.text);
+
+                if (precio == null ||
+                    stockMin == null ||
+                    (maxStockController.text.isNotEmpty && stockMax == null)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Los valores numéricos son inválidos."),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                Producto productoActualizado = Producto(
+                  idProducto: producto!.idProducto,
+                  idUnidad: unidadProducto?.idUnidad,
+                  codigoProducto: productCodeController.text,
+                  nombreProducto: productNameController.text,
+                  precioProducto: precio,
+                  stockMinimo: stockMin,
+                  stockMaximo: stockMax,
+                  rutaImagen: rutaImagen,
+                  fechaModificacion: DateTime.now(),
+                );
+
+                bool actualizado =
+                    await Producto.actualizarProducto(productoActualizado);
+
+                if (actualizado) {
+                  SuccessDialog(
+                    context: context,
+                    successMessage: "Producto actualizado correctamente.",
+                    btnOkOnPress: () => Navigator.pop(context),
+                  );
+                  obtenerProducto();
+                } else {
+                  SuccessDialog(
+                    context: context,
+                    successMessage: "Error al actualizar el producto.",
+                  );
+                }
+              },
+              child: const Text("Guardar"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildCategorySelection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Categorías',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF493D9E),
+              ),
+            ),
+            IconButton(
+              icon: Icon(editandoCategorias ? Icons.check : Icons.edit),
+              color: Colors.black,
+              onPressed: () {
+                if (editandoCategorias) {
+                  ProductoCategoria.actualizarCategoriasProducto(
+                    producto!.idProducto!,
+                    categoriasProducto,
+                  ).then((updated) {
+                    if (updated) {
+                      SuccessDialog(
+                        context: context,
+                        successMessage:
+                            "Las categorías del producto han sido actualizadas correctamente!",
+                      );
+                    } else {
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Hubo un error al actualizar las categorías",
+                      );
+                    }
+                  });
+                }
+                setState(() {
+                  editandoCategorias = !editandoCategorias;
+                });
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        FutureBuilder<List<Categoria>>(
+          future: Categoria.obtenerCategorias(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Text('No hay categorías disponibles.');
+            }
+
+            List<Categoria> categorias = snapshot.data!;
+
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: categorias.map((categoria) {
+                final estaSeleccionada = categoriasProducto
+                    .any((c) => c.idCategoria == categoria.idCategoria);
+
+                return FilterChip(
+                  label: Text(categoria.nombreCategoria),
+                  selected: estaSeleccionada,
+                  selectedColor: const Color(0xFF493D9E),
+                  backgroundColor: Colors.grey[200],
+                  labelStyle: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: estaSeleccionada
+                        ? Colors.white
+                        : const Color(0xFF493D9E),
+                  ),
+                  onSelected: editandoCategorias
+                      ? (bool selected) {
+                          setState(() {
+                            if (selected) {
+                              categoriasProducto.add(categoria);
+                            } else {
+                              categoriasProducto.removeWhere((c) =>
+                                  c.idCategoria == categoria.idCategoria);
+                            }
+                          });
+                        }
+                      : null,
+                );
+              }).toList(),
+            );
+          },
+        ),
+        const SizedBox(height: 30),
+        editandoCategorias
+            ? Wrap(
+                spacing: 8.0,
+                runSpacing: 4.0,
+                alignment: WrapAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: _showAddCategoryDialog,
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF493D9E)),
+                    child: const Text('Agregar categoría'),
+                  ),
+                  TextButton(
+                    onPressed: _showEditCategoryDialog,
+                    style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFF493D9E)),
+                    child: const Text('Editar categoría'),
+                  ),
+                  TextButton(
+                    onPressed: _showRemoveCategoryDialog,
+                    style: TextButton.styleFrom(foregroundColor: Colors.red),
+                    child: const Text('Eliminar categoría'),
+                  ),
+                ],
+              )
+            : const SizedBox.shrink(),
+      ],
+    );
   }
 
   @override
@@ -75,16 +628,11 @@ class _ProductPageState extends State<ProductPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.black),
-            onPressed: () async {
-              bool? updated = await _showEditProductDialog(context, producto!);
-              if (updated == true) {
-                await obtenerProducto();
-              }
-            },
+            onPressed: _showEditProductDialog,
           ),
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () => _showLoteDialog(),
+            onPressed: _showLoteDialog,
           ),
           IconButton(
             icon: const Icon(Icons.delete),
@@ -231,43 +779,8 @@ class _ProductPageState extends State<ProductPage> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Categorías del producto",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                        color: Colors.black,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.black),
-                      onPressed: () async {
-                        bool? updated = await editarCategoriasProducto(
-                            context, producto?.idProducto ?? 0);
-                        if (updated == true) {
-                          setState(() {}); // Solo recarga la UI si hubo cambios
-                        }
-                      },
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 15),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: categoriasProducto.map((categoria) {
-                    return Chip(
-                      label: Text(categoria.nombreCategoria),
-                      labelStyle: TextStyle(color: Colors.white),
-                      backgroundColor: Color(0xFF493d9e),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 15),
+                _buildCategorySelection(),
+                const SizedBox(height: 20),
                 const Text(
                   "Lotes del producto",
                   style: TextStyle(
@@ -276,8 +789,6 @@ class _ProductPageState extends State<ProductPage> {
                       color: Colors.black),
                 ),
                 const SizedBox(height: 10),
-
-                // Sección de tabla desplazable
                 if (lotesProducto.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(20.0),
@@ -332,8 +843,9 @@ class _ProductPageState extends State<ProductPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                    'Cantidad Comprada: ${lote.cantidadComprada}'),
-                                Text('Pérdidas: ${lote.cantidadPerdida}'),
+                                    'Cantidad Comprada: ${lote.cantidadComprada} ${unidadProducto?.tipoUnidad ?? ''}'),
+                                Text(
+                                    'Pérdidas: ${lote.cantidadPerdida} ${unidadProducto?.tipoUnidad ?? ''}'),
                                 Text(
                                     'Precio de Compra: S/ ${lote.precioCompra.toStringAsPrecision(2)}'),
                                 Text(
@@ -545,16 +1057,6 @@ class _ProductPageState extends State<ProductPage> {
                 return;
               }
 
-              if (int.parse(cantidadCompradaController.text) >
-                  (lote!.cantidadComprada - lote.cantidadActual)) {
-                ErrorDialog(
-                  context: context,
-                  errorMessage:
-                      "La cantidad insertada no debe ser menor a la cantidad de venta y la cantidad pérdida",
-                );
-                return;
-              }
-
               if (cantidadPerdida.value >
                   int.parse(cantidadCompradaController.text)) {
                 ErrorDialog(
@@ -577,7 +1079,7 @@ class _ProductPageState extends State<ProductPage> {
               }
 
               if (editarLote) {
-                if (int.parse(cantidadCompradaController.text) >
+                if (int.parse(cantidadCompradaController.text) <
                     (lote!.cantidadComprada - lote.cantidadActual)) {
                   ErrorDialog(
                     context: context,
@@ -661,258 +1163,5 @@ class _ProductPageState extends State<ProductPage> {
         }
       },
     );
-  }
-}
-
-Future<bool?> _showEditProductDialog(BuildContext context, Producto producto) {
-  TextEditingController productCodeController =
-      TextEditingController(text: producto.codigoProducto);
-  TextEditingController productNameController =
-      TextEditingController(text: producto.nombreProducto);
-  TextEditingController minStockController =
-      TextEditingController(text: producto.stockMinimo.toString());
-  TextEditingController maxStockController =
-      TextEditingController(text: producto.stockMaximo?.toString() ?? "");
-  TextEditingController priceController =
-      TextEditingController(text: producto.precioProducto.toString());
-
-  String? rutaImagen = producto.rutaImagen;
-
-  return showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text("Editar Producto"),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () async {
-                      rutaImagen =
-                          await context.push("/image-picker") as String?;
-                      setState(() {});
-                    },
-                    icon: SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: rutaImagen == null
-                          ? Image.asset(
-                              'lib/assets/iconos/iconoImagen.png',
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(rutaImagen!),
-                              fit: BoxFit.cover,
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Código del producto',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      IconButton(
-                        onPressed: () async {
-                          final String? result =
-                              await context.push('/barcode-scanner');
-                          if (result != null && result.isNotEmpty) {
-                            setState(() {
-                              productCodeController.text = result;
-                            });
-                          }
-                        },
-                        icon: Image.asset('lib/assets/iconos/iconoBarras.png',
-                            height: 40),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    productCodeController.text,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  const SizedBox(height: 10),
-                  CustomTextField(
-                    label: 'Nombre del producto',
-                    controller: productNameController,
-                    keyboardType: TextInputType.text,
-                    isRequired: true,
-                  ),
-                  CustomTextField(
-                    label: 'Stock mínimo',
-                    controller: minStockController,
-                    keyboardType: TextInputType.number,
-                  ),
-                  CustomTextField(
-                    label: 'Stock máximo',
-                    controller: maxStockController,
-                    keyboardType: TextInputType.number,
-                  ),
-                  CustomTextField(
-                    label: 'Precio por medida',
-                    controller: priceController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    isPrice: true,
-                    isRequired: true,
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text("Cancelar"),
-              ),
-              TextButton(
-                onPressed: () async {
-                  if (productNameController.text.isEmpty ||
-                      priceController.text.isEmpty ||
-                      minStockController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            "Por favor, completa los campos obligatorios."),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  double? precio = double.tryParse(priceController.text);
-                  double? stockMin = double.tryParse(minStockController.text);
-                  double? stockMax = double.tryParse(maxStockController.text);
-
-                  if (precio == null ||
-                      stockMin == null ||
-                      (maxStockController.text.isNotEmpty &&
-                          stockMax == null)) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Los valores numéricos son inválidos."),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                    return;
-                  }
-
-                  Producto productoActualizado = Producto(
-                    idProducto: producto.idProducto,
-                    idUnidad: producto.idUnidad,
-                    codigoProducto: productCodeController.text,
-                    nombreProducto: productNameController.text,
-                    precioProducto: precio,
-                    stockMinimo: stockMin,
-                    stockMaximo: stockMax,
-                    rutaImagen: rutaImagen,
-                    fechaModificacion: DateTime.now(),
-                  );
-
-                  bool actualizado =
-                      await Producto.actualizarProducto(productoActualizado);
-
-                  if (actualizado) {
-                    SuccessDialog(
-                      context: context,
-                      successMessage: "Producto actualizado correctamente.",
-                      btnOkOnPress: () => Navigator.pop(context, true),
-                    );
-                  } else {
-                    SuccessDialog(
-                      context: context,
-                      successMessage: "Error al actualizar el producto.",
-                    );
-                  }
-                },
-                child: const Text("Guardar"),
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
-
-Future<bool?> editarCategoriasProducto(
-    BuildContext context, int idProducto) async {
-  try {
-    // Obtener las categorías actuales del producto
-    List<Categoria> categoriasProducto =
-        await ProductoCategoria.obtenerCategoriasDeProducto(idProducto);
-    // Obtener todas las categorías disponibles
-    List<Categoria> todasLasCategorias = await Categoria.obtenerCategorias();
-
-    // Convertimos las categorías actuales en un Set para fácil manipulación
-    Set<int> seleccionadas =
-        categoriasProducto.map((cat) => cat.idCategoria!).toSet();
-
-    return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text("Seleccionar Categorías"),
-              content: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 8.0,
-                  children: todasLasCategorias.map((categoria) {
-                    bool estaSeleccionada =
-                        seleccionadas.contains(categoria.idCategoria);
-
-                    return ChoiceChip(
-                      label: Text(categoria.nombreCategoria),
-                      selected: estaSeleccionada,
-                      selectedColor: const Color(0xFF493d9e),
-                      labelStyle: TextStyle(
-                        color: estaSeleccionada ? Colors.white : Colors.black,
-                      ),
-                      onSelected: (selected) {
-                        setState(() {
-                          if (selected) {
-                            seleccionadas.add(categoria.idCategoria!);
-                          } else {
-                            seleccionadas.remove(categoria.idCategoria);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text("Cancelar"),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    // Guardamos los cambios en la BD
-                    await ProductoCategoria.actualizarCategoriasProducto(
-                        idProducto, seleccionadas.toList());
-                    Navigator.pop(
-                        context, true); // Indicamos que se hicieron cambios
-                  },
-                  child: const Text("Guardar"),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Error al actualizar categorías: $e")),
-    );
-    return false;
   }
 }

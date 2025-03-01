@@ -132,9 +132,8 @@ class ProductoCategoria {
     return productos;
   }
 
-  /// 🔹 **Función corregida dentro de la clase**
-  static Future<void> actualizarCategoriasProducto(
-      int idProducto, List<int> categorias) async {
+  static Future<bool> actualizarCategoriasProducto(
+      int idProducto, List<Categoria> categorias) async {
     final db = await DatabaseController().database;
 
     try {
@@ -143,15 +142,20 @@ class ProductoCategoria {
           where: 'idProducto = ?', whereArgs: [idProducto]);
 
       // Insertar las nuevas categorías seleccionadas
-      for (var idCategoria in categorias) {
+      for (var categoria in categorias) {
         await db.insert('ProductosCategorias', {
           'idProducto': idProducto,
-          'idCategoria': idCategoria,
+          'idCategoria': categoria.idCategoria,
         });
       }
+
+      debugPrint("Todas las categorías han sido insertadas correctamente.");
+      return true;
     } catch (e) {
       debugPrint(
           "Error al actualizar las categorías del producto: ${e.toString()}");
     }
+
+    return false;
   }
 }
