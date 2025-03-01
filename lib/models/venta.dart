@@ -225,7 +225,7 @@ class Venta {
              montoTotal, montoCancelado, esAlContado
         FROM Ventas
         WHERE idCliente = ?
-        ORDER BY fechaVenta DESC;
+        ORDER BY fechaVenta ASC;
       ''', [idCliente]);
 
       for (var item in result) {
@@ -287,7 +287,7 @@ class Venta {
     return ventas;
   }
 
-  static Future<bool> actualizarMontoCancelado(
+  static Future<bool> actualizarMontoCanceladoVenta(
       int idVenta, double montoACancelar) async {
     try {
       final db = await DatabaseController().database;
@@ -310,6 +310,61 @@ class Venta {
       }
     } catch (e) {
       debugPrint("Error al actualizar el monto cancelado: ${e.toString()}");
+    }
+
+    return false;
+  }
+
+  static Future<bool> actualizarMontoCanceladoVentas(
+      int idCliente, double montoACancelar) async {
+    try {
+      final db = await DatabaseController().database;
+      List<Venta> ventasPendientes = await obtenerVentasDeCliente(idCliente);
+
+      if (ventasPendientes.isEmpty) {
+        debugPrint("No hay ventas pendientes para este cliente.");
+        return false;
+      }
+
+      double montoRestante = montoACancelar;
+
+      for (Venta venta in ventasPendientes) {
+        if (montoRestante <= 0) break;
+
+        double montoPendiente =
+            venta.montoTotal - (venta.montoCancelado ?? 0.0);
+
+        if (montoRestante >= montoPendiente) {
+          // Se paga completamente la venta
+          await db.rawUpdate(
+            '''
+          UPDATE Ventas 
+          SET montoCancelado = montoTotal 
+          WHERE idVenta = ?
+          ''',
+            [venta.idVenta],
+          );
+
+          montoRestante -= montoPendiente;
+        } else {
+          // Se paga parcialmente la venta
+          await db.rawUpdate(
+            '''
+          UPDATE Ventas 
+          SET montoCancelado = montoCancelado + ? 
+          WHERE idVenta = ?
+          ''',
+            [montoRestante, venta.idVenta],
+          );
+
+          montoRestante = 0; // Se termina el dinero a cancelar
+        }
+      }
+
+      debugPrint("Pago procesado. Monto restante sin usar: $montoRestante");
+      return true;
+    } catch (e) {
+      debugPrint("Error al cancelar deuda: ${e.toString()}");
     }
 
     return false;

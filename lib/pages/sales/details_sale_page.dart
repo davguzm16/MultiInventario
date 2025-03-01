@@ -62,7 +62,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     }
   }
 
-  void showCancelarDialog() {
+  void actualizarMontoCanceladoDialog() {
     TextEditingController montoACancelarController = TextEditingController();
 
     double montoTotal = venta!.montoTotal;
@@ -93,9 +93,66 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMontoText('Monto total', montoTotal),
-                  _buildMontoText('Monto cancelado', montoCancelado),
-                  _buildMontoText('Monto pendiente', montoPendiente),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto total:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto cancelado:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoCancelado.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto pendiente:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoPendiente.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   CustomTextField(
                     label: 'Monto a cancelar',
@@ -111,7 +168,27 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  _buildMontoText('Monto faltante', montoFaltante, true),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto faltante:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFFE63946), // Rojo para destacar
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoFaltante.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontSize: 16, color: Color(0xFFE63946)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               actions: [
@@ -141,24 +218,17 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                         return;
                       }
 
-                      bool actualizado = await Venta.actualizarMontoCancelado(
-                          venta!.idVenta!, montoACancelar);
+                      bool actualizado =
+                          await Venta.actualizarMontoCanceladoVenta(
+                              venta!.idCliente, montoACancelar);
 
                       if (actualizado) {
-                        bool esDeudor = await Cliente.verificarEstadoDeudor(
-                            venta!.idCliente);
-
                         SuccessDialog(
                           context: context,
                           successMessage: 'Monto actualizado correctamente!',
                           btnOkOnPress: () async {
-                            await _obtenerDatosVenta();
-                            setState(() {});
+                            _obtenerDatosVenta();
                             context.pop();
-
-                            if (!esDeudor) {
-                              context.pop(true);
-                            }
                           },
                         );
                       } else {
@@ -176,33 +246,6 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildMontoText(String label, double amount,
-      [bool isDynamic = false]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: isDynamic ? Color(0xFFE63946) : Color(0xFF493D9E),
-            ),
-          ),
-          Text(
-            'S/${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 16,
-              color: isDynamic ? Color(0xFFE63946) : Colors.black,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -228,7 +271,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               ),
               onPressed: !(venta!.esAlContado!) &&
                       (venta!.montoCancelado! < venta!.montoTotal)
-                  ? () => showCancelarDialog()
+                  ? () => actualizarMontoCanceladoDialog()
                   : null,
             ),
             IconButton(

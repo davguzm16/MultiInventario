@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/venta.dart';
+import 'package:multiinventario/widgets/all_custom_widgets.dart';
 
 class DetailsClientPage extends StatefulWidget {
   final int idCliente;
@@ -26,16 +27,179 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
 
   Future<void> _cargarDatosCliente() async {
     Cliente? cliente = await Cliente.obtenerClientePorId(widget.idCliente);
+    bool esDeudor = await Cliente.verificarEstadoDeudor(cliente!.idCliente!);
+    List<Venta> ventasCliente =
+        await Venta.obtenerVentasDeCliente(cliente.idCliente!);
 
     setState(() {
       this.cliente = cliente;
-    });
-
-    List<Venta> ventasCliente =
-        await Venta.obtenerVentasDeCliente(cliente!.idCliente!);
-    setState(() {
+      this.cliente!.esDeudor = esDeudor;
       this.ventasCliente = ventasCliente;
     });
+  }
+
+  void actualizarMontoCanceladoDialog() async {
+    TextEditingController montoACancelarController = TextEditingController();
+
+    List<Venta> ventasPendientes =
+        await Venta.obtenerVentasDeCliente(cliente!.idCliente!);
+
+    if (ventasPendientes.isEmpty) {
+      ErrorDialog(context: context, errorMessage: 'No hay ventas pendientes.');
+      return;
+    }
+
+    double sumaMontosTotales =
+        ventasPendientes.fold(0.0, (sum, v) => sum + v.montoTotal);
+    double sumaMontosCancelados =
+        ventasPendientes.fold(0.0, (sum, v) => sum + (v.montoCancelado ?? 0.0));
+    double montoPendiente = sumaMontosTotales - sumaMontosCancelados;
+    double montoFaltante = montoPendiente;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+                side: const BorderSide(color: Color(0xFF493D9E), width: 2),
+              ),
+              title: const Text(
+                'Cancelar deuda',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Color(0xFF493D9E),
+                ),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Suma de montos totales:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text('S/ ${sumaMontosTotales.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Suma de montos cancelados:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      Text('S/ ${sumaMontosCancelados.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Monto pendiente:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E)),
+                      ),
+                      Text('S/ ${montoPendiente.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  CustomTextField(
+                    label: 'Monto a cancelar',
+                    controller: montoACancelarController,
+                    keyboardType: TextInputType.number,
+                    isPrice: true,
+                    onChanged: (value) {
+                      double montoIngresado = double.tryParse(value) ?? 0.0;
+                      setState(() {
+                        montoFaltante = (montoPendiente - montoIngresado)
+                            .clamp(0.0, montoPendiente);
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Monto faltante:',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFFE63946)),
+                      ),
+                      Text(
+                        'S/ ${montoFaltante.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            fontSize: 16, color: Color(0xFFE63946)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                Center(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2BBF55),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 12),
+                      textStyle: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    onPressed: () async {
+                      double montoACancelar =
+                          double.tryParse(montoACancelarController.text) ?? 0.0;
+
+                      if (montoACancelar <= 0 ||
+                          montoACancelar > montoPendiente) {
+                        ErrorDialog(
+                            context: context, errorMessage: 'Monto inválido');
+                        return;
+                      }
+
+                      bool actualizado =
+                          await Venta.actualizarMontoCanceladoVentas(
+                              cliente!.idCliente!, montoACancelar);
+
+                      if (actualizado) {
+                        SuccessDialog(
+                          context: context,
+                          successMessage: 'Monto actualizado correctamente!',
+                          btnOkOnPress: () async {
+                            _cargarDatosCliente();
+                            context.pop();
+                          },
+                        );
+                      } else {
+                        ErrorDialog(
+                            context: context,
+                            errorMessage: 'Error al actualizar el monto');
+                      }
+                    },
+                    child: const Text('Aceptar'),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -49,6 +213,17 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
         backgroundColor: Colors.white,
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
+        actions: [
+          IconButton(
+            icon: Icon(
+              Icons.attach_money,
+              color: cliente!.esDeudor ? Colors.black : Colors.grey,
+            ),
+            onPressed: cliente!.esDeudor
+                ? () => actualizarMontoCanceladoDialog()
+                : null,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -274,14 +449,10 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                                 Colors.black.withOpacity(0.3),
                                           ),
                                           onPressed: () async {
-                                            bool? deudaCancelada =
-                                                await context.push<bool?>(
-                                                    '/sales/details-sale/${venta.idVenta}');
+                                            await context.push(
+                                                '/sales/details-sale/${venta.idVenta}');
 
-                                            if (deudaCancelada != null &&
-                                                deudaCancelada) {
-                                              context.pop();
-                                            }
+                                            _cargarDatosCliente();
                                           },
                                           child: const Text("Detalles"),
                                         ),
