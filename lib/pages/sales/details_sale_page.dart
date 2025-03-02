@@ -220,7 +220,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
 
                       bool actualizado =
                           await Venta.actualizarMontoCanceladoVenta(
-                              venta!.idCliente, montoACancelar);
+                              venta!.idVenta!, montoACancelar);
 
                       if (actualizado) {
                         SuccessDialog(

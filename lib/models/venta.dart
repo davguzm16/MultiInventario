@@ -34,6 +34,9 @@ class Venta {
           ? await obtenerSiguienteCodigoBoleta()
           : null;
 
+      debugPrint(
+          "Condicion: ${venta.montoTotal > 5.00},CB: ${venta.codigoBoleta}, MT: ${venta.montoTotal}");
+
       final result = await db.rawInsert('''
         INSERT INTO Ventas (
           idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
@@ -85,12 +88,14 @@ class Venta {
       FROM Ventas WHERE codigoBoleta IS NOT NULL
     ''');
 
-      if (result.isNotEmpty && result.first['ultimoNumero'] != null) {
-        int ultimoNumero = result.first['ultimoNumero'] as int;
-        String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
+      int ultimoNumero =
+          (result.isNotEmpty && result.first['ultimoNumero'] != null)
+              ? result.first['ultimoNumero'] as int
+              : 0;
 
-        return '002-$numeroFormateado';
-      }
+      String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
+
+      return '002-$numeroFormateado';
     } catch (e) {
       debugPrint(
           "Error al obtener el siguiente código de boleta: ${e.toString()}");

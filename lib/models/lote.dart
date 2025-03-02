@@ -161,15 +161,12 @@ class Lote {
     try {
       final db = await DatabaseController().database;
 
+      debugPrint(
+          'CA: ${lote.cantidadActual}, CP: ${lote.cantidadPerdida}, CC: ${lote.cantidadComprada}');
       int result = await db.rawUpdate(
         '''
       UPDATE Lotes 
-      SET cantidadActual = 
-        CASE 
-          WHEN cantidadActual > ? 
-          THEN cantidadActual + (? - cantidadComprada) 
-          ELSE cantidadActual + (? - cantidadComprada) - ?
-        END, 
+      SET cantidadActual = ?,
       cantidadComprada = ?, 
       cantidadPerdida = ?, 
       precioCompra = ?, 
@@ -180,9 +177,6 @@ class Lote {
       ''',
         [
           lote.cantidadActual,
-          lote.cantidadActual,
-          lote.cantidadComprada,
-          lote.cantidadPerdida! > 0 ? lote.cantidadPerdida! : 0,
           lote.cantidadComprada,
           lote.cantidadPerdida ?? 0,
           lote.precioCompra,
