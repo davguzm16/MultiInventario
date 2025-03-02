@@ -128,175 +128,146 @@ class ConfigPageState extends State<ConfigPage> {
         ],
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              "Sincronización de Backups",
-              style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blueGrey),
-            ),
-            const SizedBox(height: 45),
-            const Icon(Icons.sync, size: 60, color: Color(0xFF2BBF55)),
-            const SizedBox(height: 45),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Activar exportación \nautomática al cerrar",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 10),
-                Switch(
-                  value: exportacionAutomatica,
-                  onChanged: activarExportacionAutomatica,
-                  activeColor: Color(0xFF2BBF55),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Text(
-                  "Días antes de notificar \nproductos próximos a vencer:",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(width: 10),
-                SizedBox(
-                  width: 80,
-                  child: TextField(
-                    controller: _diasNotificacionController,
-                    keyboardType: TextInputType.number,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Sincronización de Backups",
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blueGrey),
+              ),
+              const SizedBox(height: 45),
+              const Icon(Icons.sync, size: 60, color: Color(0xFF2BBF55)),
+              const SizedBox(height: 45),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Activar exportación \nautomática al cerrar",
                     textAlign: TextAlign.center,
-                    decoration: const InputDecoration(
-                      hintText: "0",
-                      border: OutlineInputBorder(),
-                    ),
-                    enabled: editandoDias,
+                    style: TextStyle(fontSize: 16),
                   ),
-                ),
-                const SizedBox(width: 10),
-                editandoDias
-                    ? ElevatedButton(
-                        onPressed: _guardarDiasNotificacion,
-                        child: const Text("Guardar"),
-                      )
-                    : ElevatedButton(
-                        onPressed: () {
-                          setState(() {
-                            editandoDias = true;
-                          });
-                        },
-                        child: const Text("Editar"),
+                  const SizedBox(width: 10),
+                  Switch(
+                    value: exportacionAutomatica,
+                    onChanged: activarExportacionAutomatica,
+                    activeColor: Color(0xFF2BBF55),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 30),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 20,
+                runSpacing: 10,
+                children: [
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      backgroundColor: Color(0xFF493D9E),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
                     ),
-                    backgroundColor: Color(0xFF493D9E),
-                    foregroundColor: Colors.white,
-                    elevation: 5,
-                    shadowColor: Colors.black,
-                  ),
-                  onPressed: () async {
-                    final correoUsuario =
-                        await Credenciales.obtenerCredencial("USER_EMAIL");
-                    final rutaBD = await DatabaseController().getDatabasePath();
-                    if (correoUsuario.isEmpty || rutaBD.isEmpty) {
-                      ErrorDialog(
-                        context: context,
-                        errorMessage:
-                            "No se encontró un correo válido para la exportación.",
-                      );
-                      return;
-                    }
+                    onPressed: () async {
+                      final correoUsuario =
+                          await Credenciales.obtenerCredencial("USER_EMAIL");
+                      final rutaBD =
+                          await DatabaseController().getDatabasePath();
+                      if (correoUsuario.isEmpty || rutaBD.isEmpty) {
+                        ErrorDialog(
+                          context: context,
+                          errorMessage:
+                              "No se encontró un correo válido para la exportación.",
+                        );
+                        return;
+                      }
 
-                    if (await DriveService.exportarBD(correoUsuario, rutaBD)) {
-                      SuccessDialog(
-                        context: context,
-                        successMessage: "Exportación completada",
-                      );
-                    } else {
-                      ErrorDialog(
-                        context: context,
-                        errorMessage:
-                            "No se pudo realizar correctamente la exportación.",
-                      );
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.upload,
-                    color: Colors.white,
+                      if (await DriveService.exportarBD(
+                          correoUsuario, rutaBD)) {
+                        SuccessDialog(
+                          context: context,
+                          successMessage: "Exportación completada",
+                        );
+                      } else {
+                        ErrorDialog(
+                          context: context,
+                          errorMessage:
+                              "No se pudo realizar correctamente la exportación.",
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.upload),
+                    label: const Text("Exportar"),
                   ),
-                  label: const Text(
-                    "Exportar",
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 30, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      backgroundColor: Color(0xFF2BBF55),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
                     ),
-                    backgroundColor: Color(0xFF2BBF55),
-                    foregroundColor: Colors.white,
-                    elevation: 5,
-                    shadowColor: Colors.black45,
+                    onPressed: () async {
+                      // Importación de BD...
+                    },
+                    icon: const Icon(Icons.download),
+                    label: const Text("Importar"),
                   ),
-                  onPressed: () async {
-                    final correoUsuario =
-                        await Credenciales.obtenerCredencial("USER_EMAIL");
-                    final rutaBD = await DatabaseController().getDatabasePath();
-                    if (correoUsuario.isEmpty || rutaBD.isEmpty) {
-                      ErrorDialog(
-                        context: context,
-                        errorMessage:
-                            "No se encontró un correo válido para la importación.",
-                      );
-                      return;
-                    }
-                    if (await DriveService.importarBD(correoUsuario, rutaBD)) {
-                      SuccessDialog(
-                        context: context,
-                        successMessage: "Importación completada",
-                      );
-                    } else {
-                      ErrorDialog(
-                        context: context,
-                        errorMessage:
-                            "No se pudo realizar correctamente la importación.",
-                      );
-                    }
-                  },
-                  icon: const Icon(
-                    Icons.download,
-                    color: Colors.white,
+                ],
+              ),
+              const SizedBox(height: 75),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                spacing: 10,
+                children: [
+                  Flexible(
+                    child: const Text(
+                      "Días antes de notificar productos próximos a vencer:",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
-                  label: const Text(
-                    "Importar",
-                    style: TextStyle(fontSize: 16),
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: 80,
+                    child: TextField(
+                      controller: _diasNotificacionController,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      decoration: const InputDecoration(
+                        hintText: "0",
+                        border: OutlineInputBorder(),
+                      ),
+                      enabled: editandoDias,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  IconButton(
+                    icon: Icon(editandoDias ? Icons.save : Icons.edit),
+                    color: Colors.blue,
+                    onPressed: () {
+                      if (editandoDias) {
+                        _guardarDiasNotificacion();
+                      } else {
+                        setState(() => editandoDias = true);
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

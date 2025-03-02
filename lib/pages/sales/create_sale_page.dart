@@ -730,8 +730,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               })
                           .toList(),
                     );
-
-                    context.pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,

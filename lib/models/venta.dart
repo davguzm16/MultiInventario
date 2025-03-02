@@ -116,7 +116,7 @@ class Venta {
         return Venta(
           idVenta: map['idVenta'] as int,
           idCliente: map['idCliente'] as int,
-          codigoBoleta: map['codigoBoleta'] as String,
+          codigoBoleta: map['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(map['fechaVenta'] as String),
           montoTotal: (map['montoTotal'] as num).toDouble(),
           montoCancelado: (map['montoCancelado'] as num).toDouble(),
@@ -145,7 +145,7 @@ class Venta {
         return Venta(
           idVenta: result.first['idVenta'] as int,
           idCliente: result.first['idCliente'] as int,
-          codigoBoleta: result.first['codigoBoleta'] as String,
+          codigoBoleta: result.first['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(result.first['fechaVenta'] as String),
           montoTotal: (result.first['montoTotal'] as num).toDouble(),
           montoCancelado: (result.first['montoCancelado'] as num).toDouble(),
@@ -202,7 +202,7 @@ class Venta {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: item['idCliente'] as int,
-          codigoBoleta: item['codigoBoleta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -240,7 +240,7 @@ class Venta {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: idCliente,
-          codigoBoleta: item['codigoBoleta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -280,7 +280,7 @@ class Venta {
           ventas.add(Venta(
             idVenta: item['idVenta'] as int,
             idCliente: item['idCliente'] as int,
-            codigoBoleta: item['codigoBoleta'] as String,
+            codigoBoleta: item['codigoBoleta'] as String?,
             fechaVenta: DateTime.parse(item['fechaVenta'] as String),
             montoTotal: (item['montoTotal'] as num).toDouble(),
             montoCancelado: (item['montoCancelado'] as num).toDouble(),

@@ -123,7 +123,7 @@ class Lote {
       cantidadPerdida, precioCompra, precioCompraUnidad, 
       fechaCaducidad, fechaCompra, estaDisponible
       FROM Lotes 
-      WHERE idProducto = ? AND estaDisponible = 1
+      WHERE idProducto = ? AND estaDisponible = 1 AND cantidadActual > 0
       ORDER BY idLote ASC
       ''',
         [idProducto],

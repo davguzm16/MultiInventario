@@ -214,15 +214,16 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.black),
         actions: [
-          IconButton(
-            icon: Icon(
-              Icons.attach_money,
-              color: cliente!.esDeudor ? Colors.black : Colors.grey,
+          if (cliente != null)
+            IconButton(
+              icon: Icon(
+                Icons.attach_money,
+                color: cliente!.esDeudor ? Colors.black : Colors.grey,
+              ),
+              onPressed: cliente!.esDeudor
+                  ? () => actualizarMontoCanceladoDialog()
+                  : null,
             ),
-            onPressed: cliente!.esDeudor
-                ? () => actualizarMontoCanceladoDialog()
-                : null,
-          ),
         ],
       ),
       body: Padding(
@@ -421,11 +422,11 @@ class _DetailsClientPageState extends State<DetailsClientPage> {
                                                 color: Colors.black),
                                           ),
                                           Text(
-                                            "Tipo de pago: ${venta.esAlContado! ? "Al contado" : (venta.montoCancelado == venta.montoTotal ? "Crédito (Cancelado)" : "Crédito")}",
+                                            "Tipo de pago: ${venta.esAlContado! ? "Al contado" : (venta.montoCancelado! >= venta.montoTotal ? "Crédito (Cancelado)" : "Crédito")}",
                                             style: TextStyle(
                                               color: venta.esAlContado!
                                                   ? Colors.black
-                                                  : venta.montoCancelado ==
+                                                  : venta.montoCancelado! >=
                                                           venta.montoTotal
                                                       ? const Color(0xFF2BBF55)
                                                       : Colors.red,

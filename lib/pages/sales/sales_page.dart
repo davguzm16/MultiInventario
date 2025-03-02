@@ -196,6 +196,7 @@ class _SalesPageState extends State<SalesPage>
                   cantidadCargas = 0;
                   hayMasCargas = true;
                 });
+
                 _cargarVentas(reiniciarListaVentas: true);
               },
             ),
