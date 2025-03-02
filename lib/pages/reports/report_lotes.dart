@@ -10,6 +10,7 @@ import 'package:multiinventario/models/lote.dart'; // Importa tu modelo de lotes
 import 'package:multiinventario/models/detalle_venta.dart'; // Importa tu modelo de detalles de venta
 import 'package:multiinventario/models/producto.dart'; // Importa tu modelo de productos
 import 'package:intl/intl.dart';
+import 'package:multiinventario/controllers/report_controller.dart';
 
 class ReportLotesPage extends StatefulWidget {
   const ReportLotesPage({super.key});
@@ -88,8 +89,9 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
 
   Future<void> _generarPDFGeneral(DateTime fechaInicio, DateTime fechaFinal,
       int diasAntesVencimiento) async {
+    
     final pdf = pw.Document();
-
+    final ReportController report = ReportController();
     // Obtener datos de los lotes desde los modelos
     final datosTablaLotes = await obtenerDatosTablaLotes(
         fechaInicio, fechaFinal, diasAntesVencimiento);
@@ -179,17 +181,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       ),
     );
 
-    final output = await getTemporaryDirectory();
-    final file = File("${output.path}/reporte_general_lotes.pdf");
-    await file.writeAsBytes(await pdf.save());
-
-    // Navegar a la pantalla de visualización del PDF
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PDFViewerPage(path: file.path),
-      ),
-    );
+      final path = await report.generarPDF(pdf, "reporte_lotes.pdf");
+      report.mostrarPDF(context, path);
   }
 
   Future<Map<String, dynamic>> obtenerDatosTablaLotes(DateTime fechaInicio,
@@ -267,7 +260,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
   Future<void> _generarPDFActual(DateTime fechaInicio, DateTime fechaFinal,
       int diasAntesVencimiento) async {
     final pdf = pw.Document();
-
+    final ReportController report = ReportController();
     // Obtener datos de los lotes desde los modelos
     final datosTablaLotes = await obtenerDatosTablaLotesActual(
         fechaInicio, fechaFinal, diasAntesVencimiento);
@@ -360,17 +353,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       ),
     );
 
-    final output = await getTemporaryDirectory();
-    final file = File("${output.path}/reporte_lotes_actuales.pdf");
-    await file.writeAsBytes(await pdf.save());
-
-    // Navegar a la pantalla de visualización del PDF
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PDFViewerPage(path: file.path),
-      ),
-    );
+      final path = await report.generarPDF(pdf, "reporte_lotes.pdf");
+      report.mostrarPDF(context, path);
   }
 
   Future<Map<String, dynamic>> obtenerDatosTablaLotesActual(
@@ -420,7 +404,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           lotes[i].cantidadPerdida?.toString() ?? '0',
           cantidadVendida.toString(),
           lotes[i].precioCompra.toString(),
-          '${producto?.precioProducto ?? '--'}'
+          '${producto?.precioProducto ?? '--'}',
           '${producto?.precioProducto?.toStringAsFixed(2) ?? '--'}'
         ]);
       }
@@ -609,24 +593,6 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           onSelect(text);
         },
         child: Text(text),
-      ),
-    );
-  }
-}
-
-class PDFViewerPage extends StatelessWidget {
-  final String path;
-
-  const PDFViewerPage({super.key, required this.path});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Visualizador de PDF"),
-      ),
-      body: PDFView(
-        filePath: path,
       ),
     );
   }
