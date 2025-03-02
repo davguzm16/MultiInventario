@@ -33,10 +33,10 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
   void initState() {
     super.initState();
     fechaInicio = TextEditingController(
-      text: DateFormat('dd/MM/yy').format(DateTime.now()),
+      text: DateTime.now().toIso8601String().split('T')[0]
     );
     fechaFinal = TextEditingController(
-      text: DateFormat('dd/MM/yy').format(DateTime.now()),
+      text: DateTime.now().toIso8601String().split('T')[0]
     );
     _diasController = TextEditingController();
   }
@@ -81,7 +81,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     );
     if (picked != null) {
       setState(() {
-        controller.text = DateFormat('dd/MM/yy').format(picked);
+        controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
@@ -111,7 +111,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${DateFormat('dd/MM/yy').format(fechaInicio)} - ${DateFormat('dd/MM/yy').format(fechaFinal)}"),
+                "Fecha: ${fechaInicio.toIso8601String().split('T')[0]} - ${fechaFinal.toIso8601String().split('T')[0]}"),
             pw.SizedBox(height: 10),
             pw.Text("Lotes Totales: $totalLotes"),
             pw.Text("Lotes Actuales: $lotesActuales"),
@@ -235,7 +235,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
 
         data.add([
           (i + 1).toString(), // Índice
-          DateFormat('dd/MM/yy').format(lotes[i].fechaCompra ?? DateTime.now()),
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
           lotes[i].idLote.toString(),
           lotes[i].idProducto.toString(),
           producto?.descripcion ?? '',
@@ -244,8 +244,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           lotes[i].cantidadActual.toString(),
           lotes[i].cantidadPerdida?.toString() ?? '0',
           cantidadVendida.toString(),
-          lotes[i].precioCompra.toStringAsFixed(2),
-          lotes[i].precioCompraUnidad.toStringAsFixed(2),
+          lotes[i].precioCompra.toString(),
+          lotes[i].precioCompraUnidad.toStringAsFixed(1),
         ]);
       }
     }
@@ -289,7 +289,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${DateFormat('dd/MM/yy').format(fechaInicio)} - ${DateFormat('dd/MM/yy').format(fechaFinal)}"),
+                "Fecha: ${fechaInicio.toIso8601String().split('T')[0]} - ${fechaFinal.toIso8601String().split('T')[0]}"),
             pw.SizedBox(height: 10),
             pw.Text("Lotes Totales: $totalLotes"),
             pw.Text("Lotes Actuales: $lotesActuales"),
@@ -410,17 +410,17 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
 
         data.add([
           (i + 1).toString(), // Índice
-          DateFormat('dd/MM/yy').format(lotes[i].fechaCompra ?? DateTime.now()),
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
           lotes[i].idLote.toString(),
           lotes[i].idProducto.toString(),
           producto?.descripcion ?? '',
-          DateFormat('dd/MM/yy').format(lotes[i].fechaCaducidad ?? DateTime.now()),
+          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
           lotes[i].cantidadComprada.toString(),
           lotes[i].cantidadActual.toString(),
           lotes[i].cantidadPerdida?.toString() ?? '0',
           cantidadVendida.toString(),
-          lotes[i].precioCompra.toStringAsFixed(2),
-          lotes[i].precioCompraUnidad.toStringAsFixed(2),
+          lotes[i].precioCompra.toString(),
+          '${producto?.precioProducto ?? '--'}'
           '${producto?.precioProducto?.toStringAsFixed(2) ?? '--'}'
         ]);
       }
