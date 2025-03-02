@@ -167,8 +167,8 @@ class Lote {
       SET cantidadActual = 
         CASE 
           WHEN cantidadActual > ? 
-          THEN cantidadActual + (? - cantidadComprada)
-          ELSE cantidadActual + (? - cantidadComprada)
+          THEN cantidadActual + (? - cantidadComprada) 
+          ELSE cantidadActual + (? - cantidadComprada) - ?
         END, 
       cantidadComprada = ?, 
       cantidadPerdida = ?, 
@@ -182,6 +182,7 @@ class Lote {
           lote.cantidadActual,
           lote.cantidadActual,
           lote.cantidadComprada,
+          lote.cantidadPerdida! > 0 ? lote.cantidadPerdida! : 0,
           lote.cantidadComprada,
           lote.cantidadPerdida ?? 0,
           lote.precioCompra,
