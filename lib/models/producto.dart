@@ -241,6 +241,42 @@ class Producto {
     }
   }
 
+  static Future<bool> actualizarStockActual(int idProducto) async {
+    try {
+      final db = await DatabaseController().database;
+
+      var result = await db.rawQuery(
+        '''
+      SELECT SUM(cantidadActual) as stockTotal 
+      FROM Lotes 
+      WHERE idProducto = ?
+      ''',
+        [idProducto],
+      );
+
+      int stockTotal = (result.isNotEmpty && result.first['stockTotal'] != null)
+          ? result.first['stockTotal'] as int
+          : 0;
+
+      debugPrint("ST: $stockTotal");
+
+      int updateResult = await db.rawUpdate(
+        '''
+      UPDATE Productos 
+      SET stockActual = ? 
+      WHERE idProducto = ?
+      ''',
+        [stockTotal, idProducto],
+      );
+
+      return updateResult > 0;
+    } catch (e) {
+      debugPrint("Error al actualizar el stock del producto $idProducto: $e");
+    }
+
+    return false;
+  }
+
   static Future<void> verificarStockBajo(int idProducto) async {
     try {
       final producto = await obtenerProductoPorID(idProducto);

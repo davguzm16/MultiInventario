@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/services/notification_service.dart';
 
 class Lote {
@@ -65,7 +66,7 @@ class Lote {
       );
 
       if (insertResult > 0) {
-        return actualizarStocks(lote);
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al crear lote: ${e.toString()}");
@@ -160,16 +161,26 @@ class Lote {
     try {
       final db = await DatabaseController().database;
 
-      // Actualizar el lote
       int result = await db.rawUpdate(
         '''
       UPDATE Lotes 
-      SET cantidadActual = cantidadActual + (? - cantidadComprada), cantidadComprada = ?, cantidadPerdida = ?, 
-      precioCompra = ?, precioCompraUnidad = ?, 
-      fechaCaducidad = ?, fechaCompra = ?
+      SET cantidadActual = 
+        CASE 
+          WHEN cantidadActual > ? 
+          THEN cantidadActual + (? - cantidadComprada)
+          ELSE cantidadActual + (? - cantidadComprada)
+        END, 
+      cantidadComprada = ?, 
+      cantidadPerdida = ?, 
+      precioCompra = ?, 
+      precioCompraUnidad = ?, 
+      fechaCaducidad = ?, 
+      fechaCompra = ?
       WHERE idProducto = ? AND idLote = ?
       ''',
         [
+          lote.cantidadActual,
+          lote.cantidadActual,
           lote.cantidadComprada,
           lote.cantidadComprada,
           lote.cantidadPerdida ?? 0,
@@ -181,70 +192,12 @@ class Lote {
           lote.idLote,
         ],
       );
-      debugPrint('${lote.fechaCaducidad?.toIso8601String()}');
-      debugPrint('${lote.fechaCompra?.toIso8601String()}');
+
       if (result > 0) {
-        Lote.actualizarStocks(lote);
-        return true;
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al actualizar el lote ${lote.idLote}: ${e.toString()}");
-    }
-
-    return false;
-  }
-
-  static Future<bool> actualizarStocks(Lote lote) async {
-    try {
-      final db = await DatabaseController().database;
-
-      int result = 0;
-
-      debugPrint("Esta disponible?: ${lote.estaDisponible}");
-      if (lote.estaDisponible == null) {
-        result = await db.rawUpdate(
-          '''
-        UPDATE Productos
-        SET stockActual = stockActual + ?
-        WHERE idProducto = ?
-        ''',
-          [
-            lote.cantidadActual,
-            lote.idProducto,
-          ],
-        );
-      } else {
-        if (!(lote.estaDisponible!)) {
-          result = await db.rawUpdate(
-            '''
-            UPDATE Productos
-            SET stockActual = stockActual - ?
-            WHERE idProducto = ?
-            ''',
-            [
-              lote.cantidadActual,
-              lote.idProducto,
-            ],
-          );
-        } else {
-          result = await db.rawUpdate(
-            '''
-              UPDATE Productos
-              SET stockActual = stockActual + (? - stockActual)
-              WHERE idProducto = ?
-              ''',
-            [
-              lote.cantidadActual,
-              lote.idProducto,
-            ],
-          );
-        }
-      }
-
-      return result > 0;
-    } catch (e) {
-      debugPrint(
-          "Error al actualizar el stock del producto ${lote.idProducto}: $e");
     }
 
     return false;
@@ -255,13 +208,13 @@ class Lote {
       final db = await DatabaseController().database;
 
       int result = await db.rawUpdate(
-        'UPDATE Lotes SET estaDisponible = 0 WHERE idProducto = ? AND idLote = ?',
+        'UPDATE Lotes SET estaDisponible = 0, cantidadActual = 0 WHERE idProducto = ? AND idLote = ?',
         [lote.idProducto, lote.idLote],
       );
 
       if (result > 0) {
         lote.estaDisponible = false;
-        return actualizarStocks(lote);
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al eliminar el lote ${lote.idLote}: ${e.toString()}");
