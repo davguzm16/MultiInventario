@@ -444,7 +444,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                                 productoSeleccionado,
                                 cantidad.value,
                                 descuento.value) -
-                            (loteSeleccionado!.cantidadComprada *
+                            (loteSeleccionado!.precioCompraUnidad *
                                 cantidad.value),
                       );
                     } else {
