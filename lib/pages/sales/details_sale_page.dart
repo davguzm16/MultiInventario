@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/producto.dart';
+import 'package:multiinventario/models/unidad.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -435,8 +436,44 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                             ...detallesVenta.map((detalle) {
                               return TableRow(
                                 children: [
-                                  _buildTableCell(
-                                      "${detalle.cantidadProducto} kg"),
+                                  FutureBuilder<Producto?>(
+                                    future: Producto.obtenerProductoPorID(
+                                        detalle.idProducto),
+                                    builder: (context, snapshotProducto) {
+                                      if (snapshotProducto.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return _buildTableCell("Cargando...");
+                                      } else if (snapshotProducto.hasError) {
+                                        return _buildTableCell("Error");
+                                      } else if (snapshotProducto.hasData &&
+                                          snapshotProducto.data != null) {
+                                        return FutureBuilder<Unidad?>(
+                                          future: Unidad.obtenerUnidadPorId(
+                                              snapshotProducto.data!.idUnidad!),
+                                          builder: (context, snapshotUnidad) {
+                                            if (snapshotUnidad
+                                                    .connectionState ==
+                                                ConnectionState.waiting) {
+                                              return _buildTableCell(
+                                                  "Cargando...");
+                                            } else if (snapshotUnidad
+                                                .hasError) {
+                                              return _buildTableCell("Error");
+                                            } else if (snapshotUnidad.hasData &&
+                                                snapshotUnidad.data != null) {
+                                              return _buildTableCell(
+                                                  "${detalle.cantidadProducto} ${snapshotUnidad.data!.tipoUnidad}");
+                                            } else {
+                                              return _buildTableCell(
+                                                  "No encontrado");
+                                            }
+                                          },
+                                        );
+                                      } else {
+                                        return _buildTableCell("No encontrado");
+                                      }
+                                    },
+                                  ),
                                   FutureBuilder<Producto?>(
                                     future: Producto.obtenerProductoPorID(
                                         detalle.idProducto),
