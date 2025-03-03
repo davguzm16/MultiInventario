@@ -407,6 +407,26 @@ class _CreateSalePageState extends State<CreateSalePage> {
                   onPressed: () {
                     DetalleVenta nuevoDetalle;
 
+                    if (cantidad.value > loteSeleccionado!.cantidadActual) {
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "La cantidad de productos seleccionados superan la cantidad actual del lote.",
+                      );
+                      return;
+                    }
+
+                    if (_calcularSubtotal(productoSeleccionado, cantidad.value,
+                            descuento.value) <
+                        0) {
+                      ErrorDialog(
+                        context: context,
+                        errorMessage:
+                            "Monto del subtotal invalido, considere bajar el descuento.",
+                      );
+                      return;
+                    }
+
                     if (productoSeleccionado != null &&
                         loteSeleccionado != null) {
                       nuevoDetalle = DetalleVenta(
@@ -424,7 +444,7 @@ class _CreateSalePageState extends State<CreateSalePage> {
                                 productoSeleccionado,
                                 cantidad.value,
                                 descuento.value) -
-                            (loteSeleccionado!.cantidadComprada *
+                            (loteSeleccionado!.precioCompraUnidad *
                                 cantidad.value),
                       );
                     } else {
@@ -433,17 +453,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                         errorMessage: productoSeleccionado == null
                             ? "No se ha seleccionado ningun producto para agregar en la venta."
                             : "No se ha seleccionado ningun lote del producto seleccionado.",
-                      );
-                      return;
-                    }
-
-                    if (_calcularSubtotal(productoSeleccionado, cantidad.value,
-                            descuento.value) <
-                        0) {
-                      ErrorDialog(
-                        context: context,
-                        errorMessage:
-                            "Monto del subtotal invalido, considere bajar el descuento.",
                       );
                       return;
                     }
@@ -721,8 +730,6 @@ class _CreateSalePageState extends State<CreateSalePage> {
                               })
                           .toList(),
                     );
-
-                    context.pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,

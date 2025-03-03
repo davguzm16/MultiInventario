@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:multiinventario/models/cliente.dart';
+import 'package:intl/intl.dart';
 
 class ReportSalesPage extends StatefulWidget {
   const ReportSalesPage({super.key});
@@ -288,6 +289,8 @@ Future<void> generarVentasGeneral(BuildContext context,
   final gananciaTotal = datosTablaGeneral["totalGanancias"] as double;
   final ventasContado = datosTablaGeneral["ventasContado"] as int;
   final ventasCredito = datosTablaGeneral["ventasCredito"] as int;
+  final DateFormat dateFormat = DateFormat('dd/MM/yy');
+
   try {
     pdf.addPage(
       pw.MultiPage(
@@ -300,18 +303,17 @@ Future<void> generarVentasGeneral(BuildContext context,
                     pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
             pw.Text(
-                "Fecha: ${selectedFechaInicio.toString().split(" ")[0]} - ${selectedFechaFinal.toString().split(" ")[0]}"),
+                "Fecha: ${dateFormat.format(selectedFechaInicio)} - ${dateFormat.format(selectedFechaFinal)}"),
             pw.Text("Total: S/ ${total.toStringAsFixed(2)}"),
             pw.Text("Ganancias estimadas: ${gananciaTotal.toStringAsFixed(2)}"),
             pw.Text("Ventas al contado: $ventasContado"),
             pw.Text("Ventas al crédito: $ventasCredito"),
             pw.SizedBox(height: 10),
-            // ignore: deprecated_member_use
             pw.Table.fromTextArray(
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Tipo",
                 "Cliente",
                 "Subtotal (S/)",
@@ -321,9 +323,7 @@ Future<void> generarVentasGeneral(BuildContext context,
                 "Ganancia estimada (S/)",
                 "Estado"
               ],
-              //generar filas
               data: datos,
-
               border: pw.TableBorder.all(),
               cellStyle: pw.TextStyle(fontSize: 10),
               headerStyle: pw.TextStyle(
@@ -349,7 +349,6 @@ Future<void> generarVentasGeneral(BuildContext context,
                 12: pw.Alignment.center,
                 13: pw.Alignment.center
               },
-              //Ajustar tamaño
               columnWidths: {
                 0: pw.FixedColumnWidth(35), // Índice
                 1: pw.FixedColumnWidth(60), // Fecha y hora
@@ -370,19 +369,15 @@ Future<void> generarVentasGeneral(BuildContext context,
   } catch (e) {
     debugPrint("Error $e");
   }
-  //metodos de report_controller.dart
-
-  //generar pdf
   final path = await report.generarPDF(pdf, "reporte_ventas.pdf");
-  //mostrar pdf
-  // ignore: use_build_context_synchronously
   report.mostrarPDF(context, path);
 }
 
 Future<Map<String, dynamic>> obtenerDatosTablaGeneral(
-    DateTime selectedFechaInicio, selectedFechaFinal) async {
+    DateTime selectedFechaInicio, DateTime selectedFechaFinal) async {
   List<Venta> ventas = [];
   List<List<String>> data = [];
+  final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
   ventas = await Venta.obtenerVentasporFecha(
       selectedFechaInicio, selectedFechaFinal);
@@ -404,7 +399,6 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(
         ? "Cancelado"
         : "No cancelado";
 
-    //calculo de la suma de subtotales, descuentos y ganancias
     for (int j = 0; j < detalles.length; j++) {
       subtotal = detalles[j].subtotalProducto + subtotal;
       if (detalles[j].descuentoProducto != null) {
@@ -423,14 +417,14 @@ Future<Map<String, dynamic>> obtenerDatosTablaGeneral(
 
     data.add([
       "${i + 1}", //indice
-      "${ventas[i].fechaVenta}", //fecha y hora
+      dateFormat.format(ventas[i].fechaVenta ?? DateTime.now()), //fecha y hora
       "${ventas[i].idVenta}", //Codigo de venta
       ((ventas[i].esAlContado == true) ? "Contado" : "Crédito"), //Tipos
       nombreCliente, //Cliente
       subtotal.toStringAsFixed(2),
-      "$descuento",
+      descuento.toStringAsFixed(2),
       ventas[i].montoTotal.toStringAsFixed(2),
-      "${ventas[i].montoCancelado}",
+      (ventas[i].montoCancelado ?? 0).toStringAsFixed(2),
       ganancia.toStringAsFixed(2),
       estado,
     ]);
@@ -486,7 +480,7 @@ Future<void> generarVentasTipo(
               headers: [
                 "#",
                 "Fecha y hora",
-                "Codigo de venta",
+                "Código de venta",
                 "Cliente",
                 "Subtotal (S/)",
                 "Descuento (S/)",
@@ -553,9 +547,10 @@ Future<void> generarVentasTipo(
 }
 
 Future<Map<String, dynamic>> obtenerDatosTablaTipo(
-    DateTime selectedFechaInicio, selectedFechaFinal, bool tipo) async {
+    DateTime selectedFechaInicio, DateTime selectedFechaFinal, bool tipo) async {
   List<Venta> ventas = [];
   List<List<String>> data = [];
+  final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
   ventas = await Venta.obtenerVentasporFecha(
       selectedFechaInicio, selectedFechaFinal);
@@ -565,9 +560,7 @@ Future<Map<String, dynamic>> obtenerDatosTablaTipo(
   double totalGanancias = 0;
   double total = 0;
   for (int i = 0; i < ventas.length; i++) {
-    if (ventas[i].esAlContado ==
-        tipo) //si es true = contado, si es false = crédito
-    {
+    if (ventas[i].esAlContado == tipo) {
       List<DetalleVenta> detalles =
           await DetalleVenta.obtenerDetallesPorVenta(ventas[i].idVenta!);
       Cliente? cliente = await Cliente.obtenerClientePorId(ventas[i].idCliente);
@@ -578,7 +571,6 @@ Future<Map<String, dynamic>> obtenerDatosTablaTipo(
           ? "Cancelado"
           : "No cancelado";
 
-      //calculo de la suma de subtotales, descuentos y ganancias
       for (int j = 0; j < detalles.length; j++) {
         subtotal = detalles[j].subtotalProducto + subtotal;
         if (detalles[j].descuentoProducto != null) {
@@ -591,13 +583,13 @@ Future<Map<String, dynamic>> obtenerDatosTablaTipo(
 
       data.add([
         "${i + 1}", //indice
-        "${ventas[i].fechaVenta}", //fecha y hora
+        dateFormat.format(ventas[i].fechaVenta ?? DateTime.now()), //fecha y hora
         "${ventas[i].idVenta}", //Codigo de venta
         nombreCliente, //Cliente
         subtotal.toStringAsFixed(2), //subtotal
-        "$descuento", //descuento
-        ventas[i].montoTotal.toStringAsFixed(2), //mon tototal
-        "${ventas[i].montoCancelado}", // monto cancelado
+        descuento.toStringAsFixed(2), //descuento
+        ventas[i].montoTotal.toStringAsFixed(2), //mon total
+        (ventas[i].montoCancelado ?? 0).toStringAsFixed(2), // monto cancelado
         ganancia.toStringAsFixed(2), //ganacia
         estado, //estado
       ]);

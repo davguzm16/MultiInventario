@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:multiinventario/controllers/db_controller.dart';
+import 'package:multiinventario/models/producto.dart';
+import 'package:multiinventario/services/notification_service.dart';
 
 class Lote {
   int? idLote;
@@ -64,7 +66,7 @@ class Lote {
       );
 
       if (insertResult > 0) {
-        return actualizarStocks(lote);
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al crear lote: ${e.toString()}");
@@ -122,7 +124,7 @@ class Lote {
       cantidadPerdida, precioCompra, precioCompraUnidad, 
       fechaCaducidad, fechaCompra, estaDisponible
       FROM Lotes 
-      WHERE idProducto = ? AND estaDisponible = 1
+      WHERE idProducto = ? AND estaDisponible = 1 AND cantidadActual > 0
       ORDER BY idLote ASC
       ''',
         [idProducto],
@@ -159,13 +161,18 @@ class Lote {
     try {
       final db = await DatabaseController().database;
 
-      // Actualizar el lote
+      debugPrint(
+          'CA: ${lote.cantidadActual}, CP: ${lote.cantidadPerdida}, CC: ${lote.cantidadComprada}');
       int result = await db.rawUpdate(
         '''
       UPDATE Lotes 
-      SET cantidadActual = ?, cantidadComprada = ?, cantidadPerdida = ?, 
-      precioCompra = ?, precioCompraUnidad = ?, 
-      fechaCaducidad = ?, fechaCompra = ?
+      SET cantidadActual = ?,
+      cantidadComprada = ?, 
+      cantidadPerdida = ?, 
+      precioCompra = ?, 
+      precioCompraUnidad = ?, 
+      fechaCaducidad = ?, 
+      fechaCompra = ?
       WHERE idProducto = ? AND idLote = ?
       ''',
         [
@@ -180,70 +187,12 @@ class Lote {
           lote.idLote,
         ],
       );
-      debugPrint('${lote.fechaCaducidad?.toIso8601String()}');
-      debugPrint('${lote.fechaCompra?.toIso8601String()}');
+
       if (result > 0) {
-        Lote.actualizarStocks(lote);
-        return true;
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al actualizar el lote ${lote.idLote}: ${e.toString()}");
-    }
-
-    return false;
-  }
-
-  static Future<bool> actualizarStocks(Lote lote) async {
-    try {
-      final db = await DatabaseController().database;
-
-      int result = 0;
-
-      debugPrint("Esta disponible?: ${lote.estaDisponible}");
-      if (lote.estaDisponible == null) {
-        result = await db.rawUpdate(
-          '''
-        UPDATE Productos
-        SET stockActual = stockActual + ?
-        WHERE idProducto = ?
-        ''',
-          [
-            lote.cantidadActual,
-            lote.idProducto,
-          ],
-        );
-      } else {
-        if (!(lote.estaDisponible!)) {
-          result = await db.rawUpdate(
-            '''
-            UPDATE Productos
-            SET stockActual = stockActual - ?
-            WHERE idProducto = ?
-            ''',
-            [
-              lote.cantidadActual,
-              lote.idProducto,
-            ],
-          );
-        } else {
-          result = await db.rawUpdate(
-            '''
-              UPDATE Productos
-              SET stockActual = stockActual + (? - stockActual)
-              WHERE idProducto = ?
-              ''',
-            [
-              lote.cantidadActual,
-              lote.idProducto,
-            ],
-          );
-        }
-      }
-
-      return result > 0;
-    } catch (e) {
-      debugPrint(
-          "Error al actualizar el stock del producto ${lote.idProducto}: $e");
     }
 
     return false;
@@ -254,13 +203,13 @@ class Lote {
       final db = await DatabaseController().database;
 
       int result = await db.rawUpdate(
-        'UPDATE Lotes SET estaDisponible = 0 WHERE idProducto = ? AND idLote = ?',
+        'UPDATE Lotes SET estaDisponible = 0, cantidadActual = 0 WHERE idProducto = ? AND idLote = ?',
         [lote.idProducto, lote.idLote],
       );
 
       if (result > 0) {
         lote.estaDisponible = false;
-        return actualizarStocks(lote);
+        return Producto.actualizarStockActual(lote.idProducto);
       }
     } catch (e) {
       debugPrint("Error al eliminar el lote ${lote.idLote}: ${e.toString()}");
@@ -276,8 +225,7 @@ class Lote {
     try {
       final db = await DatabaseController().database;
 
-      String fechaInicioStr =
-          fechaInicio.toIso8601String();
+      String fechaInicioStr = fechaInicio.toIso8601String();
       String fechaFinalStr =
           "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
@@ -316,17 +264,17 @@ class Lote {
       DateTime fechaFinal,
       int diasAntesVencimiento) async {
     List<Lote> lote = [];
-    
+
     try {
-      DateTime fechaLimiteCaducidad = fechaFinal.add(Duration(days: diasAntesVencimiento));
+      DateTime fechaLimiteCaducidad =
+          fechaFinal.add(Duration(days: diasAntesVencimiento));
       final db = await DatabaseController().database;
-      
-      String fechaInicioStr =
-          fechaInicio.toIso8601String();
+
+      String fechaInicioStr = fechaInicio.toIso8601String();
       String fechaFinalStr =
           "${fechaFinal.year}-${fechaFinal.month.toString().padLeft(2, '0')}-${fechaFinal.day.toString().padLeft(2, '0')}T:23:59:59:999";
       String fechaLimiteCaducidadStr =
-        "${fechaLimiteCaducidad.year}-${fechaLimiteCaducidad.month.toString().padLeft(2, '0')}-${fechaLimiteCaducidad.day.toString().padLeft(2, '0')}T:23:59:59:999";
+          "${fechaLimiteCaducidad.year}-${fechaLimiteCaducidad.month.toString().padLeft(2, '0')}-${fechaLimiteCaducidad.day.toString().padLeft(2, '0')}T:23:59:59:999";
 
       final result = await db.rawQuery('''
       SELECT idLote, idProducto, cantidadActual, cantidadComprada,
@@ -337,10 +285,10 @@ class Lote {
       AND fechaCaducidad <= ?
       ORDER BY fechaCompra ASC
       ''', [fechaInicioStr, fechaFinalStr, fechaLimiteCaducidadStr]);
-      debugPrint("${fechaInicioStr}");
-      debugPrint("${fechaFinalStr}");
-      debugPrint("${fechaLimiteCaducidadStr}");
-      debugPrint("${result}");
+      debugPrint(fechaInicioStr);
+      debugPrint(fechaFinalStr);
+      debugPrint(fechaLimiteCaducidadStr);
+      debugPrint("$result");
       if (result.isNotEmpty) {
         for (var item in result) {
           lote.add(Lote(
@@ -356,10 +304,47 @@ class Lote {
           ));
         }
       }
-      debugPrint(' lote : ${lote}');
+      debugPrint(' lote : $lote');
     } catch (e) {
       debugPrint("Error al obtener los lotes en las fechas: ${e.toString()}");
     }
     return lote;
+  }
+
+  static Future<bool> verificarFechasVencimientos(
+      int diasAntesVencimiento) async {
+    try {
+      final db = await DatabaseController().database;
+      DateTime fechaActual = DateTime.now();
+      DateTime fechaLimite =
+          fechaActual.add(Duration(days: diasAntesVencimiento));
+
+      final result = await db.rawQuery('''
+        SELECT idLote, idProducto, fechaCaducidad 
+        FROM Lotes 
+        WHERE fechaCaducidad IS NOT NULL AND fechaCaducidad <= ?
+      ''', [fechaLimite.toIso8601String()]);
+
+      for (var item in result) {
+        DateTime fechaCaducidad =
+            DateTime.parse(item['fechaCaducidad'] as String);
+        if (fechaActual.isBefore(fechaCaducidad)) {
+          await NotificationService.mostrarNotificacion(
+            titulo: "🚨 ¡Atención!",
+            contenido:
+                "⏳ El lote ${item['idLote']} del producto ${item['idProducto']} vence el 📅 ${fechaCaducidad.toLocal().toString().split(' ')[0]}.\n⚠️ ¡Toma medidas a tiempo!",
+          );
+
+          debugPrint(
+              "📢 Mostrando la notificación de vencimiento del lote ${item['idLote']} del producto ${item['idProducto']} con fecha ${fechaCaducidad.toLocal()}");
+        }
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint("Error verificando fechas de vencimiento: $e");
+    }
+
+    return false;
   }
 }

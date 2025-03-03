@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:multiinventario/models/cliente.dart';
 import 'package:multiinventario/models/detalle_venta.dart';
 import 'package:multiinventario/models/producto.dart';
+import 'package:multiinventario/models/unidad.dart';
 import 'package:multiinventario/models/venta.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -62,7 +63,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     }
   }
 
-  void showCancelarDialog() {
+  void actualizarMontoCanceladoDialog() {
     TextEditingController montoACancelarController = TextEditingController();
 
     double montoTotal = venta!.montoTotal;
@@ -93,9 +94,66 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMontoText('Monto total', montoTotal),
-                  _buildMontoText('Monto cancelado', montoCancelado),
-                  _buildMontoText('Monto pendiente', montoPendiente),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto total:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoTotal.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto cancelado:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoCancelado.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto pendiente:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFF493D9E),
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoPendiente.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 10),
                   CustomTextField(
                     label: 'Monto a cancelar',
@@ -111,7 +169,27 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  _buildMontoText('Monto faltante', montoFaltante, true),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Monto faltante:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Color(0xFFE63946), // Rojo para destacar
+                          ),
+                        ),
+                        Text(
+                          'S/ ${montoFaltante.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontSize: 16, color: Color(0xFFE63946)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               actions: [
@@ -141,24 +219,17 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                         return;
                       }
 
-                      bool actualizado = await Venta.actualizarMontoCancelado(
-                          venta!.idVenta!, montoACancelar);
+                      bool actualizado =
+                          await Venta.actualizarMontoCanceladoVenta(
+                              venta!.idVenta!, montoACancelar);
 
                       if (actualizado) {
-                        bool esDeudor = await Cliente.verificarEstadoDeudor(
-                            venta!.idCliente);
-
                         SuccessDialog(
                           context: context,
                           successMessage: 'Monto actualizado correctamente!',
                           btnOkOnPress: () async {
-                            await _obtenerDatosVenta();
-                            setState(() {});
+                            _obtenerDatosVenta();
                             context.pop();
-
-                            if (!esDeudor) {
-                              context.pop();
-                            }
                           },
                         );
                       } else {
@@ -176,33 +247,6 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
           },
         );
       },
-    );
-  }
-
-  Widget _buildMontoText(String label, double amount,
-      [bool isDynamic = false]) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '$label:',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: isDynamic ? Color(0xFFE63946) : Color(0xFF493D9E),
-            ),
-          ),
-          Text(
-            'S/${amount.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 16,
-              color: isDynamic ? Color(0xFFE63946) : Colors.black,
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -228,7 +272,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               ),
               onPressed: !(venta!.esAlContado!) &&
                       (venta!.montoCancelado! < venta!.montoTotal)
-                  ? () => showCancelarDialog()
+                  ? () => actualizarMontoCanceladoDialog()
                   : null,
             ),
             IconButton(
@@ -392,8 +436,44 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                             ...detallesVenta.map((detalle) {
                               return TableRow(
                                 children: [
-                                  _buildTableCell(
-                                      "${detalle.cantidadProducto} kg"),
+                                  FutureBuilder<Producto?>(
+                                    future: Producto.obtenerProductoPorID(
+                                        detalle.idProducto),
+                                    builder: (context, snapshotProducto) {
+                                      if (snapshotProducto.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return _buildTableCell("Cargando...");
+                                      } else if (snapshotProducto.hasError) {
+                                        return _buildTableCell("Error");
+                                      } else if (snapshotProducto.hasData &&
+                                          snapshotProducto.data != null) {
+                                        return FutureBuilder<Unidad?>(
+                                          future: Unidad.obtenerUnidadPorId(
+                                              snapshotProducto.data!.idUnidad!),
+                                          builder: (context, snapshotUnidad) {
+                                            if (snapshotUnidad
+                                                    .connectionState ==
+                                                ConnectionState.waiting) {
+                                              return _buildTableCell(
+                                                  "Cargando...");
+                                            } else if (snapshotUnidad
+                                                .hasError) {
+                                              return _buildTableCell("Error");
+                                            } else if (snapshotUnidad.hasData &&
+                                                snapshotUnidad.data != null) {
+                                              return _buildTableCell(
+                                                  "${detalle.cantidadProducto} ${snapshotUnidad.data!.tipoUnidad}");
+                                            } else {
+                                              return _buildTableCell(
+                                                  "No encontrado");
+                                            }
+                                          },
+                                        );
+                                      } else {
+                                        return _buildTableCell("No encontrado");
+                                      }
+                                    },
+                                  ),
                                   FutureBuilder<Producto?>(
                                     future: Producto.obtenerProductoPorID(
                                         detalle.idProducto),
@@ -539,7 +619,7 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
                                 ),
                               ),
                               pw.Text(
-                                '002 - ${venta?.codigoBoleta ?? "---"}',
+                                venta?.codigoBoleta ?? "---",
                                 style: pw.TextStyle(
                                   fontWeight: pw.FontWeight.bold,
                                   color: PdfColor.fromHex('#0e5087'),
@@ -686,6 +766,9 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [pw.Text('Dni: ${cliente?.dniCliente ?? '--'}')]),
+              pw.Text(
+                  "Forma de pago: ${(venta?.esAlContado == true) ? "Al contado" : "Crédito"}",
+                  textAlign: pw.TextAlign.left),
               pw.SizedBox(height: 10),
               pw.Table.fromTextArray(
                 border: pw.TableBorder.all(),
@@ -706,8 +789,37 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
               pw.SizedBox(height: 20),
               pw.Align(
                   alignment: pw.Alignment.centerRight,
-                  child: pw.Text("TOTAL S/ ${venta?.montoTotal}",
+                  child: pw.Text("MONTO TOTAL S/ ${venta?.montoTotal}",
                       style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+
+              //solo en caso si es a crédito
+              if (venta?.esAlContado != true) ...[
+                if (venta?.montoTotal == venta?.montoCancelado)
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "ESTADO CANCELADO",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  )
+                else ...[
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "MONTO CANCELADO S/ ${venta?.montoCancelado ?? 0}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                  pw.Align(
+                    alignment: pw.Alignment.centerRight,
+                    child: pw.Text(
+                      "MONTO POR PAGAR S/ ${(venta?.montoTotal ?? 0) - (venta?.montoCancelado ?? 0)}",
+                      style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ],
+
               pw.SizedBox(height: 20),
             ],
           );
@@ -718,9 +830,10 @@ class _DetailsSalePageState extends State<DetailsSalePage> {
     //metodos de report_controller.dart
 
     //generar pdf
-    final path = await report.generarPDF(pdf, "boleta.pdf");
+    final path =
+        await report.generarPDF(pdf, "boleta_${venta!.codigoBoleta}.pdf");
     //mostrar pdf
-    report.mostrarPDF(context, path);
+    report.mostrarPDF(context, path, tipo: venta?.esAlContado);
   }
 
   //extraer los datos para la tabla

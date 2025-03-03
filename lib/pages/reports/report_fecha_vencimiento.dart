@@ -1,9 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/lote.dart';
+import 'package:intl/intl.dart';
 
 class ReportFechaVencimiento extends StatefulWidget {
   const ReportFechaVencimiento({super.key});
@@ -121,6 +124,7 @@ class _ReportFechaVencimientoState extends State<ReportFechaVencimiento> {
     int totalProductos = 0;
     double valorTotal = 0;
     DateTime fechaLimite = DateTime.now().add(Duration(days: diasRestantes));
+    final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
     try {
       // Obtener todos los productos usando el método existente
@@ -147,7 +151,7 @@ class _ReportFechaVencimientoState extends State<ReportFechaVencimiento> {
                 producto.nombreProducto,
                 lote.cantidadActual.toString(),
                 lote.idLote.toString(),
-                lote.fechaCaducidad!.toString().split(' ')[0],
+                dateFormat.format(lote.fechaCaducidad!),
                 diasParaVencer.abs().toString(),
                 estado,
                 valorLote.toStringAsFixed(2)

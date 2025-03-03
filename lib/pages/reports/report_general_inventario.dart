@@ -1,9 +1,12 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:multiinventario/controllers/report_controller.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:multiinventario/models/producto.dart';
 import 'package:multiinventario/models/lote.dart';
+import 'package:intl/intl.dart';
 
 class ReportGeneralInventario extends StatefulWidget {
   const ReportGeneralInventario({super.key});
@@ -22,7 +25,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
   void initState() {
     super.initState();
     fechaController = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateFormat('dd/MM/yy').format(DateTime.now()),
     );
   }
 
@@ -90,7 +93,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
                     setState(() {
                       selectedFecha = picked;
                       fechaController.text =
-                          picked.toIso8601String().split('T')[0];
+                          DateFormat('dd/MM/yy').format(picked);
                     });
                   }
                 },
@@ -134,6 +137,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
     final datosTablaGeneral = await obtenerDatosInventario(fecha);
     final datosTabla = datosTablaGeneral["data"] as List<List<String>>;
     final valorTotal = datosTablaGeneral["valorTotal"] as double;
+    final DateFormat dateFormat = DateFormat('dd/MM/yy');
 
     try {
       pdf.addPage(
@@ -146,7 +150,7 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
                   style: pw.TextStyle(
                       fontSize: 18, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 10),
-              pw.Text("Fecha de corte: ${fecha.toString().split(' ')[0]}"),
+              pw.Text("Fecha de corte: ${dateFormat.format(fecha)}"),
               pw.Text(
                   "Valor total del inventario: S/ ${valorTotal.toStringAsFixed(2)}"),
               pw.SizedBox(height: 10),
@@ -207,27 +211,28 @@ class _ReportGeneralInventarioState extends State<ReportGeneralInventario> {
       List<Producto> productos = await Producto.obtenerTodosLosProductos();
 
       for (var producto in productos) {
-        if(producto.estaDisponible == true){
-        if (producto.stockActual != null && producto.stockActual! > 0) {
-          List<Lote> lotes =
-              await Lote.obtenerLotesDeProducto(producto.idProducto!);
+        if (producto.estaDisponible == true) {
+          if (producto.stockActual != null && producto.stockActual! > 0) {
+            List<Lote> lotes =
+                await Lote.obtenerLotesDeProducto(producto.idProducto!);
 
-          int lotesActivos =
-              lotes.where((lote) => lote.cantidadActual > 0).length;
-          double valorProducto =
-              producto.stockActual! * producto.precioProducto;
-          valorTotal += valorProducto;
+            int lotesActivos =
+                lotes.where((lote) => lote.cantidadActual > 0).length;
+            double valorProducto =
+                producto.stockActual! * producto.precioProducto;
+            valorTotal += valorProducto;
 
-          data.add([
-            "${data.length + 1}",
-            producto.codigoProducto ?? producto.idProducto.toString(),
-            producto.nombreProducto,
-            producto.stockActual!.toStringAsFixed(2),
-            lotesActivos.toString(),
-            producto.precioProducto.toStringAsFixed(2),
-            valorProducto.toStringAsFixed(2),
-          ]);
-        }}
+            data.add([
+              "${data.length + 1}",
+              producto.codigoProducto ?? producto.idProducto.toString(),
+              producto.nombreProducto,
+              producto.stockActual!.toStringAsFixed(2),
+              lotesActivos.toString(),
+              producto.precioProducto.toStringAsFixed(2),
+              valorProducto.toStringAsFixed(2),
+            ]);
+          }
+        }
       }
     } catch (e) {
       debugPrint("Error al obtener datos del inventario: $e");

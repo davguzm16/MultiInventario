@@ -196,6 +196,7 @@ class _SalesPageState extends State<SalesPage>
                   cantidadCargas = 0;
                   hayMasCargas = true;
                 });
+
                 _cargarVentas(reiniciarListaVentas: true);
               },
             ),
@@ -304,11 +305,14 @@ class _SalesPageState extends State<SalesPage>
                                               color: Colors.black),
                                         ),
                                         Text(
-                                          "Tipo de pago: ${venta.esAlContado! ? "Al contado" : "Crédito"}",
+                                          "Tipo de pago: ${venta.esAlContado! ? "Al contado" : (venta.montoCancelado == venta.montoTotal ? "Crédito (Cancelado)" : "Crédito")}",
                                           style: TextStyle(
                                             color: venta.esAlContado!
                                                 ? Colors.black
-                                                : Colors.red,
+                                                : venta.montoCancelado ==
+                                                        venta.montoTotal
+                                                    ? const Color(0xFF2BBF55)
+                                                    : Colors.red,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),

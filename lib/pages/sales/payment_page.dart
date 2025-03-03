@@ -243,6 +243,7 @@ class _PaymentPageState extends State<PaymentPage> {
   Widget _buildTipoPago() {
     // Calcular la diferencia entre el monto total y la cantidad recibida
     double diferencia = _calcularTotalVenta() - cantidadRecibida;
+    double vuelto = cantidadRecibida - _calcularTotalVenta();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -264,11 +265,13 @@ class _PaymentPageState extends State<PaymentPage> {
           esAlContado
               ? (cantidadRecibida == 0.0)
                   ? 'Vuelto: ---'
-                  : (cantidadRecibida - _calcularTotalVenta()) < 0
+                  : (vuelto < 0)
                       ? 'Vuelto: Monto Insuficiente'
-                      : 'Vuelto: S/${(cantidadRecibida - _calcularTotalVenta()).toStringAsFixed(2)}'
+                      : 'Vuelto: S/${vuelto.toStringAsFixed(2)}'
               : (cantidadRecibida >= 0.0)
-                  ? 'Por cancelar: S/${(_calcularTotalVenta() - cantidadRecibida).toStringAsFixed(2)}'
+                  ? (vuelto >= 0
+                      ? 'Vuelto: S/${vuelto.toStringAsFixed(2)}'
+                      : 'Por cancelar: S/${diferencia.toStringAsFixed(2)}')
                   : 'Por cancelar: S/${diferencia.toStringAsFixed(2)}',
           style: const TextStyle(
               fontSize: 16,
@@ -286,22 +289,35 @@ class _PaymentPageState extends State<PaymentPage> {
             onPressed: () async {
               FocusScope.of(context).unfocus();
 
+              // Validación de pago
+              if (esAlContado) {
+                if (cantidadRecibida < _calcularTotalVenta()) {
+                  ErrorDialog(
+                    context: context,
+                    errorMessage:
+                        "Monto insuficiente. \nSi desea continuar con este monto, considere cambiarlo a una venta a crédito.",
+                  );
+                  return;
+                }
+              }
+
+              if (!esAlContado &&
+                  !crearCliente &&
+                  clienteSeleccionado == null) {
+                ErrorDialog(
+                  context: context,
+                  errorMessage:
+                      "Debe seleccionar un cliente antes de continuar.",
+                );
+                return;
+              }
+
               if (crearCliente) {
                 if (_nombreController.text.isEmpty) {
                   ErrorDialog(
                     context: context,
                     errorMessage:
                         "Por favor, complete todos los campos obligatorios.",
-                  );
-                  return;
-                }
-
-                if (esAlContado &&
-                    (cantidadRecibida - _calcularTotalVenta()) < 0) {
-                  ErrorDialog(
-                    context: context,
-                    errorMessage:
-                        "Monto insuficiente. \nSi desea continuar con este monto, considere cambiarlo a una venta a crédito.",
                   );
                   return;
                 }
@@ -329,7 +345,6 @@ class _PaymentPageState extends State<PaymentPage> {
                 clienteSeleccionado!.idCliente = idCliente;
               }
 
-              // Asegurar que idCliente no es nulo
               if (clienteSeleccionado?.idCliente == null) {
                 ErrorDialog(
                   context: context,
@@ -356,22 +371,15 @@ class _PaymentPageState extends State<PaymentPage> {
                 return;
               }
 
-              ConfirmDialog(
+              SuccessDialog(
                 context: context,
-                title: "Confirmación",
-                message: "¿Estás seguro de realizar la venta?",
-                btnOkOnPress: () {
-                  SuccessDialog(
-                    context: context,
-                    successMessage: "¡La venta se ha realizado exitosamente!",
-                    btnOkOnPress: () async {
-                      for (var detalle in widget.detallesVenta) {
-                        await Producto.verificarStockBajo(detalle.idProducto);
-                      }
+                successMessage: "¡La venta se ha realizado exitosamente!",
+                btnOkOnPress: () async {
+                  for (var detalle in widget.detallesVenta) {
+                    await Producto.verificarStockBajo(detalle.idProducto);
+                  }
 
-                      context.pop();
-                    },
-                  );
+                  context.replace('/sales');
                 },
               );
             },

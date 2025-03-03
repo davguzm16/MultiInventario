@@ -113,7 +113,7 @@ class DatabaseController {
           CREATE TABLE Ventas (
             idVenta INTEGER PRIMARY KEY,
             idCliente INTEGER,
-            codigoBoleta TEXT NOT NULL UNIQUE,
+            codigoBoleta TEXT UNIQUE,
             fechaVenta DATETIME DEFAULT CURRENT_TIMESTAMP,
             montoTotal REAL NOT NULL,
             montoCancelado REAL,

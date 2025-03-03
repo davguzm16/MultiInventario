@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
@@ -7,6 +9,8 @@ import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:multiinventario/models/lote.dart'; // Importa tu modelo de lotes
 import 'package:multiinventario/models/detalle_venta.dart'; // Importa tu modelo de detalles de venta
 import 'package:multiinventario/models/producto.dart'; // Importa tu modelo de productos
+import 'package:intl/intl.dart';
+import 'package:multiinventario/controllers/report_controller.dart';
 
 class ReportLotesPage extends StatefulWidget {
   const ReportLotesPage({super.key});
@@ -30,10 +34,10 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
   void initState() {
     super.initState();
     fechaInicio = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateTime.now().toIso8601String().split('T')[0]
     );
     fechaFinal = TextEditingController(
-      text: DateTime.now().toIso8601String().split('T')[0],
+      text: DateTime.now().toIso8601String().split('T')[0]
     );
     _diasController = TextEditingController();
   }
@@ -51,12 +55,12 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     setState(() {
       _isLoading = true;
     });
-    if(_selectedReport == "Reporte general de lotes"){
-          await _generarPDFGeneral(
-        selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
-    } else if(_selectedReport == "Reporte de lotes actuales"){
-          await _generarPDFActual(
-        selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
+    if (_selectedReport == "Reporte general de lotes") {
+      await _generarPDFGeneral(
+          selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
+    } else if (_selectedReport == "Reporte de lotes actuales") {
+      await _generarPDFActual(
+          selectedFechaInicio, selectedFechaFinal, diasAntesVencimiento);
     }
 
     setState(() {
@@ -78,16 +82,16 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     );
     if (picked != null) {
       setState(() {
-        controller.text =
-            "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
+        controller.text = "${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}";
       });
     }
   }
 
   Future<void> _generarPDFGeneral(DateTime fechaInicio, DateTime fechaFinal,
       int diasAntesVencimiento) async {
+    
     final pdf = pw.Document();
-
+    final ReportController report = ReportController();
     // Obtener datos de los lotes desde los modelos
     final datosTablaLotes = await obtenerDatosTablaLotes(
         fechaInicio, fechaFinal, diasAntesVencimiento);
@@ -116,7 +120,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
             pw.Text("Lotes Acabados: $lotesAcabados"),
             pw.Text("Lotes Próximos a Vencer: $lotesProximosAVencer"),
             pw.Text(
-                "Valor de Compra Total: \$${totalValorCompra.toStringAsFixed(2)}"),
+                "Valor de Compra Total: S/ ${totalValorCompra.toStringAsFixed(2)}"),
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
               headers: [
@@ -177,17 +181,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       ),
     );
 
-    final output = await getTemporaryDirectory();
-    final file = File("${output.path}/reporte_general_lotes.pdf");
-    await file.writeAsBytes(await pdf.save());
-
-    // Navegar a la pantalla de visualización del PDF
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PDFViewerPage(path: file.path),
-      ),
-    );
+      final path = await report.generarPDF(pdf, "reporte_lotes.pdf");
+      report.mostrarPDF(context, path);
   }
 
   Future<Map<String, dynamic>> obtenerDatosTablaLotes(DateTime fechaInicio,
@@ -199,10 +194,14 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     int lotesAcabados = 0;
     int lotesProximosAVencer = 0;
 
-    // Aquí debes implementar la lógica para obtener los lotes según el rango de fechas y días antes de vencimiento
-    // Por ejemplo:
-    lotes = await Lote.obtenerLotesPorRangoDeFechasYDias(
-        fechaInicio, fechaFinal, diasAntesVencimiento);
+    // Obtener lotes según el rango de fechas y días antes de vencimiento
+    if (diasAntesVencimiento > 0) {
+      lotes = await Lote.obtenerLotesPorRangoDeFechasYDias(
+          fechaInicio, fechaFinal, diasAntesVencimiento);
+    } else {
+      lotes = await Lote.obtenerLotesporFecha(fechaInicio, fechaFinal);
+    }
+
     int totalLotes = lotes.length;
 
     for (int i = 0; i < lotes.length; i++) {
@@ -210,35 +209,38 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           await DetalleVenta.obtenerCantidadVendidaPorLote(lotes[i].idLote!);
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
-      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
-      totalValorCompra += lotes[i].precioCompra;
+      if (producto?.estaDisponible == true &&
+          producto?.estaDisponible != null) {
+        totalValorCompra += lotes[i].precioCompra;
 
-      if (lotes[i].cantidadActual > 0) {
-        lotesActuales++;
-      } else {
-        lotesAcabados++;
+        if (lotes[i].cantidadActual > 0) {
+          lotesActuales++;
+        } else {
+          lotesAcabados++;
+        }
+
+        if (diasAntesVencimiento > 0 &&
+            lotes[i].fechaCaducidad != null &&
+            lotes[i].fechaCaducidad!.isBefore(
+                DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
+          lotesProximosAVencer++;
+        }
+
+        data.add([
+          (i + 1).toString(), // Índice
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].idLote.toString(),
+          lotes[i].idProducto.toString(),
+          producto?.descripcion ?? '',
+          DateFormat('dd/MM/yy').format(lotes[i].fechaCaducidad ?? DateTime.now()),
+          lotes[i].cantidadComprada.toString(),
+          lotes[i].cantidadActual.toString(),
+          lotes[i].cantidadPerdida?.toString() ?? '0',
+          cantidadVendida.toString(),
+          lotes[i].precioCompra.toString(),
+          lotes[i].precioCompraUnidad.toStringAsFixed(1),
+        ]);
       }
-
-      if (lotes[i].fechaCaducidad != null &&
-          lotes[i].fechaCaducidad!.isBefore(
-              DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
-        lotesProximosAVencer++;
-      }
-
-      data.add([
-        (i + 1).toString(), // Índice
-        lotes[i].fechaCompra?.toIso8601String() ?? '',
-        lotes[i].idLote.toString(),
-        lotes[i].idProducto.toString(),
-        producto?.descripcion ?? '',
-        lotes[i].fechaCaducidad?.toIso8601String() ?? '',
-        lotes[i].cantidadComprada.toString(),
-        lotes[i].cantidadActual.toString(),
-        lotes[i].cantidadPerdida?.toString() ?? '0',
-        cantidadVendida.toString(),
-        lotes[i].precioCompra.toString(),
-        lotes[i].precioCompraUnidad.toString(),
-      ]);}
     }
 
     // Agregar mensajes de depuración
@@ -255,9 +257,10 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     };
   }
 
-  Future<void> _generarPDFActual(DateTime fechaInicio, DateTime fechaFinal, int diasAntesVencimiento) async {
+  Future<void> _generarPDFActual(DateTime fechaInicio, DateTime fechaFinal,
+      int diasAntesVencimiento) async {
     final pdf = pw.Document();
-
+    final ReportController report = ReportController();
     // Obtener datos de los lotes desde los modelos
     final datosTablaLotes = await obtenerDatosTablaLotesActual(
         fechaInicio, fechaFinal, diasAntesVencimiento);
@@ -286,7 +289,7 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
             pw.Text("Lotes Acabados: $lotesAcabados"),
             pw.Text("Lotes Próximos a Vencer: $lotesProximosAVencer"),
             pw.Text(
-                "Valor de Compra Total: \$${totalValorCompra.toStringAsFixed(2)}"),
+                "Valor de Compra Total: S/ ${totalValorCompra.toStringAsFixed(2)}"),
             pw.SizedBox(height: 20),
             pw.Table.fromTextArray(
               headers: [
@@ -350,21 +353,14 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       ),
     );
 
-    final output = await getTemporaryDirectory();
-    final file = File("${output.path}/reporte_lotes_actuales.pdf");
-    await file.writeAsBytes(await pdf.save());
-
-    // Navegar a la pantalla de visualización del PDF
-    // ignore: use_build_context_synchronously
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => PDFViewerPage(path: file.path),
-      ),
-    );
+      final path = await report.generarPDF(pdf, "reporte_lotes.pdf");
+      report.mostrarPDF(context, path);
   }
 
-  Future<Map<String, dynamic>> obtenerDatosTablaLotesActual(DateTime fechaInicio,
-      DateTime fechaFinal, int diasAntesVencimiento) async {
+  Future<Map<String, dynamic>> obtenerDatosTablaLotesActual(
+      DateTime fechaInicio,
+      DateTime fechaFinal,
+      int diasAntesVencimiento) async {
     List<Lote> lotes = [];
     List<List<String>> data = [];
     double totalValorCompra = 0.0;
@@ -372,10 +368,8 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
     int lotesAcabados = 0;
     int lotesProximosAVencer = 0;
 
-    // Aquí debes implementar la lógica para obtener los lotes según el rango de fechas y días antes de vencimiento
-    // Por ejemplo:
-    lotes = await Lote.obtenerLotesporFecha(
-        fechaInicio, fechaFinal);
+    // Obtener lotes según el rango de fechas y días antes de vencimiento
+    lotes = await Lote.obtenerLotesporFecha(fechaInicio, fechaFinal);
     int totalLotes = lotes.length;
 
     for (int i = 0; i < lotes.length; i++) {
@@ -384,34 +378,36 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       Producto? producto =
           await Producto.obtenerProductoPorID(lotes[i].idProducto);
       totalValorCompra += lotes[i].precioCompra;
-      if(producto?.estaDisponible == true && producto?.estaDisponible != null){
-      if (lotes[i].cantidadActual > 0) {
-        lotesActuales++;
-      } else {
-        lotesAcabados++;
-      }
+      if (producto?.estaDisponible == true &&
+          producto?.estaDisponible != null) {
+        if (lotes[i].cantidadActual > 0) {
+          lotesActuales++;
+        } else {
+          lotesAcabados++;
+        }
 
-      if (lotes[i].fechaCaducidad != null &&
-          lotes[i].fechaCaducidad!.isBefore(
-              DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
-        lotesProximosAVencer++;
-      }
+        if (lotes[i].fechaCaducidad != null &&
+            lotes[i].fechaCaducidad!.isBefore(
+                DateTime.now().add(Duration(days: diasAntesVencimiento)))) {
+          lotesProximosAVencer++;
+        }
 
-      data.add([
-        (i + 1).toString(), 
-        lotes[i].fechaCompra?.toIso8601String() ?? '--',
-        lotes[i].idLote.toString(),
-        lotes[i].idProducto.toString(),
-        producto?.descripcion ?? '--',
-        lotes[i].fechaCaducidad?.toIso8601String() ?? '--',
-        lotes[i].cantidadComprada.toString(),
-        lotes[i].cantidadActual.toString(),
-        lotes[i].cantidadPerdida?.toString() ?? '0',
-        cantidadVendida.toString(),
-        lotes[i].precioCompra.toString(),
-        lotes[i].precioCompraUnidad.toString(),
-        '${producto?.precioProducto ?? '--'}'
-      ]);}
+        data.add([
+          (i + 1).toString(), // Índice
+          lotes[i].fechaCompra?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].idLote.toString(),
+          lotes[i].idProducto.toString(),
+          producto?.descripcion ?? '',
+          lotes[i].fechaCaducidad?.toIso8601String().split('T')[0] ?? '',
+          lotes[i].cantidadComprada.toString(),
+          lotes[i].cantidadActual.toString(),
+          lotes[i].cantidadPerdida?.toString() ?? '0',
+          cantidadVendida.toString(),
+          lotes[i].precioCompra.toString(),
+          '${producto?.precioProducto ?? '--'}',
+          '${producto?.precioProducto?.toStringAsFixed(2) ?? '--'}'
+        ]);
+      }
     }
 
     // Agregar mensajes de depuración
@@ -427,8 +423,6 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
       "lotesProximosAVencer": lotesProximosAVencer,
     };
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -599,24 +593,6 @@ class _ReportLotesPageState extends State<ReportLotesPage> {
           onSelect(text);
         },
         child: Text(text),
-      ),
-    );
-  }
-}
-
-class PDFViewerPage extends StatelessWidget {
-  final String path;
-
-  const PDFViewerPage({super.key, required this.path});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Visualizador de PDF"),
-      ),
-      body: PDFView(
-        filePath: path,
       ),
     );
   }

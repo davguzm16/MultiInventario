@@ -62,11 +62,13 @@ class _InventoryPageState extends State<InventoryPage>
     if (!hayMasCargas && !reiniciarListaProductos) return;
 
     if (reiniciarListaProductos) {
-      setState(() {
-        productos.clear();
-        cantidadCargas = 0;
-        hayMasCargas = true;
-      });
+      if (mounted) {
+        setState(() {
+          productos.clear();
+          cantidadCargas = 0;
+          hayMasCargas = true;
+        });
+      }
     }
 
     // Evita que se llame nuevamente si ya está cargando

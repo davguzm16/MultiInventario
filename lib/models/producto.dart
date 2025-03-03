@@ -35,6 +35,8 @@ class Producto {
     this.stockMaximo,
     this.rutaImagen,
     this.estaDisponible,
+    this.fechaCreacion,
+    this.fechaModificacion,
   });
 
   // Metodos CRUD
@@ -104,6 +106,12 @@ class Producto {
           stockMaximo: (map['stockMaximo'] as num?)?.toDouble(),
           estaDisponible: (map['estaDisponible'] as int) == 1,
           rutaImagen: map['rutaImagen'] as String?,
+          fechaCreacion: map['fechaCreacion'] != null
+              ? DateTime.parse(map['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: map['fechaModificacion'] != null
+              ? DateTime.parse(map['fechaModificacion'] as String)
+              : null,
         );
       }).toList();
     } catch (e) {
@@ -124,16 +132,23 @@ class Producto {
 
       if (result.isNotEmpty) {
         return Producto(
-            idProducto: result.first['idProducto']! as int,
-            idUnidad: result.first['idUnidad']! as int,
-            codigoProducto: result.first['codigoProducto'] as String?,
-            nombreProducto: result.first['nombreProducto'] as String,
-            precioProducto: (result.first['precioProducto'] as num).toDouble(),
-            stockActual: (result.first['stockActual'] as num).toDouble(),
-            stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
-            stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
-            estaDisponible: (result.first['estaDisponible'] as int) == 1,
-            rutaImagen: (result.first['rutaImagen'] as String?));
+          idProducto: result.first['idProducto']! as int,
+          idUnidad: result.first['idUnidad']! as int,
+          codigoProducto: result.first['codigoProducto'] as String?,
+          nombreProducto: result.first['nombreProducto'] as String,
+          precioProducto: (result.first['precioProducto'] as num).toDouble(),
+          stockActual: (result.first['stockActual'] as num).toDouble(),
+          stockMinimo: (result.first['stockMinimo'] as num).toDouble(),
+          stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
+          estaDisponible: (result.first['estaDisponible'] as int) == 1,
+          rutaImagen: (result.first['rutaImagen'] as String?),
+          fechaCreacion: result.first['fechaCreacion'] != null
+              ? DateTime.parse(result.first['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: result.first['fechaModificacion'] != null
+              ? DateTime.parse(result.first['fechaModificacion'] as String)
+              : null,
+        );
       }
     } catch (e) {
       debugPrint("Error al obtener el producto $idProducto: ${e.toString()}");
@@ -165,6 +180,12 @@ class Producto {
           stockMaximo: (result.first['stockMaximo'] as num?)?.toDouble(),
           estaDisponible: (result.first['estaDisponible'] as int) == 1,
           rutaImagen: result.first['rutaImagen'] as String?,
+          fechaCreacion: result.first['fechaCreacion'] != null
+              ? DateTime.parse(result.first['fechaCreacion'] as String)
+              : null,
+          fechaModificacion: result.first['fechaModificacion'] != null
+              ? DateTime.parse(result.first['fechaModificacion'] as String)
+              : null,
         );
       }
     } catch (e) {
@@ -220,6 +241,42 @@ class Producto {
     }
   }
 
+  static Future<bool> actualizarStockActual(int idProducto) async {
+    try {
+      final db = await DatabaseController().database;
+
+      var result = await db.rawQuery(
+        '''
+      SELECT SUM(cantidadActual) as stockTotal 
+      FROM Lotes 
+      WHERE idProducto = ?
+      ''',
+        [idProducto],
+      );
+
+      int stockTotal = (result.isNotEmpty && result.first['stockTotal'] != null)
+          ? result.first['stockTotal'] as int
+          : 0;
+
+      debugPrint("ST: $stockTotal");
+
+      int updateResult = await db.rawUpdate(
+        '''
+      UPDATE Productos 
+      SET stockActual = ? 
+      WHERE idProducto = ?
+      ''',
+        [stockTotal, idProducto],
+      );
+
+      return updateResult > 0;
+    } catch (e) {
+      debugPrint("Error al actualizar el stock del producto $idProducto: $e");
+    }
+
+    return false;
+  }
+
   static Future<void> verificarStockBajo(int idProducto) async {
     try {
       final producto = await obtenerProductoPorID(idProducto);
@@ -237,7 +294,8 @@ class Producto {
             contenido:
                 "📦 Solo hay ${producto.stockActual} ${unidadProducto!.tipoUnidad} del producto ${producto.nombreProducto}.\n🔄 Es momento de reabastecer.",
           );
-          debugPrint("Mostrando la notificacion!");
+          debugPrint(
+              "📢 Mostrando la notificacion de stock minimo del producto ${producto.nombreProducto}");
         }
       }
     } catch (e) {
@@ -274,24 +332,22 @@ class Producto {
     }
     return productos;
   }
-static Future<List<Producto>> obtenerTodosLosProductos() async {
-  List<Producto> producto = [];
-  try {
-    final db = await DatabaseController().database;
-    final result = await db.rawQuery(
-      '''
+
+  static Future<List<Producto>> obtenerTodosLosProductos() async {
+    List<Producto> producto = [];
+    try {
+      final db = await DatabaseController().database;
+      final result = await db.rawQuery('''
       SELECT * FROM Productos
-      '''
-    );
+      ''');
 
-    // Imprimir resultado de la consulta
-    debugPrint("Resultado de la consulta: $result");
+      // Imprimir resultado de la consulta
+      debugPrint("Resultado de la consulta: $result");
 
-    // Iterar correctamente sobre la lista
-    for (var item in result) {
-      if ((item['estaDisponible'] as int) == 1) {
-        producto.add(
-          Producto(
+      // Iterar correctamente sobre la lista
+      for (var item in result) {
+        if ((item['estaDisponible'] as int) == 1) {
+          producto.add(Producto(
             idProducto: item['idProducto']! as int,
             idUnidad: item['idUnidad']! as int,
             codigoProducto: item['codigoProducto'] as String?,
@@ -302,17 +358,21 @@ static Future<List<Producto>> obtenerTodosLosProductos() async {
             stockMaximo: (item['stockMaximo'] as num?)?.toDouble(),
             estaDisponible: (item['estaDisponible'] as int) == 1,
             rutaImagen: item['rutaImagen'] as String?,
-          )
-        );
+            fechaCreacion: result.first['fechaCreacion'] != null
+                ? DateTime.parse(result.first['fechaCreacion'] as String)
+                : null,
+            fechaModificacion: result.first['fechaModificacion'] != null
+                ? DateTime.parse(result.first['fechaModificacion'] as String)
+                : null,
+          ));
+        }
       }
+    } catch (e) {
+      debugPrint("Error al obtener el producto: ${e.toString()}");
     }
-  } catch (e) {
-    debugPrint("Error al obtener el producto: ${e.toString()}");
+
+    // Imprimir la lista de productos obtenida
+    debugPrint("Lista de productos obtenida: $producto");
+    return producto;
   }
-
-  // Imprimir la lista de productos obtenida
-  debugPrint("Lista de productos obtenida: $producto");
-  return producto;
-}
-
 }

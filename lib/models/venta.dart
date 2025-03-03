@@ -29,25 +29,19 @@ class Venta {
     try {
       final db = await DatabaseController().database;
 
-      if (venta.montoTotal > 5.00) {
-        final result = await db.rawQuery('''
-        SELECT MAX(CAST(SUBSTR(codigoBoleta, 5) AS INTEGER)) as ultimoNumero
-        FROM Ventas WHERE codigoBoleta IS NOT NULL
-      ''');
+      // Solo generar código de boleta si el monto total es mayor a 5.00
+      venta.codigoBoleta = (venta.montoTotal > 5.00)
+          ? await obtenerSiguienteCodigoBoleta()
+          : null;
 
-        int ultimoNumero = result.first['ultimoNumero'] != null
-            ? (result.first['ultimoNumero'] as int)
-            : 0;
-
-        String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
-        venta.codigoBoleta = '002-$numeroFormateado';
-      }
+      debugPrint(
+          "Condicion: ${venta.montoTotal > 5.00},CB: ${venta.codigoBoleta}, MT: ${venta.montoTotal}");
 
       final result = await db.rawInsert('''
-          INSERT INTO Ventas (
-            idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
-          ) VALUES (?, ?, ?, ?, ?)
-        ''', [
+        INSERT INTO Ventas (
+          idCliente, codigoBoleta, montoTotal, montoCancelado, esAlContado
+        ) VALUES (?, ?, ?, ?, ?)
+      ''', [
         venta.idCliente,
         venta.codigoBoleta,
         venta.montoTotal,
@@ -66,9 +60,10 @@ class Venta {
         for (var detalle in detallesVentas) {
           final lote =
               await Lote.obtenerLotePorId(detalle.idProducto, detalle.idLote);
-          lote!.cantidadActual -= detalle.cantidadProducto;
-
-          await Lote.actualizarLote(lote);
+          if (lote != null) {
+            lote.cantidadActual -= detalle.cantidadProducto;
+            await Lote.actualizarLote(lote);
+          }
 
           await DetalleVenta.asignarRelacion(idVentaInsertada, detalle);
         }
@@ -84,6 +79,31 @@ class Venta {
     return false;
   }
 
+  static Future<String?> obtenerSiguienteCodigoBoleta() async {
+    try {
+      final db = await DatabaseController().database;
+
+      final result = await db.rawQuery('''
+      SELECT MAX(CAST(SUBSTR(codigoBoleta, 5) AS INTEGER)) as ultimoNumero
+      FROM Ventas WHERE codigoBoleta IS NOT NULL
+    ''');
+
+      int ultimoNumero =
+          (result.isNotEmpty && result.first['ultimoNumero'] != null)
+              ? result.first['ultimoNumero'] as int
+              : 0;
+
+      String numeroFormateado = (ultimoNumero + 1).toString().padLeft(5, '0');
+
+      return '002-$numeroFormateado';
+    } catch (e) {
+      debugPrint(
+          "Error al obtener el siguiente código de boleta: ${e.toString()}");
+    }
+
+    return null;
+  }
+
   static Future<List<Venta>> obtenerVentasPorCodigo(String codigoBoleta) async {
     try {
       final db = await DatabaseController().database;
@@ -92,6 +112,7 @@ class Venta {
       SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
       montoTotal, montoCancelado, esAlContado 
       FROM Ventas WHERE codigoBoleta LIKE ?
+      ORDER BY fechaVenta DESC
       ''',
         ['%$codigoBoleta%'],
       );
@@ -100,7 +121,7 @@ class Venta {
         return Venta(
           idVenta: map['idVenta'] as int,
           idCliente: map['idCliente'] as int,
-          codigoBoleta: map['codigoBoleta'] as String,
+          codigoBoleta: map['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(map['fechaVenta'] as String),
           montoTotal: (map['montoTotal'] as num).toDouble(),
           montoCancelado: (map['montoCancelado'] as num).toDouble(),
@@ -118,10 +139,10 @@ class Venta {
       final db = await DatabaseController().database;
       final result = await db.rawQuery(
         '''
-      SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
-      montoTotal, montoCancelado, esAlContado
-      FROM Ventas WHERE idVenta = ?
-      ''',
+        SELECT idVenta, idCliente, codigoBoleta, fechaVenta, 
+        montoTotal, montoCancelado, esAlContado
+        FROM Ventas WHERE idVenta = ?
+        ''',
         [idVenta],
       );
 
@@ -129,7 +150,7 @@ class Venta {
         return Venta(
           idVenta: result.first['idVenta'] as int,
           idCliente: result.first['idCliente'] as int,
-          codigoBoleta: result.first['codigoBoleta'] as String,
+          codigoBoleta: result.first['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(result.first['fechaVenta'] as String),
           montoTotal: (result.first['montoTotal'] as num).toDouble(),
           montoCancelado: (result.first['montoCancelado'] as num).toDouble(),
@@ -178,6 +199,7 @@ class Venta {
              montoTotal, montoCancelado, esAlContado
       FROM Ventas
       $whereClause
+      ORDER BY fechaVenta DESC
       LIMIT $cantidadPorCarga OFFSET $offset
     ''');
 
@@ -185,7 +207,7 @@ class Venta {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: item['idCliente'] as int,
-          codigoBoleta: item['codigoBoleta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -199,22 +221,31 @@ class Venta {
     return ventas;
   }
 
-  static Future<List<Venta>> obtenerVentasDeCliente(int idCliente) async {
+  static Future<List<Venta>> obtenerVentasDeCliente(int idCliente,
+      {bool? esAlContado = false}) async {
     List<Venta> ventas = [];
+
     try {
       final db = await DatabaseController().database;
+
+      String esAlContadoQuery = "";
+      if (esAlContado != null) {
+        esAlContadoQuery = "AND esAlContado = ${esAlContado ? 1 : 0}";
+      }
+
       final result = await db.rawQuery('''
         SELECT idVenta, codigoBoleta, fechaVenta, 
              montoTotal, montoCancelado, esAlContado
         FROM Ventas
-        WHERE idCliente = ?
+        WHERE idCliente = ? $esAlContadoQuery
+        ORDER BY fechaVenta ASC;
       ''', [idCliente]);
 
       for (var item in result) {
         ventas.add(Venta(
           idVenta: item['idVenta'] as int,
           idCliente: idCliente,
-          codigoBoleta: item['codigoBoleta'] as String,
+          codigoBoleta: item['codigoBoleta'] as String?,
           fechaVenta: DateTime.parse(item['fechaVenta'] as String),
           montoTotal: (item['montoTotal'] as num).toDouble(),
           montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -246,7 +277,7 @@ class Venta {
               montoTotal, montoCancelado, esAlcontado
       FROM Ventas 
       WHERE fechaVenta BETWEEN ? AND ?
-      ORDER BY fechaVenta ASC
+      ORDER BY fechaVenta DESC
       ''', [fechaInicioStr, fechaFinalStr]);
       debugPrint('hola $result');
       if (result.isNotEmpty) {
@@ -254,7 +285,7 @@ class Venta {
           ventas.add(Venta(
             idVenta: item['idVenta'] as int,
             idCliente: item['idCliente'] as int,
-            codigoBoleta: item['codigoBoleta'] as String,
+            codigoBoleta: item['codigoBoleta'] as String?,
             fechaVenta: DateTime.parse(item['fechaVenta'] as String),
             montoTotal: (item['montoTotal'] as num).toDouble(),
             montoCancelado: (item['montoCancelado'] as num).toDouble(),
@@ -269,7 +300,7 @@ class Venta {
     return ventas;
   }
 
-  static Future<bool> actualizarMontoCancelado(
+  static Future<bool> actualizarMontoCanceladoVenta(
       int idVenta, double montoACancelar) async {
     try {
       final db = await DatabaseController().database;
@@ -292,6 +323,61 @@ class Venta {
       }
     } catch (e) {
       debugPrint("Error al actualizar el monto cancelado: ${e.toString()}");
+    }
+
+    return false;
+  }
+
+  static Future<bool> actualizarMontoCanceladoVentas(
+      int idCliente, double montoACancelar) async {
+    try {
+      final db = await DatabaseController().database;
+      List<Venta> ventasPendientes = await obtenerVentasDeCliente(idCliente);
+
+      if (ventasPendientes.isEmpty) {
+        debugPrint("No hay ventas pendientes para este cliente.");
+        return false;
+      }
+
+      double montoRestante = montoACancelar;
+
+      for (Venta venta in ventasPendientes) {
+        if (montoRestante <= 0) break;
+
+        double montoPendiente =
+            venta.montoTotal - (venta.montoCancelado ?? 0.0);
+
+        if (montoRestante >= montoPendiente) {
+          // Se paga completamente la venta
+          await db.rawUpdate(
+            '''
+          UPDATE Ventas 
+          SET montoCancelado = montoTotal 
+          WHERE idVenta = ?
+          ''',
+            [venta.idVenta],
+          );
+
+          montoRestante -= montoPendiente;
+        } else {
+          // Se paga parcialmente la venta
+          await db.rawUpdate(
+            '''
+          UPDATE Ventas 
+          SET montoCancelado = montoCancelado + ? 
+          WHERE idVenta = ?
+          ''',
+            [montoRestante, venta.idVenta],
+          );
+
+          montoRestante = 0; // Se termina el dinero a cancelar
+        }
+      }
+
+      debugPrint("Pago procesado. Monto restante sin usar: $montoRestante");
+      return true;
+    } catch (e) {
+      debugPrint("Error al cancelar deuda: ${e.toString()}");
     }
 
     return false;
